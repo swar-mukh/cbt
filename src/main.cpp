@@ -1,15 +1,45 @@
 #include <iostream>
+#include <vector>
 
-int main(const int argc, char *argv[], char *envp[]) {
-	std::cout << "Argument count: " << argc << std::endl;
+#include "commands.hpp"
 
-	while (*envp) {
-		std::cout << "Env.: " << *envp++ << std::endl;
-	}
+using std::cerr;
+using std::endl;
+using std::exception;
+using std::cout;
+using std::string;
+using std::vector;
 
-	for (int i{0}; i < argc; ++i) {
-		std::cout << "Argument " << i + 1 << ": " << argv[i] << std::endl;
-	}
+void parse_commands_and_execute(vector <string> arguments) {
+    try {
+        if (arguments.size() == 3) {
+            if (arguments[1].compare("create-project") == 0) {
+                commands::create_project(arguments[2]);
+            } else {
+                commands::show_usage();
+            }
+        } else if (arguments.size() == 2) {
+            if (arguments[1].compare("help") == 0) {
+                commands::show_help();
+            } else {
+                commands::show_usage();
+            }
+        }
+    } catch (const exception & e) {
+        cerr << "Exception: " << e.what() << endl;
+    } catch (...) {
+        cerr << "Something went wrong!";
+    }
+}
 
-	return EXIT_SUCCESS;
+int main(const int argc, char *argv[]) {
+    vector<string> args(argv, argv + argc);
+
+    if (args.size() == 1) {
+        commands::show_usage();
+    } else {
+        parse_commands_and_execute(args);
+    }
+
+    return EXIT_SUCCESS;
 }
