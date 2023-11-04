@@ -40,4 +40,5 @@ cbt <options> [file_name]
 Options:
 
 create-project <project-name> - Creates a new project
+help                          - Shows this help message
 ```
