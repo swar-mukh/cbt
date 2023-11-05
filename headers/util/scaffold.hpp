@@ -1,5 +1,5 @@
-#ifndef TEXT_CONTENT
-#define TEXT_CONTENT
+#ifndef UTIL_SCAFFOLD
+#define UTIL_SCAFFOLD
 
 #include <iostream>
 
