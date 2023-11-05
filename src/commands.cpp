@@ -49,6 +49,31 @@ namespace commands {
         }
     }
 
+    void show_info() {
+        const string GNU_VERSION = std::to_string(__GNUC__) + "." + std::to_string(__GNUC_MINOR__) + "." + std::to_string(__GNUC_PATCHLEVEL__);
+
+        #ifdef __APPLE__
+        const string PLATFORM = "Apple MacOS";
+        #elif __linux__
+        const string PLATFORM = "Linux";
+        #elif __unix__
+        const string PLATFORM = "Unix";
+        #elif defined(_WIN32) || defined(_WIN64)
+        const string PLATFORM = "Microsoft Windows";
+        #endif
+
+        cout << endl
+            << "cbt: C++ Build Tool" << endl
+            << endl
+            << "Author        - Swarnava Mukherjee" << endl
+            << "Version       - 2023.11.05" << endl
+            << endl
+            << "C++ Standard  - " << __cplusplus << endl
+            << "GNU Version   - " << GNU_VERSION << endl
+            << "Platform      - " << PLATFORM << endl
+            << endl;
+    }
+
     void show_help() {
         cout << endl
             << "Usage:" << endl
@@ -57,8 +82,10 @@ namespace commands {
             << endl
             << "Options:" << endl
             << endl
-            << "create-project <project-name> - Scaffold a new project" << endl
-            << "help                          - Shows this help message" << endl
+            << "create-project <project-name>   - Scaffold a new project" << endl
+            << endl
+            << "info                            - Show information regarding cbt" << endl
+            << "help                            - Shows this help message" << endl
             << endl;
     }
 
