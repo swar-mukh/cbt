@@ -23,10 +23,10 @@ The reason why proliferation of JavaScript has been so prominent is due to `npm`
 
 `cbt` is a very simple build tool made from first principles:
 
-- Entirely command driven, e.g. `cbt create-project my-app`, `cbt create some_module/some_util`
+- Entirely command driven, e.g. `cbt create-project my-app`, `cbt create-file some_module/some_util`
 - Simple commands to build and test the project
 - Unlike an `npm` project, ensure that all projects created with `cbt` strictly have the same folder structure
-- Automatically create proper scaffold upon invocation of `cbt create <file_name>` (descriptions given below), and thereby reduce cognitive load
+- Automatically create proper scaffold upon invocation of `cbt create-file <file_name>` (descriptions given below), and thereby reduce cognitive load
 
 ## Usage
 
