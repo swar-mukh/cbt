@@ -4,7 +4,7 @@
 #include <fstream>
 #include <iostream>
 
-#include "util/text_content.hpp"
+#include "util/scaffold.hpp"
 
 namespace commands {
     namespace fs = std::experimental::filesystem;
@@ -17,7 +17,7 @@ namespace commands {
     void __create_file(const string project_name, const string file_name) {
         ofstream file_to_write(project_name + file_name);
             
-        file_to_write << util::text_content::get_predefined_text_content(file_name);
+        file_to_write << util::scaffold::get_predefined_text_content(file_name);
         
         file_to_write.close();
 

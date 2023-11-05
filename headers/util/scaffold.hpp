@@ -3,7 +3,7 @@
 
 #include <iostream>
 
-namespace util::text_content {
+namespace util::scaffold {
     std::string get_predefined_text_content(const std::string file_name);
 }
 

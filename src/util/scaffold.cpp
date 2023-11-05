@@ -5,7 +5,7 @@
 #include <sstream>
 #include <vector>
 
-namespace util::text_content {
+namespace util::scaffold {
     using std::cout;
     using std::endl;
     using std::string;
@@ -86,7 +86,6 @@ namespace util::text_content {
         vector<string> lines;
 
         while (getline(stream, line)) {
-            // cout << "Line:" << line << " -> " << line.size() << endl;
             lines.push_back(line);
         }
 
