@@ -4,9 +4,9 @@
 #include "commands.hpp"
 
 using std::cerr;
+using std::cout;
 using std::endl;
 using std::exception;
-using std::cout;
 using std::string;
 using std::vector;
 
