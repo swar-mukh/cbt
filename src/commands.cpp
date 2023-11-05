@@ -1,7 +1,6 @@
 #include "commands.hpp"
 
 #include <experimental/filesystem>
-#include <fstream>
 #include <iostream>
 
 #include "util/scaffold.hpp"
@@ -11,18 +10,7 @@ namespace commands {
 
     using std::cout;
     using std::endl;
-    using std::ofstream;
     using std::string;
-
-    void __create_file(const string project_name, const string file_name) {
-        ofstream file_to_write(project_name + file_name);
-            
-        file_to_write << util::scaffold::get_predefined_text_content(file_name);
-        
-        file_to_write.close();
-
-        cout << "CREATE " << project_name + file_name << endl;
-    }
     
     void create_project(const string project_name) {
         if (fs::exists(project_name)) {
@@ -30,22 +18,24 @@ namespace commands {
             return;
         }
 
-        if (fs::create_directory(project_name)) {
-            __create_file(project_name, "/.gitignore");
-            fs::create_directory(project_name + "/.project") ? cout << "CREATE " << project_name + "/.project" << endl : cout;
-            __create_file(project_name, "/README.md");
-            fs::create_directory(project_name + "/build") ? cout << "CREATE " << project_name + "/build" << endl : cout;
-            fs::create_directory(project_name + "/build/binaries") ? cout << "CREATE " << project_name + "/build/binaries" << endl : cout;
-            fs::create_directory(project_name + "/docs") ? cout << "CREATE " << project_name + "/docs" << endl : cout;
-            fs::create_directory(project_name + "/headers") ? cout << "CREATE " << project_name + "/headers" << endl : cout;
-            __create_file(project_name, "/headers/sample.hpp");
-            fs::create_directory(project_name + "/src") ? cout << "CREATE " << project_name + "/src" << endl : cout;
-            __create_file(project_name, "/src/main.cpp");
-            __create_file(project_name, "/src/sample.cpp");
+        cout << endl;
+
+        if (util::scaffold::create_directory(project_name)) {
+            util::scaffold::create_file(project_name, ".gitignore");
+            util::scaffold::create_directory(project_name, ".project");
+            util::scaffold::create_file(project_name, "README.md");
+            util::scaffold::create_directory(project_name, "build");
+            util::scaffold::create_directory(project_name, "build/binaries");
+            util::scaffold::create_directory(project_name, "docs");
+            util::scaffold::create_directory(project_name, "headers");
+            util::scaffold::create_file(project_name, "headers/sample.hpp");
+            util::scaffold::create_directory(project_name, "src");
+            util::scaffold::create_file(project_name, "src/main.cpp");
+            util::scaffold::create_file(project_name, "src/sample.cpp");
 
             cout << endl << "Project '" << project_name << "' created" << endl << endl;
         } else {
-            cout << endl << "Could not create project '" << project_name << "'!" << endl << endl;
+            cout << "Could not create project '" << project_name << "'!" << endl << endl;
         }
     }
 

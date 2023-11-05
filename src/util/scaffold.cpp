@@ -1,13 +1,17 @@
-#ifndef TEXT_CONTENT
-#define TEXT_CONTENT
+#include "util/scaffold.hpp"
 
+#include <experimental/filesystem>
+#include <fstream>
 #include <iostream>
 #include <sstream>
 #include <vector>
 
 namespace util::scaffold {
+    namespace fs = std::experimental::filesystem;
+    
     using std::cout;
     using std::endl;
+    using std::ofstream;
     using std::string;
     using std::stringstream;
     using std::vector;
@@ -99,21 +103,40 @@ namespace util::scaffold {
         return final_string;
     }
 
+    void create_file(const string project_name, const string file_name) {
+        const string full_path = project_name +  "/" + file_name;
+
+        ofstream file_to_write(full_path);
+        file_to_write << get_predefined_text_content(file_name);
+        file_to_write.close();
+
+        cout << "CREATE " << full_path << endl;
+    }
+
+    bool create_directory(const string project_name, const string sub_directory) {
+        const string full_path = project_name + "/" + sub_directory;
+        
+        if (fs::create_directory(full_path)) {
+            cout << "CREATE " << full_path << endl;
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     string get_predefined_text_content(const string file_name) {
-        if (file_name.compare("/.gitignore") == 0) {
+        if (file_name.compare(".gitignore") == 0) {
             return __remove_raw_literal_indentations(GITIGNORE);
-        } else if (file_name.compare("/README.md") == 0) {
+        } else if (file_name.compare("README.md") == 0) {
             return __remove_raw_literal_indentations(README_MD);
-        } else if (file_name.compare("/headers/sample.hpp") == 0) {
+        } else if (file_name.compare("headers/sample.hpp") == 0) {
             return __remove_raw_literal_indentations(SAMPLE_HPP);
-        } else if (file_name.compare("/src/main.cpp") == 0) {
+        } else if (file_name.compare("src/main.cpp") == 0) {
             return __remove_raw_literal_indentations(MAIN_CPP);
-        } else if (file_name.compare("/src/sample.cpp") == 0) {
+        } else if (file_name.compare("src/sample.cpp") == 0) {
             return __remove_raw_literal_indentations(SAMPLE_CPP);
         } else {
             return "";
         }
     }
 }
-
-#endif
