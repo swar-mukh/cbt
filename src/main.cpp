@@ -19,7 +19,9 @@ void parse_commands_and_execute(vector <string> arguments) {
                 commands::show_usage();
             }
         } else if (arguments.size() == 2) {
-            if (arguments[1].compare("info") == 0) {
+            if (arguments[1].compare("clear-build") == 0) {
+                commands::clear_build();
+            } else if (arguments[1].compare("info") == 0) {
                 commands::show_info();
             } else if (arguments[1].compare("help") == 0) {
                 commands::show_help();

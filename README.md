@@ -39,8 +39,10 @@ cbt <options> [file_name]
 
 Options:
 
-create-project <project-name> - Creates a new project
+create-project <project-name>   - Create a new project
 
-info                          - Show information regarding cbt
-help                          - Shows this help message
+clear-build                     - Delete all object files under 'build/' directory
+
+info                            - Show information regarding cbt
+help                            - Shows this help message
 ```

@@ -39,6 +39,39 @@ namespace commands {
         }
     }
 
+    void clear_build() {
+        if (!fs::exists("build")) {
+            cout << endl << "Directory 'build' does not exist!" << endl << endl;
+            return;
+        }
+
+        cout << endl;
+
+        int failed_deletion_binary_files_count{0};
+        bool at_least_one_binary_file_present{false};
+
+        for (auto const& dir_entry: fs::recursive_directory_iterator("build")) {
+            if (!fs::is_directory(dir_entry)) {
+                at_least_one_binary_file_present = true;
+
+                if (fs::remove(dir_entry)) {
+                    std::cout << "DELETE " << dir_entry << endl;
+                } else {
+                    std::cout << "DELETE Failed: " << dir_entry << endl;
+                    failed_deletion_binary_files_count++;
+                }
+            }
+        }
+
+        if (!at_least_one_binary_file_present) {
+            cout << "No object files to remove." << endl << endl;
+        } else if (failed_deletion_binary_files_count == 0) {
+            cout << endl << "All object files removed." << endl << endl;
+        } else {
+            cout << endl << "All object files removed except " << failed_deletion_binary_files_count << "." << endl << endl;
+        }
+    }
+
     void show_info() {
         const string GNU_VERSION = std::to_string(__GNUC__) + "." + std::to_string(__GNUC_MINOR__) + "." + std::to_string(__GNUC_PATCHLEVEL__);
 
@@ -73,6 +106,8 @@ namespace commands {
             << "Options:" << endl
             << endl
             << "create-project <project-name>   - Scaffold a new project" << endl
+            << endl
+            << "clear-build                     - Delete all object files under 'build/' directory"  << endl
             << endl
             << "info                            - Show information regarding cbt" << endl
             << "help                            - Shows this help message" << endl
