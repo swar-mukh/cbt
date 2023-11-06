@@ -28,6 +28,8 @@ void parse_commands_and_execute(vector <string> arguments) {
             } else {
                 commands::show_usage();
             }
+        } else {
+            commands::show_usage();
         }
     } catch (const exception & e) {
         cerr << "Exception: " << e.what() << endl;
