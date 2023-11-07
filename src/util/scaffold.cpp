@@ -39,8 +39,50 @@ namespace util::scaffold {
     #ifndef SAMPLE
     #define SAMPLE
 
+    #include <iostream>
+    #include <vector>
+
     namespace sample {
         int sum(const int a, const int b);
+
+        enum class Sex {
+            MALE,
+            FEMALE,
+            NON_BINARY
+        };
+
+        struct Person {
+            std::string first_name;
+            std::string last_name;
+            Sex sex;
+
+            friend std::ostream& operator<<(std::ostream& out, const Person& person);
+        };
+
+        struct Employee {
+            std::string id;
+            std::string first_name;
+            std::string last_name;
+            Sex sex;
+
+            friend std::ostream& operator<<(std::ostream& out, const Employee& employee);
+        };
+
+        class SampleCompany {
+        public:
+            SampleCompany(const std::string location);
+            bool fire(const std::string employee_id, const std::string reason);
+            std::string get_location() const;
+            Employee hire(const Person person);
+            bool is_candidate_eligible(const Person person) const;
+            std::vector<Employee> list_absentees() const;
+            friend std::ostream& operator<<(std::ostream& out, const SampleCompany& company);
+        
+        private:
+            Employee founder;
+            std::vector<Employee> employees;
+            std::string location;
+        };
     }
 
     #endif
@@ -77,9 +119,33 @@ namespace util::scaffold {
     const string SAMPLE_CPP = R"(
     #include "sample.hpp"
 
+    #include <iostream>
+    #include <vector>
+
     namespace sample {
         int sum(const int a, const int b) {
             return a + b;
+        }
+
+        std::ostream& operator<<(std::ostream& out, const Person& person) {
+            out << person.first_name << std::endl;
+            return out;
+        }
+
+        std::ostream& operator<<(std::ostream& out, const Employee& employee) {
+            out << employee.id << std::endl;
+            return out;
+        }
+
+        SampleCompany::SampleCompany(std::string location): location(location){}
+
+        std::string SampleCompany::get_location() const {
+            return this->location;
+        }
+
+        std::ostream& operator<<(std::ostream& out, const SampleCompany& company) {
+            out << company.get_location() << std::endl;
+            return out;
         }
     }
     )";
