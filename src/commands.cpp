@@ -28,6 +28,8 @@ namespace commands {
             util::scaffold::create_directory(project_name, "build");
             util::scaffold::create_directory(project_name, "build/binaries");
             util::scaffold::create_directory(project_name, "docs");
+            util::scaffold::create_file(project_name, "docs/LICENSE.txt");
+            util::scaffold::create_file(project_name, "docs/Roadmap.md");
             util::scaffold::create_directory(project_name, "headers");
             util::scaffold::create_file(project_name, "headers/sample.hpp");
             util::scaffold::create_directory(project_name, "src");

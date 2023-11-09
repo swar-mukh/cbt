@@ -151,6 +151,27 @@ namespace util::scaffold {
     }
     )";
 
+    const string LICENSE_TXT = R"(
+    This is a sample license file.
+
+    Add actual content in this file.
+    )";
+
+    const string ROADMAP_MD = R"(
+    # Sample Roadmap
+
+    - [X] Get legal documents
+    - [ ] Setup infrastructure
+    - [ ] Develop login feature:
+        - [X] Model the data
+        - [ ] Sanitise data
+        - [ ] Persist in database
+    - [ ] Setup media driver:
+        - [ ] Get necessary interface descriptions
+        - [ ] Perform R/W
+        - [ ] Subject code to thorough testing
+    )";
+
     string __remove_raw_literal_indentations(const string raw_literal) {
         string line, final_string;
         stringstream stream(raw_literal);
@@ -196,6 +217,10 @@ namespace util::scaffold {
             return __remove_raw_literal_indentations(GITIGNORE);
         } else if (file_name.compare("README.md") == 0) {
             return __remove_raw_literal_indentations(README_MD);
+        } else if (file_name.compare("docs/LICENSE.txt") == 0) {
+            return __remove_raw_literal_indentations(LICENSE_TXT);
+        } else if (file_name.compare("docs/Roadmap.md") == 0) {
+            return __remove_raw_literal_indentations(ROADMAP_MD);
         } else if (file_name.compare("headers/sample.hpp") == 0) {
             return __remove_raw_literal_indentations(SAMPLE_HPP);
         } else if (file_name.compare("src/main.cpp") == 0) {
