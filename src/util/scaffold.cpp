@@ -172,6 +172,28 @@ namespace util::scaffold {
         - [ ] Subject code to thorough testing
     )";
 
+    const string PROJECT_INI = R"(
+    ; Since a rudimentary INI parser is used, ensure that the actual `key` and `value` pairs
+    ; follow the same `key` and `value` format in this file which was provided while creation
+    ; of the project. Also, ensure that each pair is contained within a single line.
+
+    name=my-project
+    description=A sample project that does so and so
+
+    version=2023-11-09
+
+    ; `authors` is always an array even if there is only one entity, At least one author is required.
+    authors[]=Sample LName <sample_lname@domain.tld>
+    authors[]=Another MName LName <another_nmane_lname@domain.tld>
+
+    ; `platforms` is always an array even if there is only one supported platform and 
+    ; values can be any of 'linux', 'macos', 'unix', `windows`. At least one platform is required.
+    platforms[]=linux
+    platforms[]=macos
+    platforms[]=unix
+    platforms[]=windows
+    )";
+
     string __remove_raw_literal_indentations(const string raw_literal) {
         string line, final_string;
         stringstream stream(raw_literal);
@@ -227,6 +249,8 @@ namespace util::scaffold {
             return __remove_raw_literal_indentations(MAIN_CPP);
         } else if (file_name.compare("src/sample.cpp") == 0) {
             return __remove_raw_literal_indentations(SAMPLE_CPP);
+        } else if (file_name.compare("project.ini") == 0) {
+            return __remove_raw_literal_indentations(PROJECT_INI);
         } else {
             return "";
         }

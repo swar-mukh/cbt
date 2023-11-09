@@ -35,6 +35,7 @@ namespace commands {
             util::scaffold::create_directory(project_name, "src");
             util::scaffold::create_file(project_name, "src/main.cpp");
             util::scaffold::create_file(project_name, "src/sample.cpp");
+            util::scaffold::create_file(project_name, "project.ini");
 
             cout << endl << "Project '" << project_name << "' created" << endl << endl;
         } else {
