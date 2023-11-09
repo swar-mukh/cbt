@@ -2,6 +2,7 @@
 
 #include <experimental/filesystem>
 #include <iostream>
+#include <string>
 
 #include "util/scaffold.hpp"
 

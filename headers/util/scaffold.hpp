@@ -1,7 +1,7 @@
 #ifndef UTIL_SCAFFOLD
 #define UTIL_SCAFFOLD
 
-#include <iostream>
+#include <string>
 
 namespace util::scaffold {
     void create_file(const std::string project_name, const std::string file_name);

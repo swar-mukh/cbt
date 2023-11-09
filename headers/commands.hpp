@@ -1,7 +1,7 @@
 #ifndef COMMANDS
 #define COMMANDS
 
-#include <iostream>
+#include <string>
 
 namespace commands {
     void create_project(const std::string project_name);
