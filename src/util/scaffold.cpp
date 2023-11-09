@@ -237,8 +237,6 @@ namespace util::scaffold {
     string get_predefined_text_content(const string file_name) {
         if (file_name.compare(".gitignore") == 0) {
             return __remove_raw_literal_indentations(GITIGNORE);
-        } else if (file_name.compare("README.md") == 0) {
-            return __remove_raw_literal_indentations(README_MD);
         } else if (file_name.compare("docs/LICENSE.txt") == 0) {
             return __remove_raw_literal_indentations(LICENSE_TXT);
         } else if (file_name.compare("docs/Roadmap.md") == 0) {
@@ -249,6 +247,8 @@ namespace util::scaffold {
             return __remove_raw_literal_indentations(MAIN_CPP);
         } else if (file_name.compare("src/sample.cpp") == 0) {
             return __remove_raw_literal_indentations(SAMPLE_CPP);
+        } else if (file_name.compare("README.md") == 0) {
+            return __remove_raw_literal_indentations(README_MD);
         } else if (file_name.compare("project.ini") == 0) {
             return __remove_raw_literal_indentations(PROJECT_INI);
         } else {

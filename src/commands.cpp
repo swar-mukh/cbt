@@ -24,7 +24,6 @@ namespace commands {
         if (util::scaffold::create_directory(project_name)) {
             util::scaffold::create_file(project_name, ".gitignore");
             util::scaffold::create_directory(project_name, ".project");
-            util::scaffold::create_file(project_name, "README.md");
             util::scaffold::create_directory(project_name, "build");
             util::scaffold::create_directory(project_name, "build/binaries");
             util::scaffold::create_directory(project_name, "docs");
@@ -35,6 +34,7 @@ namespace commands {
             util::scaffold::create_directory(project_name, "src");
             util::scaffold::create_file(project_name, "src/main.cpp");
             util::scaffold::create_file(project_name, "src/sample.cpp");
+            util::scaffold::create_file(project_name, "README.md");
             util::scaffold::create_file(project_name, "project.ini");
 
             cout << endl << "Project '" << project_name << "' created" << endl << endl;
