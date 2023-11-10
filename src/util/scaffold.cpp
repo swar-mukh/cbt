@@ -1,6 +1,6 @@
 #include "util/scaffold.hpp"
 
-#include <experimental/filesystem>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -8,7 +8,7 @@
 #include <vector>
 
 namespace util::scaffold {
-    namespace fs = std::experimental::filesystem;
+    namespace fs = std::filesystem;
     
     using std::cout;
     using std::endl;

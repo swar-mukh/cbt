@@ -1,13 +1,13 @@
 #include "commands.hpp"
 
-#include <experimental/filesystem>
+#include <filesystem>
 #include <iostream>
 #include <string>
 
 #include "util/scaffold.hpp"
 
 namespace commands {
-    namespace fs = std::experimental::filesystem;
+    namespace fs = std::filesystem;
 
     using std::cout;
     using std::endl;
