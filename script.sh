@@ -10,6 +10,6 @@ echo "Compiling src/main.cpp" && g++ -std=c++17 -Wall -Wextra -pedantic -c -I ./
 
 echo
 
-echo "Building build/cbt" && g++ -std=c++17 -Wall -Wextra -pedantic -O3 build/binaries/*.o build/binaries/**/*.o -o build/cbt
+echo "Building build/cbt" && g++ -std=c++17 -Wall -Wextra -pedantic -O3 -Os -s build/binaries/*.o build/binaries/**/*.o -o build/cbt
 
 echo
