@@ -172,7 +172,7 @@ namespace util::scaffold {
         - [ ] Subject code to thorough testing
     )";
 
-    const string PROJECT_INI = R"(
+    const string PROJECT_CFG = R"(
     ; Since a rudimentary INI parser is used, ensure that the actual `key` and `value` pairs
     ; follow the same `key` and `value` format in this file which was provided while creation
     ; of the project. Also, ensure that each pair is contained within a single line.
@@ -249,8 +249,8 @@ namespace util::scaffold {
             return __remove_raw_literal_indentations(SAMPLE_CPP);
         } else if (file_name.compare("README.md") == 0) {
             return __remove_raw_literal_indentations(README_MD);
-        } else if (file_name.compare("project.ini") == 0) {
-            return __remove_raw_literal_indentations(PROJECT_INI);
+        } else if (file_name.compare("project.cfg") == 0) {
+            return __remove_raw_literal_indentations(PROJECT_CFG);
         } else {
             return "";
         }
