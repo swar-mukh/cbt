@@ -91,6 +91,7 @@ namespace util::scaffold {
 
     const string MAIN_CPP = R"(
     #include <iostream>
+    #include <map>
 
     #include "sample.hpp"
 
