@@ -104,21 +104,21 @@ namespace commands {
     }
 
     void clear_build() {
-        if (!fs::exists("build")) {
-            cout << endl << "Directory 'build/' does not exist!" << endl << endl;
+        if (!util::scaffold::is_command_invoked_from_workspace()) {
+            cout << endl << "Could not execute command! Are you sure you are inside the project workspace?" << endl << endl;
             return;
         }
 
-        cout << endl;
-
         if (fs::remove_all(fs::current_path() / "build")) {
-            cout << "DELETE build/" << endl << endl;
-
-            util::scaffold::create_directory(".", "build");
-            util::scaffold::create_directory(".", "build/binaries");
-
-            cout << endl;
+            cout << endl << "DELETE build/" << endl;
         }
+
+        cout << endl;
+        
+        util::scaffold::create_directory(".", "build");
+        util::scaffold::create_directory(".", "build/binaries");
+
+        cout << endl;
     }
 
     void show_info() {
