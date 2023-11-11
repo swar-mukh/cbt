@@ -138,7 +138,7 @@ namespace commands {
             << "cbt: C++ Build Tool" << endl
             << endl
             << "Author        - Swarnava Mukherjee" << endl
-            << "Version       - 2023.11.10" << endl
+            << "Version       - 2023.11.11" << endl
             << endl
             << "C++ Standard  - " << __cplusplus << endl
             << "GNU Version   - " << GNU_VERSION << endl
