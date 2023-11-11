@@ -225,7 +225,7 @@ namespace util::scaffold {
     }
 
     bool create_directory(const string project_name, const string sub_directory) {
-        const string full_path = project_name + "/" + sub_directory;
+        const string full_path = project_name + "/" + sub_directory + (sub_directory.length() != 0 ? "/" : "");
         
         if (fs::create_directory(full_path)) {
             cout << "CREATE " << full_path << endl;
