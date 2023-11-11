@@ -256,4 +256,8 @@ namespace util::scaffold {
             return "";
         }
     }
+
+    bool is_command_invoked_from_workspace() {
+        return fs::exists("project.cfg") && fs::exists("headers/") &&fs::exists("src/");
+    }
 }
