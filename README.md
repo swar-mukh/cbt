@@ -41,6 +41,7 @@ Options:
 
 create-project <project-name>   - Create a new project
 
+compile-project                 - Compile all files and generate respective binaries under 'build binaries/'
 clear-build                     - Delete all object files under 'build/' directory
 
 info                            - Show information regarding cbt
