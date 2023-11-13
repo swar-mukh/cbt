@@ -16,6 +16,8 @@ void parse_commands_and_execute(vector <string> arguments) {
         if (arguments.size() == 3) {
             if (arguments[1].compare("create-project") == 0) {
                 commands::create_project(arguments[2]);
+            } else if (arguments[1].compare("create-file") == 0) {
+                commands::create_file(arguments[2]);
             } else {
                 commands::show_usage();
             }

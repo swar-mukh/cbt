@@ -5,6 +5,8 @@
 
 namespace commands {
     void create_project(const std::string project_name);
+    
+    void create_file(const std::string file_name);
 
     void compile_project();
     void clear_build();

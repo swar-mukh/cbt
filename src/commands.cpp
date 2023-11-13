@@ -6,6 +6,7 @@
 #include <string>
 
 #include "workspace/scaffold.hpp"
+#include "workspace/util.hpp"
 
 namespace commands {
     namespace fs = std::filesystem;
@@ -42,6 +43,33 @@ namespace commands {
         } else {
             cout << "Could not create project '" << project_name << "'!" << endl << endl;
         }
+    }
+
+    void create_file(const string file_name) {
+        if (!workspace::scaffold::is_command_invoked_from_workspace()) {
+            cout << endl << "Could not execute command! Are you sure you are inside the project workspace?" << endl << endl;
+            return;
+        }
+        
+        const auto [is_valid, reason_if_any] = workspace::util::is_valid_file_name(file_name);
+
+        if (!is_valid) {
+            cout << endl << reason_if_any << endl << endl;
+            return;
+        }
+
+        cout << endl;
+
+        const bool create_only_header_file{ file_name.starts_with("headers/") };
+
+        if (create_only_header_file) {
+            workspace::scaffold::create_file(".", file_name + ".hpp");
+        } else {
+            workspace::scaffold::create_file(".", string("headers/") + file_name + ".hpp");
+            workspace::scaffold::create_file(".", string("src/") + file_name + ".cpp");
+        }
+
+        cout << endl;
     }
 
     void compile_project() {
@@ -155,6 +183,9 @@ namespace commands {
             << "Options:" << endl
             << endl
             << "create-project <project-name>   - Scaffold a new project" << endl
+            << endl
+            << "create-file <file_name>         - Generate header and respective C++ files under 'headers/', 'src/' and 'test/' directories" << endl
+            << "create-file <path/to/file_name> - Same as above, but will create necessary sub-directories if required" << endl
             << endl
             << "compile-project                 - Compile all files and generate respective binaries under 'build/binaries/'" << endl
             << "clear-build                     - Delete all object files under 'build/' directory"  << endl

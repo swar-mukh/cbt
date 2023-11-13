@@ -2,10 +2,14 @@
 
 #include <filesystem>
 #include <fstream>
+#include <iomanip>
 #include <iostream>
+#include <regex>
 #include <sstream>
 #include <string>
 #include <vector>
+
+#include "workspace/util.hpp"
 
 namespace workspace::scaffold {
     namespace fs = std::filesystem;
@@ -37,13 +41,13 @@ namespace workspace::scaffold {
     )";
 
     const string SAMPLE_HPP = R"(
-    #ifndef SAMPLE
-    #define SAMPLE
+    #ifndef @GUARD
+    #define @GUARD
 
     #include <iostream>
     #include <vector>
 
-    namespace sample {
+    namespace @NAMESPACE {
         int sum(const int a, const int b);
 
         enum class Sex {
@@ -119,12 +123,12 @@ namespace workspace::scaffold {
     )";
 
     const string SAMPLE_CPP = R"(
-    #include "sample.hpp"
+    #include "@FILE_NAME"
 
     #include <iostream>
     #include <vector>
 
-    namespace sample {
+    namespace @NAMESPACE {
         int sum(const int a, const int b) {
             return a + b;
         }
@@ -217,18 +221,32 @@ namespace workspace::scaffold {
     void create_file(const string project_name, const string file_name) {
         const string full_path = project_name +  "/" + file_name;
 
-        ofstream file_to_write(full_path);
-        file_to_write << get_predefined_text_content(file_name);
-        file_to_write.close();
+        if (fs::exists(full_path)) {
+            cout << std::right << std::setw(8) <<  "SKIP " << full_path << endl;
+        } else {
+            if (!fs::exists(full_path.substr(0, full_path.find_last_of("/")))) {
+                create_directory(".", full_path.substr(0, full_path.find_last_of("/")), true);
+            }
 
-        cout << "CREATE " << full_path << endl;
+            ofstream file_to_write(full_path);
+            file_to_write << get_predefined_text_content(file_name);
+            file_to_write.close();
+
+            cout << std::right << std::setw(8) << "CREATE " << full_path << endl;
+        }
     }
 
-    bool create_directory(const string project_name, const string sub_directory) {
-        const string full_path = project_name + "/" + sub_directory + (sub_directory.length() != 0 ? "/" : "");
+    bool create_directory(const string project_name, const string sub_directory, bool multi_directory) {
+        string full_path =( project_name + "/" + sub_directory + (sub_directory.length() != 0 ? "/" : ""));
+
+        if (full_path.starts_with("././")) {
+            full_path = full_path.replace(0, 4, "./");
+        }
         
-        if (fs::create_directory(full_path)) {
-            cout << "CREATE " << full_path << endl;
+        const bool result{ multi_directory ? fs::create_directories(full_path) : fs::create_directory(full_path) };
+
+        if (result) {
+            cout << std::right << std::setw(8) << "DIR " << full_path << endl;
             return true;
         } else {
             return false;
@@ -242,12 +260,25 @@ namespace workspace::scaffold {
             return __remove_raw_literal_indentations(LICENSE_TXT);
         } else if (file_name.compare("docs/Roadmap.md") == 0) {
             return __remove_raw_literal_indentations(ROADMAP_MD);
-        } else if (file_name.compare("headers/sample.hpp") == 0) {
-            return __remove_raw_literal_indentations(SAMPLE_HPP);
+        } else if (file_name.ends_with(".hpp")) {
+            const string text{ __remove_raw_literal_indentations(SAMPLE_HPP) };
+            const auto [stemmed_name, guard_name, namespace_name] = workspace::util::get_qualified_names(file_name);
+            
+            const string with_guard = std::regex_replace(text, GUARD_R, guard_name);
+            const string with_import = std::regex_replace(with_guard, IMPORT_R, stemmed_name + ".hpp");
+            const string final_text = std::regex_replace(with_import, NAMESPACE_R, namespace_name);
+            
+            return final_text;
         } else if (file_name.compare("src/main.cpp") == 0) {
             return __remove_raw_literal_indentations(MAIN_CPP);
-        } else if (file_name.compare("src/sample.cpp") == 0) {
-            return __remove_raw_literal_indentations(SAMPLE_CPP);
+        } else if (file_name.ends_with(".cpp")) {
+            const string text{ __remove_raw_literal_indentations(SAMPLE_CPP) };
+            const auto [stemmed_name, guard_name, namespace_name] = workspace::util::get_qualified_names(file_name);
+            
+            const string with_import = std::regex_replace(text, IMPORT_R, stemmed_name + ".hpp");
+            const string final_text = std::regex_replace(with_import, NAMESPACE_R, namespace_name);
+            
+            return final_text;
         } else if (file_name.compare("README.md") == 0) {
             return __remove_raw_literal_indentations(README_MD);
         } else if (file_name.compare("project.cfg") == 0) {
