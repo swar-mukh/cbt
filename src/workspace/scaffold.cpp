@@ -183,7 +183,7 @@ namespace workspace::scaffold {
 
     version=2023-11-09
 
-    ; `authors` is always an array even if there is only one entity, At least one author is required.
+    ; `authors` is always an array even if there is only one entity. At least one author is required.
     authors[]=Sample LName <sample_lname@domain.tld>
     authors[]=Another MName LName <another_nmane_lname@domain.tld>
 
