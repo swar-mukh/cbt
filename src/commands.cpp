@@ -5,7 +5,7 @@
 #include <iostream>
 #include <string>
 
-#include "util/scaffold.hpp"
+#include "workspace/scaffold.hpp"
 
 namespace commands {
     namespace fs = std::filesystem;
@@ -22,21 +22,21 @@ namespace commands {
 
         cout << endl;
 
-        if (util::scaffold::create_directory(project_name)) {
-            util::scaffold::create_file(project_name, ".gitignore");
-            util::scaffold::create_directory(project_name, ".project");
-            util::scaffold::create_directory(project_name, "build");
-            util::scaffold::create_directory(project_name, "build/binaries");
-            util::scaffold::create_directory(project_name, "docs");
-            util::scaffold::create_file(project_name, "docs/LICENSE.txt");
-            util::scaffold::create_file(project_name, "docs/Roadmap.md");
-            util::scaffold::create_directory(project_name, "headers");
-            util::scaffold::create_file(project_name, "headers/sample.hpp");
-            util::scaffold::create_directory(project_name, "src");
-            util::scaffold::create_file(project_name, "src/main.cpp");
-            util::scaffold::create_file(project_name, "src/sample.cpp");
-            util::scaffold::create_file(project_name, "README.md");
-            util::scaffold::create_file(project_name, "project.cfg");
+        if (workspace::scaffold::create_directory(project_name)) {
+            workspace::scaffold::create_file(project_name, ".gitignore");
+            workspace::scaffold::create_directory(project_name, ".project");
+            workspace::scaffold::create_directory(project_name, "build");
+            workspace::scaffold::create_directory(project_name, "build/binaries");
+            workspace::scaffold::create_directory(project_name, "docs");
+            workspace::scaffold::create_file(project_name, "docs/LICENSE.txt");
+            workspace::scaffold::create_file(project_name, "docs/Roadmap.md");
+            workspace::scaffold::create_directory(project_name, "headers");
+            workspace::scaffold::create_file(project_name, "headers/sample.hpp");
+            workspace::scaffold::create_directory(project_name, "src");
+            workspace::scaffold::create_file(project_name, "src/main.cpp");
+            workspace::scaffold::create_file(project_name, "src/sample.cpp");
+            workspace::scaffold::create_file(project_name, "README.md");
+            workspace::scaffold::create_file(project_name, "project.cfg");
 
             cout << endl << "Project '" << project_name << "' created" << endl << endl;
         } else {
@@ -45,7 +45,7 @@ namespace commands {
     }
 
     void compile_project() {
-        if (!util::scaffold::is_command_invoked_from_workspace()) {
+        if (!workspace::scaffold::is_command_invoked_from_workspace()) {
             cout << endl << "Could not execute command! Are you sure you are inside the project workspace?" << endl << endl;
             return;
         }
@@ -57,8 +57,8 @@ namespace commands {
         if (!fs::exists("build/")) {
             show_newline_separator = true;
 
-            util::scaffold::create_directory(string("."), string("build"));
-            util::scaffold::create_directory(string("."), string("build/binaries/"));
+            workspace::scaffold::create_directory(string("."), string("build"));
+            workspace::scaffold::create_directory(string("."), string("build/binaries/"));
         }
 
         string gpp_include_paths{"-Iheaders"};
@@ -76,7 +76,7 @@ namespace commands {
 
                 if (!fs::exists(directory_under_check)) {
                     show_newline_separator = true;
-                    util::scaffold::create_directory(string("."), directory_under_check);
+                    workspace::scaffold::create_directory(string("."), directory_under_check);
                 }
             }
         }
@@ -104,7 +104,7 @@ namespace commands {
     }
 
     void clear_build() {
-        if (!util::scaffold::is_command_invoked_from_workspace()) {
+        if (!workspace::scaffold::is_command_invoked_from_workspace()) {
             cout << endl << "Could not execute command! Are you sure you are inside the project workspace?" << endl << endl;
             return;
         }
@@ -114,9 +114,9 @@ namespace commands {
         }
 
         cout << endl;
-        
-        util::scaffold::create_directory(".", "build");
-        util::scaffold::create_directory(".", "build/binaries");
+
+        workspace::scaffold::create_directory(".", "build");
+        workspace::scaffold::create_directory(".", "build/binaries");
 
         cout << endl;
     }

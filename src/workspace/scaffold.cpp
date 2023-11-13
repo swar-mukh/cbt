@@ -1,4 +1,4 @@
-#include "util/scaffold.hpp"
+#include "workspace/scaffold.hpp"
 
 #include <filesystem>
 #include <fstream>
@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-namespace util::scaffold {
+namespace workspace::scaffold {
     namespace fs = std::filesystem;
     
     using std::cout;
