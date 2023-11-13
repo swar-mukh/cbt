@@ -150,7 +150,7 @@ namespace commands {
     }
 
     void show_info() {
-        const string GNU_VERSION = std::to_string(__GNUC__) + "." + std::to_string(__GNUC_MINOR__) + "." + std::to_string(__GNUC_PATCHLEVEL__);
+        const string GCC_VERSION = std::to_string(__GNUC__) + "." + std::to_string(__GNUC_MINOR__) + "." + std::to_string(__GNUC_PATCHLEVEL__);
 
         #ifdef __APPLE__
         const string PLATFORM = "Apple MacOS";
@@ -169,7 +169,7 @@ namespace commands {
             << "Version       - 2023.11.11" << endl
             << endl
             << "C++ Standard  - " << __cplusplus << endl
-            << "GNU Version   - " << GNU_VERSION << endl
+            << "GCC Version   - " << GCC_VERSION << endl
             << "Platform      - " << PLATFORM << endl
             << endl;
     }
