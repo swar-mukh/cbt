@@ -47,6 +47,8 @@ create-file <path/to/file_name> - Same as above, but will create necessary sub-d
 compile-project                 - Compile all files and generate respective binaries under 'build/binaries/<respective-paths>'
 clear-build                     - Delete all object files under 'build/' directory
 
+build-project                   - Perform linking and generate final executable under 'build/' (requires project compilation first)
+
 info                            - Show information regarding cbt
 help                            - Shows this help message
 ```

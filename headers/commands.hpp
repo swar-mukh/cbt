@@ -11,6 +11,8 @@ namespace commands {
     void compile_project();
     void clear_build();
 
+    void build_project();
+
     void show_info();
     void show_help();
 

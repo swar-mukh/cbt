@@ -149,6 +149,50 @@ namespace commands {
         cout << endl;
     }
 
+    void build_project() {
+        if (!workspace::scaffold::is_command_invoked_from_workspace()) {
+            cout << endl << "Could not execute command! Are you sure you are inside the project workspace?" << endl << endl;
+            return;
+        }
+
+        if (!fs::exists("build/")) {
+            cout << endl << "Directory 'build/' does not exist!" << endl << endl;
+            return;
+        }
+        
+        if (!fs::exists("build/binaries")) {
+            cout << endl << "Directory 'build/binaries/' does not exist!" << endl << endl;
+            return;
+        }
+
+        string binaries{ "" };
+        int binary_files_count{ 0 };
+
+        for (auto const& dir_entry: fs::recursive_directory_iterator("build/binaries")) {
+            if (fs::is_regular_file(dir_entry)) {
+                binary_files_count++;
+                binaries += dir_entry.path().string() + " ";
+            }
+        }
+
+        if (binary_files_count == 0) {
+            cout << endl << "No binaries present! Run 'cbt compile-project' first." << endl << endl;
+            return;
+        }
+
+        #if defined(_WIN32) || defined(_WIN64)
+        const string BINARY_NAME = "app.exe";
+        #else
+        const string BINARY_NAME = "app";
+        #endif
+
+        const int result = system((string("g++ -std=c++17 -Wall -Wextra -pedantic -O3 -Os -s ") + binaries + "-o build/" + BINARY_NAME).c_str());
+
+        cout << endl << (result == 0 ? string("✔") : string("✘")) << (" BUILD build/" + BINARY_NAME) <<  endl;
+
+        cout << endl;
+    }
+
     void show_info() {
         const string GCC_VERSION = std::to_string(__GNUC__) + "." + std::to_string(__GNUC_MINOR__) + "." + std::to_string(__GNUC_PATCHLEVEL__);
 
@@ -189,6 +233,8 @@ namespace commands {
             << endl
             << "compile-project                 - Compile all files and generate respective binaries under 'build/binaries/'" << endl
             << "clear-build                     - Delete all object files under 'build/' directory"  << endl
+            << endl
+            << "build-project                   - Perform linking and generate final executable under 'build/' (requires project compilation first)" << endl
             << endl
             << "info                            - Show information regarding cbt" << endl
             << "help                            - Shows this help message" << endl
