@@ -31,7 +31,7 @@ The reason why proliferation of JavaScript has been so prominent is due to `npm`
 ## Usage
 
 ```sh
-cbt help
+$ cbt help
 
 Usage:
 
