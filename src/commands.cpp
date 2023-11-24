@@ -17,11 +17,9 @@ namespace commands {
     
     void create_project(const string project_name) {
         if (fs::exists(project_name)) {
-            cout << endl << "Directory '" << project_name << "' already exists!" << endl << endl;
+            cout << "Directory '" << project_name << "' already exists!" << endl;
             return;
         }
-
-        cout << endl;
 
         if (workspace::scaffold::create_directory(project_name)) {
             workspace::scaffold::create_file(project_name, ".gitignore");
@@ -39,26 +37,24 @@ namespace commands {
             workspace::scaffold::create_file(project_name, "README.md");
             workspace::scaffold::create_file(project_name, "project.cfg");
 
-            cout << endl << "Project '" << project_name << "' created" << endl << endl;
+            cout << endl << "Project '" << project_name << "' created" << endl;
         } else {
-            cout << "Could not create project '" << project_name << "'!" << endl << endl;
+            cout << "Could not create project '" << project_name << "'!" << endl;
         }
     }
 
     void create_file(const string file_name) {
         if (!workspace::scaffold::is_command_invoked_from_workspace()) {
-            cout << endl << "Could not execute command! Are you sure you are inside the project workspace?" << endl << endl;
+            cout << "Could not execute command! Are you sure you are inside the project workspace?" << endl;
             return;
         }
         
         const auto [is_valid, reason_if_any] = workspace::util::is_valid_file_name(file_name);
 
         if (!is_valid) {
-            cout << endl << reason_if_any << endl << endl;
+            cout << reason_if_any << endl;
             return;
         }
-
-        cout << endl;
 
         const bool create_only_header_file{ file_name.starts_with("headers/") };
 
@@ -68,17 +64,13 @@ namespace commands {
             workspace::scaffold::create_file(".", string("headers/") + file_name + ".hpp");
             workspace::scaffold::create_file(".", string("src/") + file_name + ".cpp");
         }
-
-        cout << endl;
     }
 
     void compile_project() {
         if (!workspace::scaffold::is_command_invoked_from_workspace()) {
-            cout << endl << "Could not execute command! Are you sure you are inside the project workspace?" << endl << endl;
+            cout << "Could not execute command! Are you sure you are inside the project workspace?" << endl;
             return;
         }
-
-        cout << endl;
 
         bool show_newline_separator{false};
 
@@ -127,41 +119,37 @@ namespace commands {
                 }
             }
         }
-
-        cout << endl;
     }
 
     void clear_build() {
         if (!workspace::scaffold::is_command_invoked_from_workspace()) {
-            cout << endl << "Could not execute command! Are you sure you are inside the project workspace?" << endl << endl;
+            cout << "Could not execute command! Are you sure you are inside the project workspace?" << endl;
             return;
         }
 
         if (fs::remove_all(fs::current_path() / "build")) {
-            cout << endl << "DELETE build/" << endl;
+            cout << std::right << std::setw(8) << "DELETE " << "build/" << endl;
         }
 
         cout << endl;
 
         workspace::scaffold::create_directory(".", "build");
         workspace::scaffold::create_directory(".", "build/binaries");
-
-        cout << endl;
     }
 
     void build_project() {
         if (!workspace::scaffold::is_command_invoked_from_workspace()) {
-            cout << endl << "Could not execute command! Are you sure you are inside the project workspace?" << endl << endl;
+            cout << "Could not execute command! Are you sure you are inside the project workspace?" << endl;
             return;
         }
 
         if (!fs::exists("build/")) {
-            cout << endl << "Directory 'build/' does not exist!" << endl << endl;
+            cout << "Directory 'build/' does not exist!" << endl;
             return;
         }
         
         if (!fs::exists("build/binaries")) {
-            cout << endl << "Directory 'build/binaries/' does not exist!" << endl << endl;
+            cout << "Directory 'build/binaries/' does not exist!" << endl;
             return;
         }
 
@@ -176,7 +164,7 @@ namespace commands {
         }
 
         if (binary_files_count == 0) {
-            cout << endl << "No binaries present! Run 'cbt compile-project' first." << endl << endl;
+            cout << "No binaries present! Run 'cbt compile-project' first." << endl;
             return;
         }
 
@@ -188,9 +176,7 @@ namespace commands {
 
         const int result = system((string("g++ -std=c++17 -Wall -Wextra -pedantic -O3 -Os -s ") + binaries + "-o build/" + BINARY_NAME).c_str());
 
-        cout << endl << (result == 0 ? string("✔") : string("✘")) << (" BUILD build/" + BINARY_NAME) <<  endl;
-
-        cout << endl;
+        cout << (result == 0 ? string("✔") : string("✘")) << (" BUILD build/" + BINARY_NAME) << endl;
     }
 
     void show_info() {
@@ -206,7 +192,7 @@ namespace commands {
         const string PLATFORM = "Microsoft Windows";
         #endif
 
-        cout << endl
+        cout
             << "cbt: C++ Build Tool" << endl
             << endl
             << "Author        - Swarnava Mukherjee" << endl
@@ -214,12 +200,11 @@ namespace commands {
             << endl
             << "C++ Standard  - " << __cplusplus << endl
             << "GCC Version   - " << GCC_VERSION << endl
-            << "Platform      - " << PLATFORM << endl
-            << endl;
+            << "Platform      - " << PLATFORM << endl;
     }
 
     void show_help() {
-        cout << endl
+        cout
             << "Usage:" << endl
             << endl
             << "cbt <options> [items]" << endl
@@ -237,11 +222,10 @@ namespace commands {
             << "build-project                   - Perform linking and generate final executable under 'build/' (requires project compilation first)" << endl
             << endl
             << "info                            - Show information regarding cbt" << endl
-            << "help                            - Shows this help message" << endl
-            << endl;
+            << "help                            - Shows this help message" << endl;
     }
 
     void show_usage() {
-        cout << endl << "Invalid usage. Type 'cbt help' for available commands." << endl << endl;
+        cout << "Invalid usage. Type 'cbt help' for available commands." << endl;
     }
 }

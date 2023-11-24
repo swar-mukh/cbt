@@ -48,11 +48,15 @@ void parse_commands_and_execute(vector <string> arguments) {
 int main(const int argc, char *argv[]) {
     vector<string> args(argv, argv + argc);
 
+    cout << endl;
+
     if (args.size() == 1) {
         commands::show_usage();
     } else {
         parse_commands_and_execute(args);
     }
+
+    cout << endl;
 
     return EXIT_SUCCESS;
 }
