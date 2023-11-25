@@ -52,3 +52,34 @@ build-project                   - Perform linking and generate final executable 
 info                            - Show information regarding cbt
 help                            - Shows this help message
 ```
+
+## Installation
+
+### Notes
+
+1. Currently, `cbt` is exclusively developed in `WSL2 Ubuntu 20.04`. But MinGW for Windows should also do the trick. Future support for other platforms is planned.
+2. There is a hard dependency on `g++` as the underlying tool.
+3. There is a hard dependency on `C++2a` standard. Ensure your `gcc` toolchain is at least `9.4.0`.
+
+### Steps
+
+1. Clone/download the source code and navigate to the directory
+2. Run `chmod +x script.sh`
+3. Run `./script.sh`
+4. The executable will be placed under the `build/` directory with the name `cbt`
+5. Run `cbt help` to get all available commands
+
+## Roadmap
+
+**Disclaimer**: The following roadmap may be subjected to change depending on various factors like: bandwidth, priority and/or complexity.
+
+- [X] Create a basic workable binary
+- [X] Allow basic `create`, `compile` and `build` functionalities
+- [ ] Bootstrap `cbt` with `cbt` (_Partially achieved_)
+- [ ] Support scaffold for `test`ing (_In Progress_)
+- [ ] Use `project.cfg` as a one-stop configuration file for the entire project workspace management (_In Progress_)
+- [ ] Decouple `g++` and all build configurations from source code (_Requires completion of `project.cfg` parser first_)
+- [ ] Add support for various other C++ compilers
+- [ ] Support scaffold for shared objects (`.so` and `.dll`)
+- [ ] Add support for dependency management
+- [ ] Add support for documentation during scaffold and as a command (maybe via some 3rd party tools like `doxygen`)
