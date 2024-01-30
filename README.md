@@ -73,13 +73,15 @@ help                            - Shows this help message
 
 **Disclaimer**: The following roadmap may be subjected to change depending on various factors like: bandwidth, priority and/or complexity.
 
-- [X] Create a basic workable binary
-- [X] Allow basic `create`, `compile` and `build` functionalities
-- [ ] Bootstrap `cbt` with `cbt` (_Partially achieved_)
-- [ ] Support scaffold for `test`ing (_In Progress_)
-- [ ] Use `project.cfg` as a one-stop configuration file for the entire project workspace management (_In Progress_)
-- [ ] Decouple `g++` and all build configurations from source code (_Requires completion of `project.cfg` parser first_)
-- [ ] Add support for various other C++ compilers
-- [ ] Support scaffold for shared objects (`.so` and `.dll`)
-- [ ] Add support for dependency management
-- [ ] Add support for documentation during scaffold and as a command (maybe via some 3rd party tools like `doxygen`)
+| # | Task | Status | Notes |
+|:-:|------|:------:|-------|
+| 1 | Create a basic workable binary | `✅ Complete` ||
+| 2 | Allow basic `create`, `compile` and `build` functionalities | `✅ Complete` ||
+| 3 | Support scaffold for `test`ing | `⏳ In Progress` ||
+| 4 | Use `project.cfg` as a one-stop configuration file for the entire project workspace management | `⏳ In Progress` |
+| 5 | Decouple `g++` and all build configurations from source code | `💤 TBD` | _Requires completion of `project.cfg` parser first_ |
+| 6 | Add support for various other C++ compilers | `💤 TBD` ||
+| 7 | Support scaffold for shared objects (`.so` and `.dll`) | `💤 TBD` ||
+| 8 | Add support for dependency management | `💤 TBD` ||
+| 9 | Add support for documentation during scaffold and as a command (maybe via some 3rd party tools like `doxygen`) | `💤 TBD` ||
+| 10 | Bootstrap `cbt` with `cbt` | `⛅ Partially achieved` ||
