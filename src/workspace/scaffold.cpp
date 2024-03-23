@@ -40,7 +40,7 @@ namespace workspace::scaffold {
     Discuss rules of engagement here
     )";
 
-    const string ENV_PARSER_HPP = R"(
+    const string CBT_TOOLS_ENV_PARSER_HPP = R"(
     #ifndef CBT_TOOLS_ENV_PARSER
     #define CBT_TOOLS_ENV_PARSER
 
@@ -67,7 +67,7 @@ namespace workspace::scaffold {
     #endif
     )";
 
-    const string ENV_PARSER_CPP = R"(
+    const string CBT_TOOLS_ENV_PARSER_CPP = R"(
     #include "cbt_tools/env_parser.hpp"
 
     #include <filesystem>
@@ -156,6 +156,42 @@ namespace workspace::scaffold {
         }
     }
     )";
+
+    const string CBT_TOOLS_UTILS_HPP = R"(
+    #ifndef CBT_TOOLS_UTILS
+    #define CBT_TOOLS_UTILS
+
+    #include <string>
+    #include <tuple>
+
+    namespace cbt_tools::utils {
+        using std::string;
+
+        std::tuple<string, string> get_key_value_pair_from_line(const string line, const string delimiter);
+    }
+
+    #endif
+    )";
+
+    const string CBT_TOOLS_UTILS_CPP = R"(
+    #include "cbt_tools/utils.hpp"
+
+    #include <string>
+    #include <tuple>
+
+    namespace cbt_tools::utils {
+        using std::string;
+
+        std::tuple<string, string> get_key_value_pair_from_line(const string line, const string delimiter) {
+            const int delimiter_position = line.find(delimiter);
+
+            const string key = line.substr(0, delimiter_position);
+            const string value = line.substr(delimiter_position + 1);
+
+            return std::make_tuple(key, value);
+        }
+    }
+    )";
     
     const string SAMPLE_HPP = R"(
     #ifndef @GUARD
@@ -215,6 +251,8 @@ namespace workspace::scaffold {
     #include <map>
 
     #include "cbt_tools/env_parser.hpp"
+    #include "cbt_tools/utils.hpp"
+
     #include "sample.hpp"
 
     void prepare_env(std::map<std::string, std::string> env) {
@@ -232,12 +270,7 @@ namespace workspace::scaffold {
         std::map<std::string, std::string> env;
 
         while (*envp) {
-            const std::string env_variable = std::string(*envp++);
-            const int position_of_equal_to_symbol = env_variable.find("=");
-
-            const std::string key = env_variable.substr(0, position_of_equal_to_symbol);
-            const std::string value = env_variable.substr(position_of_equal_to_symbol + 1);
-
+            const auto [key, value] = cbt_tools::utils::get_key_value_pair_from_line(std::string(*envp++), std::string("="));
             env[key] = value;
         }
         
@@ -417,9 +450,13 @@ namespace workspace::scaffold {
         } else if (file_name.starts_with("environments/") && file_name.ends_with(".env")) {
             return __remove_raw_literal_indentations(ENV_FILE);
         } else if (file_name.compare("headers/cbt_tools/env_parser.hpp") == 0) {
-            return __remove_raw_literal_indentations(ENV_PARSER_HPP);
+            return __remove_raw_literal_indentations(CBT_TOOLS_ENV_PARSER_HPP);
+        } else if (file_name.compare("headers/cbt_tools/utils.hpp") == 0) {
+            return __remove_raw_literal_indentations(CBT_TOOLS_UTILS_HPP);
         } else if (file_name.compare("src/cbt_tools/env_parser.cpp") == 0) {
-            return __remove_raw_literal_indentations(ENV_PARSER_CPP);
+            return __remove_raw_literal_indentations(CBT_TOOLS_ENV_PARSER_CPP);
+        } else if (file_name.compare("src/cbt_tools/utils.cpp") == 0) {
+            return __remove_raw_literal_indentations(CBT_TOOLS_UTILS_CPP);
         } else if (file_name.ends_with(".hpp")) {
             const string text{ __remove_raw_literal_indentations(SAMPLE_HPP) };
             const auto [stemmed_name, guard_name, namespace_name] = workspace::util::get_qualified_names(file_name);
