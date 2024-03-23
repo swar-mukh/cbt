@@ -76,6 +76,8 @@ namespace workspace::scaffold {
     #include <string>
     #include <variant>
 
+    #include "cbt_tools/utils.hpp"
+
     namespace cbt_tools::env_parser {
         namespace fs = std::filesystem;
 
@@ -120,12 +122,7 @@ namespace workspace::scaffold {
                 string line;
 
                 while (std::getline(env_file, line)) {
-                    const string env_entry = string(line);
-                    const int delimiter = env_entry.find("=");
-
-                    const string key = env_entry.substr(0, delimiter);
-                    const string value = env_entry.substr(delimiter + 1);
-
+                    const auto [key, value] = cbt_tools::utils::get_key_value_pair_from_line(line, string("="));
                     env_template[key] = value;
                 }
             } else {
@@ -142,12 +139,7 @@ namespace workspace::scaffold {
                 string line;
 
                 while (std::getline(env_file, line)) {
-                    const string env_entry = string(line);
-                    const int delimiter = env_entry.find("=");
-
-                    const string key = env_entry.substr(0, delimiter);
-                    const string value = env_entry.substr(delimiter + 1);
-
+                    const auto [key, value] = cbt_tools::utils::get_key_value_pair_from_line(line, string("="));
                     set(key, value);
                 }
             } else {
