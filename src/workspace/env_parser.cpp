@@ -42,10 +42,10 @@ namespace workspace::env_parser {
             }
         } else {
             cerr << "Template environment file 'environments/.env.template' missing!" << endl;
-        }   
+        }
     }
 
-    VARIANT_TYPE get_env(const string key) {
+    ALLOWED_ENV_DATA_TYPES get_env(const string key) {
         const string return_type = env_template[key];
 
         if (!env_values.contains(key)) {

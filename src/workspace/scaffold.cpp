@@ -52,12 +52,12 @@ namespace workspace::scaffold {
         using std::map;
         using std::string;
 
-        using VARIANT_TYPE = std::variant<std::monostate, bool, int, float, string>;
+        using ALLOWED_ENV_DATA_TYPES = std::variant<std::monostate, bool, int, float, string>;
 
         static map<string, string> env_template;
-        static map<string, VARIANT_TYPE> env_values;
+        static map<string, ALLOWED_ENV_DATA_TYPES> env_values;
 
-        VARIANT_TYPE get_env(const string key);
+        ALLOWED_ENV_DATA_TYPES get_env(const string key);
         void set(const string key, const string value);
 
         void read_template();
@@ -101,7 +101,7 @@ namespace workspace::scaffold {
         }
 
         // You would typically not need to touch this function
-        VARIANT_TYPE get_env(const string key) {
+        ALLOWED_ENV_DATA_TYPES get_env(const string key) {
             const string return_type = env_template[key];
 
             if (!env_values.contains(key)) {
