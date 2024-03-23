@@ -40,6 +40,123 @@ namespace workspace::scaffold {
     Discuss rules of engagement here
     )";
 
+    const string ENV_PARSER_HPP = R"(
+    #ifndef CBT_TOOLS_ENV_PARSER
+    #define CBT_TOOLS_ENV_PARSER
+
+    #include <map>
+    #include <string>
+    #include <variant>
+
+    namespace cbt_tools::env_parser {
+        using std::map;
+        using std::string;
+
+        using VARIANT_TYPE = std::variant<std::monostate, bool, int, float, string>;
+
+        static map<string, string> env_template;
+        static map<string, VARIANT_TYPE> env_values;
+
+        VARIANT_TYPE get_env(string key);
+        void set(string key, string value);
+
+        void read_template();
+        void read_env_file(string env);
+    }
+
+    #endif
+    )";
+
+    const string ENV_PARSER_CPP = R"(
+    #include "cbt_tools/env_parser.hpp"
+
+    #include <filesystem>
+    #include <fstream>
+    #include <iostream>
+    #include <string>
+    #include <variant>
+
+    namespace cbt_tools::env_parser {
+        namespace fs = std::filesystem;
+
+        using std::cerr;
+        using std::cout;
+        using std::endl;
+        using std::ifstream;
+        using std::string;
+
+        void set(string key, string value) {
+            // Use the below conditional checks and keep adding the keys
+            // that have been defined in 'environments/.env.template' file
+
+            if (key.compare("a_bool_entry") == 0) {
+                env_values["a_bool_entry"] = value.compare("true") == 0 ? true : false;
+            } else if (key.compare("an_int_entry") == 0) {
+                env_values["an_int_entry"] = std::stoi(value);
+            } else if (key.compare("a_float_entry") == 0) {
+                env_values["a_float_entry"] = std::stof(value);
+            } else if (key.compare("a_string_entry") == 0) {
+                env_values["a_string_entry"] = value;
+            }
+        }
+
+        // You would typically not need to touch this function
+        VARIANT_TYPE get_env(string key) {
+            const string return_type = env_template[key];
+
+            if (!env_values.contains(key)) {
+                return std::monostate();
+            } else {
+                return env_values[key];
+            }
+        }
+        
+        // You would typically not need to touch this function
+        void read_template() {
+            const string file_name { "environments/.env.template" };
+
+            if (fs::exists(file_name)) {
+                ifstream env_file(file_name);
+                string line;
+
+                while (std::getline(env_file, line)) {
+                    const string env_entry = string(line);
+                    const int delimiter = env_entry.find("=");
+
+                    const string key = env_entry.substr(0, delimiter);
+                    const string value = env_entry.substr(delimiter + 1);
+
+                    env_template[key] = value;
+                }
+            } else {
+                cerr << "Template environment file 'environments/.env.template' missing!" << endl;
+            } 
+        }
+
+        // You would typically not need to touch this function
+        void read_env_file(string env) {
+            const string env_file_name{ "environments/" + env + ".env" };
+
+            if (fs::exists(env_file_name)) {
+                ifstream env_file(env_file_name);
+                string line;
+
+                while (std::getline(env_file, line)) {
+                    const string env_entry = string(line);
+                    const int delimiter = env_entry.find("=");
+
+                    const string key = env_entry.substr(0, delimiter);
+                    const string value = env_entry.substr(delimiter + 1);
+
+                    set(key, value);
+                }
+            } else {
+                cerr << "No such environment '" << env << "'!" << endl;
+            }
+        }
+    }
+    )";
+    
     const string SAMPLE_HPP = R"(
     #ifndef @GUARD
     #define @GUARD
@@ -97,7 +214,18 @@ namespace workspace::scaffold {
     #include <iostream>
     #include <map>
 
+    #include "cbt_tools/env_parser.hpp"
     #include "sample.hpp"
+
+    void prepare_env(std::map<std::string, std::string> env) {
+        cbt_tools::env_parser::read_template();
+
+        if (env["env"].length() != 0) {
+            cbt_tools::env_parser::read_env_file(env["env"]);
+        } else {
+            cbt_tools::env_parser::read_env_file("local");
+        }
+    }
 
     int main(const int argc, char *argv[], char *envp[]) {
         std::vector<std::string> args(argv, argv + argc);
@@ -113,8 +241,18 @@ namespace workspace::scaffold {
             env[key] = value;
         }
         
+        prepare_env(env);
+
         std::cout << "args[0]: " << args[0] << std::endl;
         std::cout << "env[\"HOME\"]: " << env["HOME"] << std::endl;
+
+        const std::string sample_env_key { "a_float_entry" };
+        auto env_value = cbt_tools::env_parser::get_env(sample_env_key);
+
+        if (std::holds_alternative<float>(env_value)) {
+            const float value = std::get<float>(env_value);
+            std::cout << "Env. value of '" << sample_env_key << "' is: " << value << std::endl;
+        }
 
         std::cout << "Sum of 2 and 3 is: " << sample::sum(2, 3) << std::endl;
 
@@ -160,6 +298,20 @@ namespace workspace::scaffold {
     This is a sample license file.
 
     Add actual content in this file.
+    )";
+
+    const string ENV_TEMPLATE = R"(
+    a_bool_entry=bool
+    an_int_entry=int
+    a_float_entry=float
+    a_string_entry=string
+    )";
+
+    const string ENV_FILE = R"(
+    a_bool_entry=true
+    an_int_entry=123
+    a_float_entry=4.56
+    a_string_entry=Hello there!
     )";
 
     const string ROADMAP_MD = R"(
@@ -260,6 +412,14 @@ namespace workspace::scaffold {
             return __remove_raw_literal_indentations(LICENSE_TXT);
         } else if (file_name.compare("docs/Roadmap.md") == 0) {
             return __remove_raw_literal_indentations(ROADMAP_MD);
+        } else if (file_name.compare("environments/.env.template") == 0) {
+            return __remove_raw_literal_indentations(ENV_TEMPLATE);
+        } else if (file_name.starts_with("environments/") && file_name.ends_with(".env")) {
+            return __remove_raw_literal_indentations(ENV_FILE);
+        } else if (file_name.compare("headers/cbt_tools/env_parser.hpp") == 0) {
+            return __remove_raw_literal_indentations(ENV_PARSER_HPP);
+        } else if (file_name.compare("src/cbt_tools/env_parser.cpp") == 0) {
+            return __remove_raw_literal_indentations(ENV_PARSER_CPP);
         } else if (file_name.ends_with(".hpp")) {
             const string text{ __remove_raw_literal_indentations(SAMPLE_HPP) };
             const auto [stemmed_name, guard_name, namespace_name] = workspace::util::get_qualified_names(file_name);
