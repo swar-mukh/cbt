@@ -95,4 +95,13 @@ namespace workspace::util {
             string("::")
         );
     }
+
+    std::tuple<string, string> get_key_value_pair_from_line(const string line, const string delimiter) {
+        const int delimiter_position = line.find(delimiter);
+
+        const string key = line.substr(0, delimiter_position);
+        const string value = line.substr(delimiter_position + 1);
+
+        return std::make_tuple(key, value);
+    }
 }
