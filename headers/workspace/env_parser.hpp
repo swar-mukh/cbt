@@ -14,11 +14,11 @@ namespace workspace::env_parser {
     static map<string, string> env_template;
     static map<string, VARIANT_TYPE> env_values;
 
-    VARIANT_TYPE get_env(string key);
-    void set(string key, string value);
+    VARIANT_TYPE get_env(const string key);
+    void set(const string key, const string value);
 
     void read_template();
-    void read_env_file(string env);
+    void read_env_file(const string env);
 }
 
 #endif

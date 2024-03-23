@@ -57,11 +57,11 @@ namespace workspace::scaffold {
         static map<string, string> env_template;
         static map<string, VARIANT_TYPE> env_values;
 
-        VARIANT_TYPE get_env(string key);
-        void set(string key, string value);
+        VARIANT_TYPE get_env(const string key);
+        void set(const string key, const string value);
 
         void read_template();
-        void read_env_file(string env);
+        void read_env_file(const string env);
     }
 
     #endif
@@ -85,7 +85,7 @@ namespace workspace::scaffold {
         using std::ifstream;
         using std::string;
 
-        void set(string key, string value) {
+        void set(const string key, const string value) {
             // Use the below conditional checks and keep adding the keys
             // that have been defined in 'environments/.env.template' file
 
@@ -101,7 +101,7 @@ namespace workspace::scaffold {
         }
 
         // You would typically not need to touch this function
-        VARIANT_TYPE get_env(string key) {
+        VARIANT_TYPE get_env(const string key) {
             const string return_type = env_template[key];
 
             if (!env_values.contains(key)) {
@@ -134,7 +134,7 @@ namespace workspace::scaffold {
         }
 
         // You would typically not need to touch this function
-        void read_env_file(string env) {
+        void read_env_file(const string env) {
             const string env_file_name{ "environments/" + env + ".env" };
 
             if (fs::exists(env_file_name)) {

@@ -15,7 +15,7 @@ namespace workspace::env_parser {
     using std::ifstream;
     using std::string;
 
-    void set(string key, string value) {
+    void set(const string key, const string value) {
         if (key.compare("a_bool_entry") == 0) {
             env_values["a_bool_entry"] = value.compare("true") == 0 ? true : false;
         } else if (key.compare("an_int_entry") == 0) {
@@ -48,7 +48,7 @@ namespace workspace::env_parser {
         }   
     }
 
-    VARIANT_TYPE get_env(string key) {
+    VARIANT_TYPE get_env(const string key) {
         const string return_type = env_template[key];
 
         if (!env_values.contains(key)) {
@@ -58,7 +58,7 @@ namespace workspace::env_parser {
         }
     }
 
-    void read_env_file(string env) {
+    void read_env_file(const string env) {
         const string env_file_name{ "environments/" + env + ".env" };
 
         if (fs::exists(env_file_name)) {
