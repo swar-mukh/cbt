@@ -24,6 +24,7 @@ namespace workspace::scaffold {
     const string GITIGNORE = R"(
     build
     test
+    environments/*.env
     )";
 
     const string README_MD = R"(
