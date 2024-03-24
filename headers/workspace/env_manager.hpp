@@ -19,6 +19,8 @@ namespace workspace::env_manager {
 
     void read_template();
     void read_env_file(const string env);
+
+    void prepare_env(map<string, string> env);
 }
 
 #endif

@@ -3,6 +3,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <map>
 #include <string>
 #include <variant>
 
@@ -77,6 +78,16 @@ namespace workspace::env_manager {
             }
         } else {
             cerr << "No such environment '" << env << "'!" << endl;
+        }
+    }
+
+    void prepare_env(std::map<string, string> env) {
+        read_template();
+
+        if (env["env"].length() != 0) {
+            read_env_file(env["env"]);
+        } else {
+            read_env_file("local");
         }
     }
 }
