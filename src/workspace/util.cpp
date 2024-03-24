@@ -80,7 +80,7 @@ namespace workspace::util {
         );
     }
 
-    string convert_stemmed_name_to_guard_name(string stemmed_name) {
+    string convert_stemmed_name_to_guard_name(const string stemmed_name) {
         return std::regex_replace(
             change_case(stemmed_name, TextCase::UPPER_CASE),
             std::regex("/", std::regex_constants::basic),
@@ -88,7 +88,7 @@ namespace workspace::util {
         );
     }
 
-    string convert_stemmed_name_to_namespace_name(string stemmed_name) {
+    string convert_stemmed_name_to_namespace_name(const string stemmed_name) {
         return std::regex_replace(
             change_case(stemmed_name, TextCase::LOWER_CASE),
             std::regex("/", std::regex_constants::basic),
