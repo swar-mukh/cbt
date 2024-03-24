@@ -29,9 +29,22 @@ namespace commands {
             workspace::scaffold::create_directory(project_name, "docs");
             workspace::scaffold::create_file(project_name, "docs/LICENSE.txt");
             workspace::scaffold::create_file(project_name, "docs/Roadmap.md");
+            workspace::scaffold::create_directory(project_name, "environments");
+            workspace::scaffold::create_file(project_name, "environments/.env.template");
+            workspace::scaffold::create_file(project_name, "environments/integration.env");
+            workspace::scaffold::create_file(project_name, "environments/local.env");
+            workspace::scaffold::create_file(project_name, "environments/production.env");
+            workspace::scaffold::create_file(project_name, "environments/staging.env");
+            workspace::scaffold::create_file(project_name, "environments/test.env");
             workspace::scaffold::create_directory(project_name, "headers");
+            workspace::scaffold::create_directory(project_name, "headers/cbt_tools");
+            workspace::scaffold::create_file(project_name, "headers/cbt_tools/env_manager.hpp");
+            workspace::scaffold::create_file(project_name, "headers/cbt_tools/utils.hpp");
             workspace::scaffold::create_file(project_name, "headers/sample.hpp");
             workspace::scaffold::create_directory(project_name, "src");
+            workspace::scaffold::create_directory(project_name, "src/cbt_tools");
+            workspace::scaffold::create_file(project_name, "src/cbt_tools/env_manager.cpp");
+            workspace::scaffold::create_file(project_name, "src/cbt_tools/utils.cpp");
             workspace::scaffold::create_file(project_name, "src/main.cpp");
             workspace::scaffold::create_file(project_name, "src/sample.cpp");
             workspace::scaffold::create_file(project_name, "README.md");
@@ -113,7 +126,7 @@ namespace commands {
                 if (stemmed_cpp_file.compare("main") != 0 && !fs::exists("headers/" + stemmed_cpp_file + ".hpp")) {
                     cout << "SKIP " << ("headers/" + stemmed_cpp_file + ".hpp") << " (No corresponding file found!)" << endl;
                 } else {
-                    const int result = system((string("g++ -std=c++17 -Wall -Wextra -pedantic ") + gpp_include_paths + " -c " + cpp_file + " -o build/binaries/" + stemmed_cpp_file + ".o").c_str());
+                    const int result = system((string("g++ -std=c++2a -Wall -Wextra -pedantic ") + gpp_include_paths + " -c " + cpp_file + " -o build/binaries/" + stemmed_cpp_file + ".o").c_str());
 
                     cout << (result == 0 ? string("✔") : string("✘")) << " COMPILE " << cpp_file << " -> build/binaries/" << stemmed_cpp_file << ".o" <<  endl;
                 }
@@ -174,7 +187,7 @@ namespace commands {
         const string BINARY_NAME = "app";
         #endif
 
-        const int result = system((string("g++ -std=c++17 -Wall -Wextra -pedantic -O3 -Os -s ") + binaries + "-o build/" + BINARY_NAME).c_str());
+        const int result = system((string("g++ -std=c++2a -Wall -Wextra -pedantic -O3 -Os -s ") + binaries + "-o build/" + BINARY_NAME).c_str());
 
         cout << (result == 0 ? string("✔") : string("✘")) << (" BUILD build/" + BINARY_NAME) << endl;
     }
@@ -196,7 +209,7 @@ namespace commands {
             << "cbt: C++ Build Tool" << endl
             << endl
             << "Author        - Swarnava Mukherjee" << endl
-            << "Release       - 2023.11.24" << endl
+            << "Release       - 2024.03.24" << endl
             << endl
             << "C++ Standard  - " << __cplusplus << endl
             << "GCC Version   - " << GCC_VERSION << endl
