@@ -1,4 +1,4 @@
-#include "workspace/env_parser.hpp"
+#include "workspace/env_manager.hpp"
 
 #include <filesystem>
 #include <fstream>
@@ -8,7 +8,7 @@
 
 #include "workspace/util.hpp"
 
-namespace workspace::env_parser {
+namespace workspace::env_manager {
     namespace fs = std::filesystem;
 
     using std::cerr;

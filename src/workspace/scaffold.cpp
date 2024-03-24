@@ -40,15 +40,15 @@ namespace workspace::scaffold {
     Discuss rules of engagement here
     )";
 
-    const string CBT_TOOLS_ENV_PARSER_HPP = R"(
-    #ifndef CBT_TOOLS_ENV_PARSER
-    #define CBT_TOOLS_ENV_PARSER
+    const string CBT_TOOLS_ENV_MANAGER_HPP = R"(
+    #ifndef CBT_TOOLS_ENV_MANAGER
+    #define CBT_TOOLS_ENV_MANAGER
 
     #include <map>
     #include <string>
     #include <variant>
 
-    namespace cbt_tools::env_parser {
+    namespace cbt_tools::env_manager {
         using std::map;
         using std::string;
 
@@ -62,23 +62,26 @@ namespace workspace::scaffold {
 
         void read_template();
         void read_env_file(const string env);
+
+        void prepare_env(map<string, string> env);
     }
 
     #endif
     )";
 
-    const string CBT_TOOLS_ENV_PARSER_CPP = R"(
-    #include "cbt_tools/env_parser.hpp"
+    const string CBT_TOOLS_ENV_MANAGER_CPP = R"(
+    #include "cbt_tools/env_manager.hpp"
 
     #include <filesystem>
     #include <fstream>
     #include <iostream>
+    #include <map>
     #include <string>
     #include <variant>
 
     #include "cbt_tools/utils.hpp"
 
-    namespace cbt_tools::env_parser {
+    namespace cbt_tools::env_manager {
         namespace fs = std::filesystem;
 
         using std::cerr;
@@ -144,6 +147,17 @@ namespace workspace::scaffold {
                 }
             } else {
                 cerr << "No such environment '" << env << "'!" << endl;
+            }
+        }
+
+        // You would typically not need to touch this function
+        void prepare_env(std::map<string, string> env) {
+            read_template();
+
+            if (env["env"].length() != 0) {
+                read_env_file(env["env"]);
+            } else {
+                read_env_file("local");
             }
         }
     }
@@ -242,20 +256,10 @@ namespace workspace::scaffold {
     #include <iostream>
     #include <map>
 
-    #include "cbt_tools/env_parser.hpp"
+    #include "cbt_tools/env_manager.hpp"
     #include "cbt_tools/utils.hpp"
 
     #include "sample.hpp"
-
-    void prepare_env(std::map<std::string, std::string> env) {
-        cbt_tools::env_parser::read_template();
-
-        if (env["env"].length() != 0) {
-            cbt_tools::env_parser::read_env_file(env["env"]);
-        } else {
-            cbt_tools::env_parser::read_env_file("local");
-        }
-    }
 
     int main(const int argc, char *argv[], char *envp[]) {
         std::vector<std::string> args(argv, argv + argc);
@@ -266,13 +270,13 @@ namespace workspace::scaffold {
             env[key] = value;
         }
         
-        prepare_env(env);
+        cbt_tools::env_manager::prepare_env(env);
 
         std::cout << "args[0]: " << args[0] << std::endl;
         std::cout << "env[\"HOME\"]: " << env["HOME"] << std::endl;
 
         const std::string sample_env_key { "a_float_entry" };
-        auto env_value = cbt_tools::env_parser::get_env(sample_env_key);
+        auto env_value = cbt_tools::env_manager::get_env(sample_env_key);
 
         if (std::holds_alternative<float>(env_value)) {
             const float value = std::get<float>(env_value);
@@ -441,12 +445,12 @@ namespace workspace::scaffold {
             return __remove_raw_literal_indentations(ENV_TEMPLATE);
         } else if (file_name.starts_with("environments/") && file_name.ends_with(".env")) {
             return __remove_raw_literal_indentations(ENV_FILE);
-        } else if (file_name.compare("headers/cbt_tools/env_parser.hpp") == 0) {
-            return __remove_raw_literal_indentations(CBT_TOOLS_ENV_PARSER_HPP);
+        } else if (file_name.compare("headers/cbt_tools/env_manager.hpp") == 0) {
+            return __remove_raw_literal_indentations(CBT_TOOLS_ENV_MANAGER_HPP);
         } else if (file_name.compare("headers/cbt_tools/utils.hpp") == 0) {
             return __remove_raw_literal_indentations(CBT_TOOLS_UTILS_HPP);
-        } else if (file_name.compare("src/cbt_tools/env_parser.cpp") == 0) {
-            return __remove_raw_literal_indentations(CBT_TOOLS_ENV_PARSER_CPP);
+        } else if (file_name.compare("src/cbt_tools/env_manager.cpp") == 0) {
+            return __remove_raw_literal_indentations(CBT_TOOLS_ENV_MANAGER_CPP);
         } else if (file_name.compare("src/cbt_tools/utils.cpp") == 0) {
             return __remove_raw_literal_indentations(CBT_TOOLS_UTILS_CPP);
         } else if (file_name.ends_with(".hpp")) {

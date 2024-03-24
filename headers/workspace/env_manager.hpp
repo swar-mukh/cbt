@@ -1,11 +1,11 @@
-#ifndef WORKSPACE_ENV_PARSER
-#define WORKSPACE_ENV_PARSER
+#ifndef WORKSPACE_ENV_MANAGER
+#define WORKSPACE_ENV_MANAGER
 
 #include <map>
 #include <string>
 #include <variant>
 
-namespace workspace::env_parser {
+namespace workspace::env_manager {
     using std::map;
     using std::string;
 

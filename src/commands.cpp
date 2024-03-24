@@ -38,12 +38,12 @@ namespace commands {
             workspace::scaffold::create_file(project_name, "environments/test.env");
             workspace::scaffold::create_directory(project_name, "headers");
             workspace::scaffold::create_directory(project_name, "headers/cbt_tools");
-            workspace::scaffold::create_file(project_name, "headers/cbt_tools/env_parser.hpp");
+            workspace::scaffold::create_file(project_name, "headers/cbt_tools/env_manager.hpp");
             workspace::scaffold::create_file(project_name, "headers/cbt_tools/utils.hpp");
             workspace::scaffold::create_file(project_name, "headers/sample.hpp");
             workspace::scaffold::create_directory(project_name, "src");
             workspace::scaffold::create_directory(project_name, "src/cbt_tools");
-            workspace::scaffold::create_file(project_name, "src/cbt_tools/env_parser.cpp");
+            workspace::scaffold::create_file(project_name, "src/cbt_tools/env_manager.cpp");
             workspace::scaffold::create_file(project_name, "src/cbt_tools/utils.cpp");
             workspace::scaffold::create_file(project_name, "src/main.cpp");
             workspace::scaffold::create_file(project_name, "src/sample.cpp");
