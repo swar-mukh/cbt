@@ -64,7 +64,16 @@ namespace workspace::env_manager {
 
             while (std::getline(env_file, line)) {
                 const auto [key, value] = workspace::util::get_key_value_pair_from_line(line, string("="));
-                set(key, value);
+
+                if (!env_template.contains(key)) {
+                    cerr << endl
+                        << std::right << std::setw(8) << "ERROR " << "Key '" << key << "' absent in 'environments/.env.template'!" << endl
+                        << endl
+                        << "Not reading '" << key << "' into memory. Either add it to 'environments/.env.template' with appropriate data-type or remove it from '" << env_file_name << "' altogether." << endl
+                        << endl;
+                } else {
+                    set(key, value);
+                }
             }
         } else {
             cerr << "No such environment '" << env << "'!" << endl;
