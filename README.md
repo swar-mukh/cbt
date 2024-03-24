@@ -86,3 +86,4 @@ help                            - Shows this help message
 | 9 | Add support for documentation during scaffold and as a command (maybe via some 3rd party tools like `doxygen`) | `💤 TBD` ||
 | 10 | Bootstrap `cbt` with `cbt` | `⛅ Partially achieved` ||
 | 11 | Add native support for reading environment values from `env` file(s) | `✅ Complete` ||
+| 12 | Optimise compilation and building by inspecting dependency graph | `💤 TBD` ||
