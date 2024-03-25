@@ -6,21 +6,12 @@
 #include <variant>
 
 namespace workspace::env_manager {
-    using std::map;
     using std::string;
 
-    using ALLOWED_ENV_DATA_TYPES = std::variant<std::monostate, bool, int, float, string>;
-
-    static map<string, string> env_template;
-    static map<string, ALLOWED_ENV_DATA_TYPES> env_values;
+    using ALLOWED_ENV_DATA_TYPES = std::variant<bool, int, float, string>;
 
     ALLOWED_ENV_DATA_TYPES get_env(const string key);
-    void set(const string key, const string value);
-
-    void read_template();
-    void read_env_file(const string env);
-
-    void prepare_env(map<string, string> env);
+    void prepare_env(std::map<string, string> env);
 }
 
 #endif

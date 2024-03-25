@@ -2,6 +2,7 @@
 
 #include <cstdlib>
 #include <filesystem>
+#include <functional>
 #include <fstream>
 #include <iostream>
 #include <map>
@@ -19,52 +20,62 @@ namespace workspace::env_manager {
     using std::endl;
     using std::ifstream;
     using std::string;
-    
-    template<typename T>
-    T __parse_value_for_key(const string key, const string value) {
-        const string name = typeid(T).name();
-        string data_type{ "" };
 
-        if (name.compare("b") == 0 || name.compare("bool") == 0) {
-            data_type = "bool";
-        } else if (name.compare("i") == 0 || name.compare("int") == 0) {
-            data_type = "int";
-        } else if (name.compare("f") == 0 || name.compare("float") == 0) {
-            data_type = "float";
-        } else {
-            data_type = "string";
-        }
+    const string DELIMITER = string("=");
 
-        try {
-            if (data_type.compare("bool") == 0) {
-                if (value.compare("true") == 0 || value.compare("false") == 0) {
-                    return value.compare("true") == 0 ? true : false;
-                } else {
-                    throw std::invalid_argument("");
-                }
+    std::map<string, string> env_template;
+    std::map<string, ALLOWED_ENV_DATA_TYPES> env_values;
+
+    std::map<string, std::function<ALLOWED_ENV_DATA_TYPES(const string, const string)>> PARSERS{
+        { "bool", [](const string key, const string value) {
+            if (value.compare("true") == 0 || value.compare("false") == 0) {
+                return value.compare("true") == 0 ? true : false;
             } else {
-                return data_type.compare("int") == 0 ? std::stoi(value) : std::stof(value);
+                throw std::invalid_argument("Could not parse value for '" + key + "' to 'bool' type. Expected either 'true' or 'false'.");
             }
-        } catch (const std::invalid_argument &e) {
-            throw std::invalid_argument("Could not parse value for '" + key + "' to '" + data_type + "' type.");
-        } catch (const std::out_of_range &e) {
-            throw std::invalid_argument("Value for '" + key + "' falls out of range of '" + data_type + "' type.");
-        }
-    }
+        }},
+        { "int", [](const string key, const string value) {
+            try {
+                return std::stoi(value);
+            } catch (const std::invalid_argument &e) {
+                throw std::invalid_argument("Could not parse value for '" + key + "' to 'int' type.");
+            } catch (const std::out_of_range &e) {
+                throw std::invalid_argument("Value for '" + key + "' falls out of range of 'int' type.");
+            }
+        }},
+        { "float", [](const string key, const string value) {
+            try {
+                return std::stof(value);
+            } catch (const std::invalid_argument &e) {
+                throw std::invalid_argument("Could not parse value for '" + key + "' to 'float' type.");
+            } catch (const std::out_of_range &e) {
+                throw std::invalid_argument("Value for '" + key + "' falls out of range of 'float' type.");
+            }
+        }},
+        { "string", []([[maybe_unused]] const string _, const string value) { return value; } },
+    };
 
-    void set(const string key, const string value) {
+    void __set(const string key, const string value) {
         if (key.compare("a_bool_entry") == 0) {
-            env_values["a_bool_entry"] = __parse_value_for_key<bool>(key, value);
+            env_values["a_bool_entry"] = PARSERS["bool"](key, value);
         } else if (key.compare("an_int_entry") == 0) {
-            env_values["an_int_entry"] = __parse_value_for_key<int>(key, value);
+            env_values["an_int_entry"] = PARSERS["int"](key, value);
         } else if (key.compare("a_float_entry") == 0) {
-            env_values["a_float_entry"] = __parse_value_for_key<float>(key, value);
+            env_values["a_float_entry"] = PARSERS["float"](key, value);
         } else if (key.compare("a_string_entry") == 0) {
-            env_values["a_string_entry"] = value;
+            env_values["a_string_entry"] = PARSERS["string"](key, value);
         }
     }
 
-    void read_template() {
+    ALLOWED_ENV_DATA_TYPES get_env(const string key) {
+        if (env_values.contains(key)) {
+            return env_values[key];
+        } else {
+            throw std::invalid_argument("Trying to access invalid key '" + key + "'");
+        }
+    }
+    
+    void __read_template_file() {
         const string template_file_name{ "environments/.env.template" };
 
         if (fs::exists(template_file_name)) {
@@ -74,12 +85,12 @@ namespace workspace::env_manager {
             while (std::getline(env_file, line)) {
                 std::erase(line, '\r');
 
-                const auto [key, value] = workspace::util::get_key_value_pair_from_line(line, string("="));
+                const auto [key, value] = workspace::util::get_key_value_pair_from_line(line, DELIMITER);
 
-                if (value.compare("bool") != 0 && value.compare("int") != 0 && value.compare("float") != 0 && value.compare("string") != 0) {
-                    throw std::domain_error("Unsupported data type '" + value + "' for key '" + key + "'");
-                } else {
+                if (PARSERS.contains(value)) {
                     env_template[key] = value;
+                } else {
+                    throw std::domain_error("Unsupported data type '" + value + "' for key '" + key + "'");
                 }
             }
         } else {
@@ -87,47 +98,33 @@ namespace workspace::env_manager {
         }
     }
 
-    ALLOWED_ENV_DATA_TYPES get_env(const string key) {
-        const string return_type = env_template[key];
-
-        if (!env_values.contains(key)) {
-            return std::monostate();
-        } else {
-            return env_values[key];
-        }
-    }
-
-    void read_env_file(const string env) {
+    void __read_env_file(const string env) {
         const string env_file_name{ "environments/" + env + ".env" };
 
-        if (fs::exists(env_file_name)) {
-            ifstream env_file(env_file_name);
-            string line;
+        ifstream env_file(env_file_name);
+        string line;
 
-            while (std::getline(env_file, line)) {
-                std::erase(line, '\r');
+        while (std::getline(env_file, line)) {
+            std::erase(line, '\r');
 
-                const auto [key, value] = workspace::util::get_key_value_pair_from_line(line, string("="));
+            const auto [key, value] = workspace::util::get_key_value_pair_from_line(line, DELIMITER);
 
-                if (!env_template.contains(key)) {
-                    throw std::domain_error("Key '" + key + "' absent in 'environments/.env.template'");
-                } else {
-                    set(key, value);
-                }
+            if (!env_template.contains(key)) {
+                throw std::domain_error("Key '" + key + "' absent in 'environments/.env.template'");
+            } else {
+                __set(key, value);
             }
-        } else {
-            cerr << "No such environment '" << env << "'!" << endl;
         }
     }
 
     void prepare_env(std::map<string, string> env) {
         try {
-            read_template();
+            __read_template_file();
 
             if (env["env"].length() != 0) {
-                read_env_file(env["env"]);
+                __read_env_file(env["env"]);
             } else {
-                read_env_file("local");
+                __read_env_file("local");
             }
         } catch (const std::exception &e) {
             cerr << endl << "Exception: " << e.what() << endl << endl;
