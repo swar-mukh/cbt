@@ -220,7 +220,14 @@ namespace commands {
         cout
             << "Usage:" << endl
             << endl
-            << "cbt <options> [items]" << endl
+            << "[env=<an_env_file>] cbt <options> [file_name]" << endl
+            << endl
+            << "Note:" << endl
+            << endl
+            << "1. Environment files are located under the `environments/` directory" << endl
+            << "2. The '.env.template' file must be provided with all the environment values along with the necessary types" << endl
+            << "3. `env` entry defaults to 'local.env' if no `env` entry is provided" << endl
+            << "4. Specify the `env` file to be picked up without the '.env' extension, e.g. \"env=production\"" << endl
             << endl
             << "Options:" << endl
             << endl

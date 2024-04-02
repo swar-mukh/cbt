@@ -27,6 +27,7 @@ The reason why proliferation of JavaScript has been so prominent is due to `npm`
 - Simple commands to build and test the project
 - Unlike an `npm` project, ensure that all projects created with `cbt` strictly have the same folder structure
 - Automatically create proper scaffold upon invocation of `cbt create-file <file_name>` (descriptions given below), and thereby reduce cognitive load
+- First-class (and **type-safe**) support for `env` file(s)
 
 ## Usage
 
@@ -35,7 +36,14 @@ $ cbt help
 
 Usage:
 
-cbt <options> [file_name]
+[env=<an_env_file>] cbt <options> [file_name]
+
+Note:
+
+1. Environment files are located under the `environments/` directory
+2. The '.env.template' file must be provided with all the environment values along with the necessary types
+3. `env` entry defaults to 'local.env' if no `env` entry is provided
+4. Specify the `env` file to be picked up without the '.env' extension, e.g. "env=production"
 
 Options:
 
