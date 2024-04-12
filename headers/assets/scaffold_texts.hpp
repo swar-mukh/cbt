@@ -70,7 +70,7 @@ namespace assets::scaffold_texts {
         using std::ifstream;
         using std::string;
 
-        const string DELIMITER = string("=");
+        const string DELIMITER{ "=" };
 
         std::map<string, string> env_template;
         std::map<string, ALLOWED_ENV_DATA_TYPES> env_values;
