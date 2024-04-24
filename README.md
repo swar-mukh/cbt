@@ -72,10 +72,14 @@ help                            - Shows this help message
 ### Steps
 
 1. Clone/download the source code and navigate to the directory
-2. Run `chmod +x script.sh`
-3. Run `./script.sh`
-4. The executable will be placed under the `build/` directory with the name `cbt`
-5. Run `cbt help` to get all available commands
+2. Run the following:
+  ```sh
+  $ mkdir -p build/binaries/workspace
+  $ chmod +x script.sh
+  $ ./script.sh
+  ```
+3. The executable will be placed under the `build/` directory with the name `cbt`
+4. Run `./build/cbt help` to get all available commands
 
 ## Roadmap
 
@@ -87,11 +91,11 @@ help                            - Shows this help message
 | 2 | Allow basic `create`, `compile` and `build` functionalities | `✅ Complete` ||
 | 3 | Support scaffold for `test`ing | `⏳ In Progress` ||
 | 4 | Use `project.cfg` as a one-stop configuration file for the entire project workspace management | `⏳ In Progress` |
-| 5 | Decouple `g++` and all build configurations from source code | `💤 TBD` | _Requires completion of `project.cfg` parser first_ |
-| 6 | Add support for various other C++ compilers | `💤 TBD` ||
+| 5 | Decouple `g++` and all build configurations from source code | `💤 TBD` | _<ul><li>Requires completion of `project.cfg` parser first.</li><li>Need to add other strict and sane compiler flags.</li></ul>_ |
+| 6 | Add support for various other C++ compilers | `💤 TBD` | _Requires a slight forward thinking mindset w.r.t. point 8 below_ |
 | 7 | Support scaffold for shared objects (`.so` and `.dll`) | `💤 TBD` ||
-| 8 | Add support for dependency management | `💤 TBD` ||
+| 8 | Add support for dependency management | `💤 TBD` | _<ul><li>How to handle dependencies developed with another compiler implementation than current project?</li><li>Scaffold should support generating library code along with executable code during project creation.</li></ul>_ |
 | 9 | Add support for documentation during scaffold and as a command (maybe via some 3rd party tools like `doxygen`) | `💤 TBD` ||
 | 10 | Bootstrap `cbt` with `cbt` | `⛅ Partially achieved` ||
-| 11 | Add native support for reading environment values from `env` file(s) | `✅ Complete` ||
-| 12 | Optimise compilation and building by inspecting dependency graph | `💤 TBD` ||
+| 11 | Add native support for reading environment values from `env` file(s) | `✅ Complete` | _Need to update the documentation regarding the method of invocation for the application instead of `cbt`_ |
+| 12 | Optimise compilation and building by inspecting dependency graph | `💤 TBD` | _<ul><li>Should we go all in with C++ modules instead?</li><li>How to mix-n-match traditional HPP/CPP files with module files in the same project?</li></ul>_ |
