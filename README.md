@@ -99,3 +99,4 @@ help                            - Shows this help message
 | 10 | Bootstrap `cbt` with `cbt` | `⛅ Partially achieved` ||
 | 11 | Add native support for reading environment values from `env` file(s) | `✅ Complete` | _Need to update the documentation regarding the method of invocation for the application instead of `cbt`_ |
 | 12 | Optimise compilation and building by inspecting dependency graph | `💤 TBD` | _<ul><li>Should we go all in with C++ modules instead?</li><li>How to mix-n-match traditional HPP/CPP files with module files in the same project?</li></ul>_ |
+| 13 | Support scaffold for daemons (*nix) and services (Windows)  | `💤 TBD` ||
