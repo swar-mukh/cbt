@@ -97,8 +97,7 @@ namespace commands {
         if (!fs::exists("build/")) {
             show_newline_separator = true;
 
-            workspace::scaffold::create_directory(string("."), string("build"));
-            workspace::scaffold::create_directory(string("."), string("build/binaries/"));
+            workspace::scaffold::create_directory(string("."), string("build/binaries/"), true);
         }
 
         string gpp_include_paths{"-Iheaders"};
@@ -115,8 +114,7 @@ namespace commands {
                 const string directory_under_check = string("build/binaries/" + directory.substr(literal_length_of_headers));
 
                 if (!fs::exists(directory_under_check)) {
-                    show_newline_separator = true;
-                    workspace::scaffold::create_directory(string("."), directory_under_check);
+                    workspace::scaffold::create_directory(string("."), directory_under_check, false, false);
                 }
             }
         }
