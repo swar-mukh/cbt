@@ -60,8 +60,6 @@ namespace workspace::util {
 
     std::tuple<string, string, string> get_qualified_names(const string full_file_path) {
         string stemmed_name{""};
-        string guard_name{""};
-        string namespace_name{""};
 
         const int literal_length_of_headers = string("headers/").length();
         const int literal_length_of_src = string("src/").length();
