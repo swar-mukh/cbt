@@ -28,6 +28,7 @@ The reason why proliferation of JavaScript has been so prominent is due to `npm`
 - Unlike an `npm` project, ensure that all projects created with `cbt` strictly have the same folder structure
 - Automatically create proper scaffold upon invocation of `cbt create-file <file_name>` (descriptions given below), and thereby reduce cognitive load
 - First-class (and **type-safe**) support for `env` file(s)
+- Unobtrusive and transparent `cbt_tools` offered to bring quality-of-life improvements as well as enable flexible customisation(s) as per project requirements
 
 ## Usage
 
@@ -47,15 +48,17 @@ Note:
 
 Options:
 
-create-project <project-name>   - Create a new project
+create-project <project-name>   - Scaffold a new project
 
-create-file <file_name>         - Generate header and respective C++ files under 'headers/' and 'src/' directories
+create-file <file_name>         - Generate header and respective C++ files under 'headers/', 'src/' and 'test/' directories
 create-file <path/to/file_name> - Same as above, but will create necessary sub-directories if required
 
-compile-project                 - Compile all files and generate respective binaries under 'build/binaries/<respective-paths>'
+compile-project                 - Compile all files and generate respective binaries under 'build/binaries/'
 clear-build                     - Delete all object files under 'build/' directory
 
 build-project                   - Perform linking and generate final executable under 'build/' (requires project compilation first)
+
+run-unit-tests                  - Run all test cases under 'tests/unit_tests/' directory
 
 info                            - Show information regarding cbt
 help                            - Shows this help message
@@ -89,7 +92,7 @@ help                            - Shows this help message
 |:-:|------|:------:|-------|
 | 1 | Create a basic workable binary | `✅ Complete` ||
 | 2 | Allow basic `create`, `compile` and `build` functionalities | `✅ Complete` ||
-| 3 | Support scaffold for `test`ing | `⏳ In Progress` ||
+| 3 | Support scaffold for `test`ing | `⛅ Partially achieved` | _Only unit tests supported currently_ |
 | 4 | Use `project.cfg` as a one-stop configuration file for the entire project workspace management | `⏳ In Progress` |
 | 5 | Decouple `g++` and all build configurations from source code | `💤 TBD` | _<ul><li>Requires completion of `project.cfg` parser first.</li><li>Need to add other strict and sane compiler flags.</li></ul>_ |
 | 6 | Add support for various other C++ compilers | `💤 TBD` | _Requires a slight forward thinking mindset w.r.t. point 8 below_ |
