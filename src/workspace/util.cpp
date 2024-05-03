@@ -60,17 +60,18 @@ namespace workspace::util {
 
     std::tuple<string, string, string> get_qualified_names(const string full_file_path) {
         string stemmed_name{""};
-        string guard_name{""};
-        string namespace_name{""};
 
         const int literal_length_of_headers = string("headers/").length();
         const int literal_length_of_src = string("src/").length();
+        const int literal_length_of_tests = string("tests/unit_tests/").length();
         const int literal_length_of_extension = string(".cpp").length();
 
         if (full_file_path.starts_with("headers/")) {
             stemmed_name = full_file_path.substr(literal_length_of_headers, full_file_path.length() - (literal_length_of_headers + literal_length_of_extension));
         } else if (full_file_path.starts_with("src/")) {
             stemmed_name = full_file_path.substr(literal_length_of_src, full_file_path.length() - (literal_length_of_src + literal_length_of_extension));
+        } else if (full_file_path.starts_with("tests/unit_tests/")) {
+            stemmed_name = full_file_path.substr(literal_length_of_tests, full_file_path.length() - (literal_length_of_tests + literal_length_of_extension));
         }
 
         return std::make_tuple(

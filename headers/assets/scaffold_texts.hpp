@@ -191,6 +191,54 @@ namespace assets::scaffold_texts {
     }
     )";
 
+    const string CBT_TOOLS_TEST_HARNESS_HPP = R"(
+    #ifndef CBT_TOOLS_TEST_HARNESS
+    #define CBT_TOOLS_TEST_HARNESS
+
+    #include <functional>
+    #include <iomanip>
+    #include <iostream>
+    #include <string>
+    #include <tuple>
+    #include <vector>
+
+    namespace cbt_tools::test_harness {
+        // Note: Edit this parent class *only if* the harness provided is not upto your requirements
+        class TestSuite {
+        public:
+            virtual void add_test_case(const std::string title, std::function<void()> test_case) final {
+                test_cases.push_back(std::make_tuple(title, test_case));
+            }
+            virtual void run() final {
+                setup();
+                
+                for (const auto& test_case: test_cases) {
+                    before_each();
+
+                    const auto [title, test_fn] = test_case;
+                            
+                    std::cout << std::right << std::setw(8) << "RUN " << title << std::endl;
+                    test_fn();
+
+                    after_each();
+                }
+                
+                teardown();
+            }
+
+        private:
+            virtual void setup() = 0;
+            virtual void before_each() = 0;
+            virtual void after_each() = 0;
+            virtual void teardown() = 0;
+
+            std::vector<std::tuple<std::string, std::function<void()>>> test_cases;
+        };
+    }
+
+    #endif
+    )";
+
     const string CBT_TOOLS_UTILS_HPP = R"(
     #ifndef CBT_TOOLS_UTILS
     #define CBT_TOOLS_UTILS
@@ -348,6 +396,61 @@ namespace assets::scaffold_texts {
             out << company.get_location() << std::endl;
             return out;
         }
+    }
+    )";
+
+    const string SAMPLE_TEST_CPP = R"(
+    #include "cbt_tools/test_harness.hpp"
+
+    #include <cassert>
+    #include <functional>
+    #include <iostream>
+    #include <string>
+
+    #include "@RELATIVE_SRC_FILE_NAME"
+
+    class ScopedTestSuite: public cbt_tools::test_harness::TestSuite {
+    private:
+        void setup() override {
+            // Add necessary code here
+        }
+        void before_each() override {
+            // Add necessary code here
+            sample_env_int = 1;
+        }
+        void after_each() override {
+            // Add necessary code here
+            sample_env_int = 2;
+        }
+        void teardown() override {
+            // Add necessary code here
+        }
+
+        // add your environment variables and functionalities here, if necessary
+        int sample_env_int{ 0 };
+        @NAMESPACE::SampleCompany sample_company{ "Sample location" };
+    };
+
+    int main() {
+        ScopedTestSuite test_suite;
+
+        std::cout << std::endl << std::setw(8) << "EXECUTE " << __FILE__ << std::endl << std::endl;
+
+        test_suite.add_test_case("Test that sum of 5 and 6 is 11", []() {
+            assert((@NAMESPACE::sum(5, 6) == 11));
+        });
+        
+        test_suite.add_test_case("Test that sum of 5 and 6 is not 12", []() {
+            assert((@NAMESPACE::sum(5, 6) != 12));
+        });
+        
+        test_suite.add_test_case("Test that sum of 3 and 7 is 10", []() {
+            assert((@NAMESPACE::sum(3, 7) == 10));
+        });
+        
+        test_suite.run();
+
+        return EXIT_SUCCESS;
     }
     )";
 

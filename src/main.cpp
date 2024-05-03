@@ -28,6 +28,8 @@ void parse_commands_and_execute(vector <string> arguments) {
                 commands::clear_build();
             } else if (arguments[1].compare("build-project") == 0) {
                 commands::build_project();
+            } else if (arguments[1].compare("run-unit-tests") == 0) {
+                commands::run_unit_tests();
             } else if (arguments[1].compare("info") == 0) {
                 commands::show_info();
             } else if (arguments[1].compare("help") == 0) {

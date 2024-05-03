@@ -60,7 +60,7 @@ namespace workspace::scaffold {
         }
     }
 
-    bool create_directory(const string project_name, const string sub_directory, bool multi_directory) {
+    bool create_directory(const string project_name, const string sub_directory, bool multi_directory, bool verbose) {
         string full_path =( project_name + "/" + sub_directory + (sub_directory.length() != 0 ? "/" : ""));
 
         if (full_path.starts_with("././")) {
@@ -70,7 +70,9 @@ namespace workspace::scaffold {
         const bool result{ multi_directory ? fs::create_directories(full_path) : fs::create_directory(full_path) };
 
         if (result) {
-            cout << std::right << std::setw(8) << "DIR " << full_path << endl;
+            if (verbose) {
+                cout << std::right << std::setw(8) << "DIR " << full_path << endl;
+            }
             return true;
         } else {
             return false;
@@ -90,6 +92,8 @@ namespace workspace::scaffold {
             return __remove_raw_literal_indentations(ENV_FILE);
         } else if (file_name.compare("headers/cbt_tools/env_manager.hpp") == 0) {
             return __remove_raw_literal_indentations(CBT_TOOLS_ENV_MANAGER_HPP);
+        } else if (file_name.compare("headers/cbt_tools/test_harness.hpp") == 0) {
+            return __remove_raw_literal_indentations(CBT_TOOLS_TEST_HARNESS_HPP);
         } else if (file_name.compare("headers/cbt_tools/utils.hpp") == 0) {
             return __remove_raw_literal_indentations(CBT_TOOLS_UTILS_HPP);
         } else if (file_name.compare("src/cbt_tools/env_manager.cpp") == 0) {
@@ -107,9 +111,24 @@ namespace workspace::scaffold {
             return final_text;
         } else if (file_name.compare("src/main.cpp") == 0) {
             return __remove_raw_literal_indentations(MAIN_CPP);
+        } else if (file_name.starts_with("tests/unit_tests/")) {
+            const string text{ __remove_raw_literal_indentations(SAMPLE_TEST_CPP) };
+            const auto [stemmed_name, _, namespace_name] = workspace::util::get_qualified_names(file_name);
+
+            const string with_import = std::regex_replace(text, IMPORT_R, stemmed_name + ".cpp");
+            const string with_relative_import = std::regex_replace(
+                with_import, 
+                RELATIVE_SRC_R, 
+                fs::relative(
+                    "./src/" + stemmed_name + ".cpp",
+                    "./" + fs::path(file_name).parent_path().string()
+                ).string());
+            const string final_text = std::regex_replace(with_relative_import, NAMESPACE_R, namespace_name);
+            
+            return final_text;
         } else if (file_name.ends_with(".cpp")) {
             const string text{ __remove_raw_literal_indentations(SAMPLE_CPP) };
-            const auto [stemmed_name, guard_name, namespace_name] = workspace::util::get_qualified_names(file_name);
+            const auto [stemmed_name, _, namespace_name] = workspace::util::get_qualified_names(file_name);
             
             const string with_import = std::regex_replace(text, IMPORT_R, stemmed_name + ".hpp");
             const string final_text = std::regex_replace(with_import, NAMESPACE_R, namespace_name);
