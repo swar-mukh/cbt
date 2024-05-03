@@ -26,6 +26,8 @@ namespace commands {
             workspace::scaffold::create_directory(project_name, ".project");
             workspace::scaffold::create_directory(project_name, "build");
             workspace::scaffold::create_directory(project_name, "build/binaries");
+            workspace::scaffold::create_directory(project_name, "build/test_binaries");
+            workspace::scaffold::create_directory(project_name, "build/test_binaries/unit_tests");
             workspace::scaffold::create_directory(project_name, "docs");
             workspace::scaffold::create_file(project_name, "docs/LICENSE.txt");
             workspace::scaffold::create_file(project_name, "docs/Roadmap.md");
@@ -39,6 +41,7 @@ namespace commands {
             workspace::scaffold::create_directory(project_name, "headers");
             workspace::scaffold::create_directory(project_name, "headers/cbt_tools");
             workspace::scaffold::create_file(project_name, "headers/cbt_tools/env_manager.hpp");
+            workspace::scaffold::create_file(project_name, "headers/cbt_tools/test_harness.hpp");
             workspace::scaffold::create_file(project_name, "headers/cbt_tools/utils.hpp");
             workspace::scaffold::create_file(project_name, "headers/sample.hpp");
             workspace::scaffold::create_directory(project_name, "src");
@@ -47,6 +50,9 @@ namespace commands {
             workspace::scaffold::create_file(project_name, "src/cbt_tools/utils.cpp");
             workspace::scaffold::create_file(project_name, "src/main.cpp");
             workspace::scaffold::create_file(project_name, "src/sample.cpp");
+            workspace::scaffold::create_directory(project_name, "tests");
+            workspace::scaffold::create_directory(project_name, "tests/unit_tests");
+            workspace::scaffold::create_file(project_name, "tests/unit_tests/sample.cpp");
             workspace::scaffold::create_file(project_name, "README.md");
             workspace::scaffold::create_file(project_name, "project.cfg");
 
@@ -76,6 +82,7 @@ namespace commands {
         } else {
             workspace::scaffold::create_file(".", string("headers/") + file_name + ".hpp");
             workspace::scaffold::create_file(".", string("src/") + file_name + ".cpp");
+            workspace::scaffold::create_file(".", string("tests/unit_tests/") + file_name + ".cpp");
         }
     }
 
@@ -148,6 +155,8 @@ namespace commands {
 
         workspace::scaffold::create_directory(".", "build");
         workspace::scaffold::create_directory(".", "build/binaries");
+        workspace::scaffold::create_directory(".", "build/test_binaries");
+        workspace::scaffold::create_directory(".", "build/test_binaries/unit_tests");
     }
 
     void build_project() {
@@ -190,6 +199,61 @@ namespace commands {
         const int result = system((string("g++ -std=c++2a -Wall -Wextra -pedantic -O3 -Os -s ") + binaries + "-o build/" + BINARY_NAME).c_str());
 
         cout << (result == 0 ? string("✔") : string("✘")) << (" BUILD build/" + BINARY_NAME) << endl;
+    }
+
+    void run_unit_tests() {
+        if (!workspace::scaffold::is_command_invoked_from_workspace()) {
+            cout << "Could not execute command! Are you sure you are inside the project workspace?" << endl;
+            return;
+        }
+
+        bool show_newline_separator{false};
+
+        if (!fs::exists("build/")) {
+            show_newline_separator = true;
+
+            workspace::scaffold::create_directory(string("."), string("build/test_binaries/unit_tests"), true);
+        }
+
+        if (show_newline_separator) {
+            cout << endl;  
+        }
+         
+        const string gpp_include_paths{ "-Iheaders" };
+        const int literal_length_of_unit_tests = string("tests/unit_tests/").length();
+        const int literal_length_of_extension = string(".cpp").length();
+
+        #if defined(_WIN32) || defined(_WIN64)
+        const string EXTENSION{ ".exe" };
+        #else
+        const string EXTENSION{ "" };
+        #endif
+
+        for (auto const& dir_entry: fs::recursive_directory_iterator("tests/unit_tests")) {
+            if (fs::is_directory(dir_entry)) {
+                const string directory = dir_entry.path().string();
+
+                const string directory_under_check = string("build/test_binaries/unit_tests/" + directory.substr(literal_length_of_unit_tests));
+
+                if (!fs::exists(directory_under_check)) {
+                    workspace::scaffold::create_directory(string("."), directory_under_check, false, false);
+                }
+            } else if (fs::is_regular_file(dir_entry)) {
+                const string cpp_file = dir_entry.path().string();
+                const string stemmed_cpp_file = cpp_file.substr(literal_length_of_unit_tests, cpp_file.length() - (literal_length_of_unit_tests + literal_length_of_extension));
+
+                const int result = system((string("g++ -std=c++2a -Wall -Wextra -pedantic -O3 -Os -s ") + gpp_include_paths + " " + cpp_file + " -o build/test_binaries/unit_tests/" + stemmed_cpp_file + EXTENSION).c_str());
+                cout << (result == 0 ? string("✔") : string("✘")) << " COMPILE " << cpp_file << " -> build/test_binaries/unit_tests/" << (stemmed_cpp_file + EXTENSION) <<  endl;
+            }
+        }
+
+        for (auto const& dir_entry: fs::recursive_directory_iterator("build/test_binaries/unit_tests/")) {
+            if (fs::is_regular_file(dir_entry)) {
+                const string cpp_file = dir_entry.path().string();
+
+                system((cpp_file).c_str());
+            }
+        }
     }
 
     void show_info() {
@@ -240,6 +304,8 @@ namespace commands {
             << "clear-build                     - Delete all object files under 'build/' directory"  << endl
             << endl
             << "build-project                   - Perform linking and generate final executable under 'build/' (requires project compilation first)" << endl
+            << endl
+            << "run-unit-tests                  - Run all test cases under 'tests/unit_tests/' directory" << endl
             << endl
             << "info                            - Show information regarding cbt" << endl
             << "help                            - Shows this help message" << endl;

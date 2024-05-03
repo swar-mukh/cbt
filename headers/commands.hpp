@@ -13,6 +13,8 @@ namespace commands {
 
     void build_project();
 
+    void run_unit_tests();
+    
     void show_info();
     void show_help();
 
