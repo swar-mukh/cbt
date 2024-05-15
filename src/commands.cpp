@@ -33,10 +33,8 @@ namespace commands {
             workspace::scaffold::create_file(project_name, "docs/Roadmap.md");
             workspace::scaffold::create_directory(project_name, "environments");
             workspace::scaffold::create_file(project_name, "environments/.env.template");
-            workspace::scaffold::create_file(project_name, "environments/integration.env");
             workspace::scaffold::create_file(project_name, "environments/local.env");
             workspace::scaffold::create_file(project_name, "environments/production.env");
-            workspace::scaffold::create_file(project_name, "environments/staging.env");
             workspace::scaffold::create_file(project_name, "environments/test.env");
             workspace::scaffold::create_directory(project_name, "headers");
             workspace::scaffold::create_directory(project_name, "headers/cbt_tools");
