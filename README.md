@@ -77,9 +77,8 @@ help                            - Shows this help message
 1. Clone/download the source code and navigate to the directory
 2. Run the following:
   ```sh
-  $ mkdir -p build/binaries/workspace
   $ chmod +x script.sh
-  $ ./script.sh
+  $ ./script.sh init compile build
   ```
 3. The executable will be placed under the `build/` directory with the name `cbt`
 4. Run `./build/cbt help` to get all available commands
