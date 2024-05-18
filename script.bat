@@ -1,0 +1,73 @@
+@echo off
+setlocal
+
+set CPP_STANDARD=c++2a
+set SAFETY_FLAGS=-Wall -Wextra -pedantic
+
+set HEADERS_DIR=headers
+set BUILD_DIR=build
+set BINARIES_DIR=%BUILD_DIR%/binaries
+
+set COMPILE_FLAGS=-std=%CPP_STANDARD% %SAFETY_FLAGS% -Os -s -c -I%HEADERS_DIR%/
+set BUILD_FLAGS=-std=%CPP_STANDARD% %SAFETY_FLAGS% -O3 -Os -s
+
+echo.
+
+for %%a in (%*) do (
+    if %%a == init (
+        call :init
+    ) else if %%a == compile (
+        call :compile
+    ) else if %%a == build (
+        call :build
+    ) else if %%a == clean (
+        call :clean
+    ) else (
+        echo Invalid option!
+        exit /b 1
+    )
+    echo.
+)
+
+exit /b 0
+
+:init
+    echo "==========="
+    echo "Phase: init"
+    echo "==========="
+    echo.
+    echo "[CREATE] 'build/' directory"
+    mkdir build\binaries\workspace
+    mkdir build\test_binaries\unit_tests
+    exit /b 0
+
+:compile
+    echo "=============="
+    echo "Phase: compile"
+    echo "=============="
+    echo.
+    echo "[COMPILE] src/workspace/env_manager.cpp" && g++ %COMPILE_FLAGS% src/workspace/env_manager.cpp -o %BINARIES_DIR%/workspace/env_manager.o
+    echo "[COMPILE] src/workspace/scaffold.cpp" && g++ %COMPILE_FLAGS% src/workspace/scaffold.cpp -o %BINARIES_DIR%/workspace/scaffold.o
+    echo "[COMPILE] src/workspace/util.cpp" && g++ %COMPILE_FLAGS% src/workspace/util.cpp -o %BINARIES_DIR%/workspace/util.o
+    echo "[COMPILE] src/commands.cpp" && g++ %COMPILE_FLAGS% src/commands.cpp -o %BINARIES_DIR%/commands.o
+    echo "[COMPILE] src/main.cpp" && g++ %COMPILE_FLAGS% src/main.cpp -o %BINARIES_DIR%/main.o
+    exit /b 0
+
+:build
+    echo "============"
+    echo "Phase: build"
+    echo "============"
+    echo.
+    echo "[BUILD] build/cbt.exe" && g++ %BUILD_FLAGS% %BINARIES_DIR%/*.o %BINARIES_DIR%/workspace/*.o -o build/cbt.exe
+    exit /b 0
+
+:clean
+    echo "============"
+    echo "Phase: clean"
+    echo "============"
+    echo.
+    rmdir /s /q build
+    echo "[DELETE] sample project (if present)" && rmdir /s /q my-project
+    echo.
+    call :init
+    exit /b 0
