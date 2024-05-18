@@ -245,9 +245,13 @@ namespace commands {
 
         for (auto const& dir_entry: fs::recursive_directory_iterator("build/test_binaries/unit_tests/")) {
             if (fs::is_regular_file(dir_entry)) {
-                const string cpp_file = dir_entry.path().string();
+                fs::path cpp_path = dir_entry.path();
 
-                system((cpp_file).c_str());
+                #if defined(_WIN32) || defined(_WIN64)
+                system((cpp_path.make_preferred().string()).c_str());
+                #else
+                system((cpp_path.string()).c_str());
+                #endif
             }
         }
     }
