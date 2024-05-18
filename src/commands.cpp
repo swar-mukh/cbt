@@ -131,7 +131,7 @@ namespace commands {
                 } else {
                     const int result = system((string("g++ -std=c++2a -Wall -Wextra -pedantic -Os ") + gpp_include_paths + " -c " + cpp_file + " -o build/binaries/" + stemmed_cpp_file + ".o").c_str());
 
-                    cout << (result == 0 ? string("✔") : string("✘")) << " COMPILE " << cpp_file << " -> build/binaries/" << stemmed_cpp_file << ".o" <<  endl;
+                    cout << "[COMPILE]" << std::left << std::setw(6) << (result == 0 ? "[OK]" : "[NOK]") << cpp_file <<  endl;
                 }
             }
         }
@@ -194,7 +194,7 @@ namespace commands {
 
         const int result = system((string("g++ -std=c++2a -Wall -Wextra -pedantic -O3 -Os -s ") + binaries + "-o build/" + BINARY_NAME).c_str());
 
-        cout << (result == 0 ? string("✔") : string("✘")) << (" BUILD build/" + BINARY_NAME) << endl;
+        cout << "[BUILD]" << std::left << std::setw(6) << (result == 0 ? "[OK]" : "[NOK]") << ( "build/" + BINARY_NAME) << endl;
     }
 
     void run_unit_tests() {
@@ -239,7 +239,7 @@ namespace commands {
                 const string stemmed_cpp_file = cpp_file.substr(literal_length_of_unit_tests, cpp_file.length() - (literal_length_of_unit_tests + literal_length_of_extension));
 
                 const int result = system((string("g++ -std=c++2a -Wall -Wextra -pedantic -O3 -Os -s ") + gpp_include_paths + " " + cpp_file + " -o build/test_binaries/unit_tests/" + stemmed_cpp_file + EXTENSION).c_str());
-                cout << (result == 0 ? string("✔") : string("✘")) << " COMPILE " << cpp_file << " -> build/test_binaries/unit_tests/" << (stemmed_cpp_file + EXTENSION) <<  endl;
+                cout << "[COMPILE]" << std::left << std::setw(6) << (result == 0 ? "[OK]" : "[NOK]") << cpp_file <<  endl;
             }
         }
 
