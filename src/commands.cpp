@@ -223,7 +223,7 @@ namespace commands {
 
         for (auto const& dir_entry: fs::recursive_directory_iterator("build/test_binaries/unit_tests/")) {
             if (fs::is_regular_file(dir_entry)) {
-                system(workspace::util::get_platform_formatted_filename(dir_entry.path()).c_str());
+                [[maybe_unused]] const int result = system(workspace::util::get_platform_formatted_filename(dir_entry.path()).c_str());
             }
         }
     }
