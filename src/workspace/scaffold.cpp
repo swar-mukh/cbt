@@ -79,6 +79,21 @@ namespace workspace::scaffold {
         }
     }
 
+    void create_build_tree_as_necessary() {
+        if (!fs::exists("build/")) {
+            workspace::scaffold::create_directory(string("."), "build", false, false);
+        }
+        if (!fs::exists("build/binaries")) {
+            workspace::scaffold::create_directory(string("."), "build/binaries", false, false);
+        }
+        if (!fs::exists("build/test_binaries")) {
+            workspace::scaffold::create_directory(string("."), "build/test_binaries", false, false);
+        }
+        if (!fs::exists("build/test_binaries/unit_tests")) {
+            workspace::scaffold::create_directory(string("."), "build/test_binaries/unit_tests", false, false);
+        }
+    }
+
     string get_predefined_text_content(const string file_name) {
         if (file_name.compare(".gitignore") == 0) {
             return __remove_raw_literal_indentations(GITIGNORE);

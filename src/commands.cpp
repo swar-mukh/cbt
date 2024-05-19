@@ -90,13 +90,7 @@ namespace commands {
             return;
         }
 
-        bool show_newline_separator{false};
-
-        if (!fs::exists("build/")) {
-            show_newline_separator = true;
-
-            workspace::scaffold::create_directory(string("."), string("build/binaries/"), true);
-        }
+        workspace::scaffold::create_build_tree_as_necessary();
 
         string gpp_include_paths{"-Iheaders"};
         const int literal_length_of_headers = string("headers/").length();
@@ -115,10 +109,6 @@ namespace commands {
                     workspace::scaffold::create_directory(string("."), directory_under_check, false, false);
                 }
             }
-        }
-
-        if (show_newline_separator) {
-            cout << endl;  
         }
 
         for (auto const& dir_entry: fs::recursive_directory_iterator("src")) {
@@ -149,10 +139,7 @@ namespace commands {
 
         cout << endl;
 
-        workspace::scaffold::create_directory(".", "build");
-        workspace::scaffold::create_directory(".", "build/binaries");
-        workspace::scaffold::create_directory(".", "build/test_binaries");
-        workspace::scaffold::create_directory(".", "build/test_binaries/unit_tests");
+        workspace::scaffold::create_build_tree_as_necessary();
     }
 
     void build_project() {
@@ -203,17 +190,7 @@ namespace commands {
             return;
         }
 
-        bool show_newline_separator{false};
-
-        if (!fs::exists("build/")) {
-            show_newline_separator = true;
-
-            workspace::scaffold::create_directory(string("."), string("build/test_binaries/unit_tests"), true);
-        }
-
-        if (show_newline_separator) {
-            cout << endl;  
-        }
+        workspace::scaffold::create_build_tree_as_necessary();
          
         const string gpp_include_paths{ "-Iheaders" };
         const string unit_tests_directory{ "tests/unit_tests/" };
