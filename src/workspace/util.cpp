@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <filesystem>
 #include <functional>
 #include <iostream>
 #include <regex>
@@ -104,5 +105,13 @@ namespace workspace::util {
         const string value = line.substr(delimiter_position + 1);
 
         return std::make_tuple(key, value);
+    }
+
+    string get_platform_formatted_filename(const string file_name) {
+        return std::filesystem::path(file_name).make_preferred().string();
+    }
+
+    string get_platform_formatted_filename(std::filesystem::path path) {
+        return path.make_preferred().string();
     }
 }

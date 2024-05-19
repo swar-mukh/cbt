@@ -66,22 +66,34 @@ help                            - Shows this help message
 
 ## Installation
 
+Ready-made binaries for Ubuntu and Windows are available through [Releases](https://github.com/swar-mukh/cbt/releases).
+
+For other platforms, or for building from source, read on.
+
 ### Notes
 
-1. Currently, `cbt` is exclusively developed in `WSL2 Ubuntu 20.04`. But MinGW for Windows should also do the trick. Future support for other platforms is planned.
+1. `cbt` is developed in `WSL2 Ubuntu 20.04` and `Windows 11`.
 2. There is a hard dependency on `g++` as the underlying tool.
-3. There is a hard dependency on `C++2a` standard. Ensure your `gcc` toolchain is at least `9.4.0`.
+3. There is a hard dependency on `C++2a` standard. Ensure your `GNU` toolchain is at least `9.4.0`.
+4. `GNU` toolchain used for development is `11.4.0`.
+5. If on Windows, MinGW can be downloaded from [WinLibs](https://winlibs.com/).
+6. On a Mac, `g++` is actually a tiny wrapper over `clang`. This shouldn't be a problem as such, but if you want to develop exclusively through `g++`, then download the binary (though Homebrew or MacPorts, etc.) and alias `g++` to the appropriate downloaded binary, i.e. `alias g++=g++-<version>`
 
 ### Steps
 
 1. Clone/download the source code and navigate to the directory
 2. Run the following:
   ```sh
+  # On *nix platforms
   $ chmod +x script.sh
   $ ./script.sh init compile build
+
+  # On Windows
+  > .\script.bat init compile build
   ```
-3. The executable will be placed under the `build/` directory with the name `cbt`
-4. Run `./build/cbt help` to get all available commands
+3. The executable will be placed under the `build/` directory with the name `cbt` (or `cbt.exe` on `Windows`)
+4. Run `./build/cbt help` (or `.\build\cbt.exe` on `Windows`) to get all available commands
+5. Add the binary to your OS' `PATH`.
 
 ## Roadmap
 
