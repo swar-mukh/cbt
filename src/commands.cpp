@@ -194,7 +194,7 @@ namespace commands {
 
         const int result = system((string("g++ -std=c++2a -Wall -Wextra -pedantic -O3 -Os -s ") + binaries + "-o build/" + BINARY_NAME).c_str());
 
-        cout << "[BUILD]" << std::left << std::setw(6) << (result == 0 ? "[OK]" : "[NOK]") << ( "build/" + BINARY_NAME) << endl;
+        cout << "[BUILD]" << std::left << std::setw(6) << (result == 0 ? "[OK]" : "[NOK]") << workspace::util::get_platform_formatted_filename("build/" + BINARY_NAME) << endl;
     }
 
     void run_unit_tests() {
@@ -216,7 +216,8 @@ namespace commands {
         }
          
         const string gpp_include_paths{ "-Iheaders" };
-        const int literal_length_of_unit_tests = string("tests/unit_tests/").length();
+        const string unit_tests_directory{ "tests/unit_tests/" };
+        const int literal_length_of_unit_tests = unit_tests_directory.length();
         const int literal_length_of_extension = string(".cpp").length();
 
         #if defined(_WIN32) || defined(_WIN64)
@@ -225,7 +226,7 @@ namespace commands {
         const string EXTENSION{ "" };
         #endif
 
-        for (auto const& dir_entry: fs::recursive_directory_iterator("tests/unit_tests")) {
+        for (auto const& dir_entry: fs::recursive_directory_iterator(unit_tests_directory)) {
             if (fs::is_directory(dir_entry)) {
                 const string directory = dir_entry.path().string();
 
@@ -239,19 +240,13 @@ namespace commands {
                 const string stemmed_cpp_file = cpp_file.substr(literal_length_of_unit_tests, cpp_file.length() - (literal_length_of_unit_tests + literal_length_of_extension));
 
                 const int result = system((string("g++ -std=c++2a -Wall -Wextra -pedantic -O3 -Os -s ") + gpp_include_paths + " " + cpp_file + " -o build/test_binaries/unit_tests/" + stemmed_cpp_file + EXTENSION).c_str());
-                cout << "[COMPILE]" << std::left << std::setw(6) << (result == 0 ? "[OK]" : "[NOK]") << cpp_file <<  endl;
+                cout << "[COMPILE]" << std::left << std::setw(6) << (result == 0 ? "[OK]" : "[NOK]") << workspace::util::get_platform_formatted_filename(cpp_file) <<  endl;
             }
         }
 
         for (auto const& dir_entry: fs::recursive_directory_iterator("build/test_binaries/unit_tests/")) {
             if (fs::is_regular_file(dir_entry)) {
-                fs::path cpp_path = dir_entry.path();
-
-                #if defined(_WIN32) || defined(_WIN64)
-                system((cpp_path.make_preferred().string()).c_str());
-                #else
-                system((cpp_path.string()).c_str());
-                #endif
+                system(workspace::util::get_platform_formatted_filename(dir_entry.path()).c_str());
             }
         }
     }

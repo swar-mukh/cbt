@@ -1,6 +1,7 @@
 #ifndef WORKSPACE_UTIL
 #define WORKSPACE_UTIL
 
+#include <filesystem>
 #include <string>
 #include <tuple>
 
@@ -19,6 +20,8 @@ namespace workspace::util {
     string convert_stemmed_name_to_guard_name(const string stemmed_name);
     string convert_stemmed_name_to_namespace_name(const string stemmed_name);
     std::tuple<string, string> get_key_value_pair_from_line(const string line, const string delimiter);
+    string get_platform_formatted_filename(const string file_name);
+    string get_platform_formatted_filename(std::filesystem::path path);
 }
 
 #endif

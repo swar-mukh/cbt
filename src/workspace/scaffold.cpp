@@ -56,7 +56,7 @@ namespace workspace::scaffold {
             file_to_write << get_predefined_text_content(file_name);
             file_to_write.close();
 
-            cout << std::right << std::setw(8) << "CREATE " << full_path << endl;
+            cout << std::right << std::setw(8) << "CREATE " << workspace::util::get_platform_formatted_filename(full_path) << endl;
         }
     }
 
@@ -71,7 +71,7 @@ namespace workspace::scaffold {
 
         if (result) {
             if (verbose) {
-                cout << std::right << std::setw(8) << "DIR " << full_path << endl;
+                cout << std::right << std::setw(8) << "DIR " << workspace::util::get_platform_formatted_filename(full_path) << endl;
             }
             return true;
         } else {
