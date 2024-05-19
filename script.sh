@@ -35,6 +35,7 @@ function build() {
     echo "============"
     echo
     echo "[BUILD] build/cbt" && g++ $BUILD_FLAGS $BINARIES_DIR/*.o $BINARIES_DIR/**/*.o -o build/cbt
+    echo "[HASH] build/cbt" && sha256sum build/cbt > build/Ubuntu.sha256.checksum.txt
 }
 
 function clean() {

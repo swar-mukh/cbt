@@ -59,6 +59,7 @@ exit /b 0
     echo "============"
     echo.
     echo "[BUILD] build/cbt.exe" && g++ %BUILD_FLAGS% %BINARIES_DIR%/*.o %BINARIES_DIR%/workspace/*.o -o build/cbt.exe
+    echo "[HASH] build/cbt.exe" && certutil -hashfile build\cbt.exe SHA256 > build\Windows.sha256.checksum.txt
     exit /b 0
 
 :clean
