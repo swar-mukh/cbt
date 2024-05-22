@@ -44,8 +44,8 @@ namespace workspace::util {
 
         if (lowercased_file_name.starts_with("headers/") && lowercased_file_name.length() == string("headers/").length()) {
             return std::make_tuple(false, "Full file name not provided");
-        } else if (lowercased_file_name.starts_with("src/") || lowercased_file_name.starts_with("test/")) {
-            return std::make_tuple(false, "File name cannot start with 'src/' or 'test/'");
+        } else if (lowercased_file_name.starts_with("src/") || lowercased_file_name.starts_with("tests/")  || lowercased_file_name.starts_with("tests/unit_tests")) {
+            return std::make_tuple(false, "File name cannot start with 'src/' or 'tests/' or 'tests/unit_tests/'");
         } else if (lowercased_file_name.starts_with("/") || lowercased_file_name.ends_with("/")) {
             return std::make_tuple(false, "File name cannot start or end with a slash, i.e. '/'");
         } else if (lowercased_file_name.ends_with(".cpp") || lowercased_file_name.ends_with(".hpp")) {
