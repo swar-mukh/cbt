@@ -42,59 +42,7 @@ namespace workspace::scaffold {
         return final_string;
     }
 
-    void create_file(const string project_name, const string file_name) {
-        const string full_path = project_name +  "/" + file_name;
-
-        if (fs::exists(full_path)) {
-            cout << std::right << std::setw(8) <<  "SKIP " << full_path << endl;
-        } else {
-            if (!fs::exists(full_path.substr(0, full_path.find_last_of("/")))) {
-                create_directory(".", full_path.substr(0, full_path.find_last_of("/")), true);
-            }
-
-            ofstream file_to_write(full_path);
-            file_to_write << get_predefined_text_content(file_name);
-            file_to_write.close();
-
-            cout << std::right << std::setw(8) << "CREATE " << workspace::util::get_platform_formatted_filename(full_path) << endl;
-        }
-    }
-
-    bool create_directory(const string project_name, const string sub_directory, bool multi_directory, bool verbose) {
-        string full_path =( project_name + "/" + sub_directory + (sub_directory.length() != 0 ? "/" : ""));
-
-        if (full_path.starts_with("././")) {
-            full_path = full_path.replace(0, 4, "./");
-        }
-        
-        const bool result{ multi_directory ? fs::create_directories(full_path) : fs::create_directory(full_path) };
-
-        if (result) {
-            if (verbose) {
-                cout << std::right << std::setw(8) << "DIR " << workspace::util::get_platform_formatted_filename(full_path) << endl;
-            }
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    void create_build_tree_as_necessary() {
-        if (!fs::exists("build/")) {
-            workspace::scaffold::create_directory(string("."), "build", false, false);
-        }
-        if (!fs::exists("build/binaries")) {
-            workspace::scaffold::create_directory(string("."), "build/binaries", false, false);
-        }
-        if (!fs::exists("build/test_binaries")) {
-            workspace::scaffold::create_directory(string("."), "build/test_binaries", false, false);
-        }
-        if (!fs::exists("build/test_binaries/unit_tests")) {
-            workspace::scaffold::create_directory(string("."), "build/test_binaries/unit_tests", false, false);
-        }
-    }
-
-    string get_predefined_text_content(const string file_name) {
+    string __get_predefined_text_content(const string file_name) {
         if (file_name.compare(".gitignore") == 0) {
             return __remove_raw_literal_indentations(GITIGNORE);
         } else if (file_name.compare("docs/LICENSE.txt") == 0) {
@@ -155,6 +103,58 @@ namespace workspace::scaffold {
             return __remove_raw_literal_indentations(PROJECT_CFG);
         } else {
             return "";
+        }
+    }
+
+    void create_file(const string project_name, const string file_name) {
+        const string full_path = project_name +  "/" + file_name;
+
+        if (fs::exists(full_path)) {
+            cout << std::right << std::setw(8) <<  "SKIP " << full_path << endl;
+        } else {
+            if (!fs::exists(full_path.substr(0, full_path.find_last_of("/")))) {
+                create_directory(".", full_path.substr(0, full_path.find_last_of("/")), true);
+            }
+
+            ofstream file_to_write(full_path);
+            file_to_write << __get_predefined_text_content(file_name);
+            file_to_write.close();
+
+            cout << std::right << std::setw(8) << "CREATE " << workspace::util::get_platform_formatted_filename(full_path) << endl;
+        }
+    }
+
+    bool create_directory(const string project_name, const string sub_directory, bool multi_directory, bool verbose) {
+        string full_path =( project_name + "/" + sub_directory + (sub_directory.length() != 0 ? "/" : ""));
+
+        if (full_path.starts_with("././")) {
+            full_path = full_path.replace(0, 4, "./");
+        }
+        
+        const bool result{ multi_directory ? fs::create_directories(full_path) : fs::create_directory(full_path) };
+
+        if (result) {
+            if (verbose) {
+                cout << std::right << std::setw(8) << "DIR " << workspace::util::get_platform_formatted_filename(full_path) << endl;
+            }
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    void create_build_tree_as_necessary() {
+        if (!fs::exists("build/")) {
+            workspace::scaffold::create_directory(string("."), "build", false, false);
+        }
+        if (!fs::exists("build/binaries")) {
+            workspace::scaffold::create_directory(string("."), "build/binaries", false, false);
+        }
+        if (!fs::exists("build/test_binaries")) {
+            workspace::scaffold::create_directory(string("."), "build/test_binaries", false, false);
+        }
+        if (!fs::exists("build/test_binaries/unit_tests")) {
+            workspace::scaffold::create_directory(string("."), "build/test_binaries/unit_tests", false, false);
         }
     }
 
