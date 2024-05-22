@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "assets/scaffold_texts.hpp"
+#include "workspace/project_config.hpp"
 #include "workspace/util.hpp"
 
 namespace workspace::scaffold {
@@ -42,7 +43,7 @@ namespace workspace::scaffold {
         return final_string;
     }
 
-    string __get_predefined_text_content(const string file_name) {
+    string __get_predefined_text_content(const string file_name, const string project_name) {
         if (file_name.compare(".gitignore") == 0) {
             return __remove_raw_literal_indentations(GITIGNORE);
         } else if (file_name.compare("docs/LICENSE.txt") == 0) {
@@ -100,7 +101,20 @@ namespace workspace::scaffold {
         } else if (file_name.compare("README.md") == 0) {
             return __remove_raw_literal_indentations(README_MD);
         } else if (file_name.compare("project.cfg") == 0) {
-            return __remove_raw_literal_indentations(PROJECT_CFG);
+            using namespace workspace::project_config;
+
+            const Project project {
+                .name{ project_name },
+                .description{ "Add some description here" },
+                .version{ "2024-05-22" },
+                .authors{
+                    { .name{ "Sample LName" }, .email_id{ "sample_lname@domain.tld>" } },
+                    { .name{ "Another MName LName" }, .email_id{ "another_nmane_lname@domain.tld" } }
+                },
+                .platforms{ Platform::BSD, Platform::LINUX, Platform::MACOS, Platform::UNIX, Platform::WINDOWS }
+            };
+
+            return convert_model_to_cfg(project);
         } else {
             return "";
         }
@@ -117,7 +131,7 @@ namespace workspace::scaffold {
             }
 
             ofstream file_to_write(full_path);
-            file_to_write << __get_predefined_text_content(file_name);
+            file_to_write << __get_predefined_text_content(file_name, project_name);
             file_to_write.close();
 
             cout << std::right << std::setw(8) << "CREATE " << workspace::util::get_platform_formatted_filename(full_path) << endl;
