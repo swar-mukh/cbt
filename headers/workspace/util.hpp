@@ -22,6 +22,7 @@ namespace workspace::util {
     std::tuple<string, string> get_key_value_pair_from_line(const string line, const string delimiter);
     string get_platform_formatted_filename(const string file_name);
     string get_platform_formatted_filename(std::filesystem::path path);
+    string get_current_timestamp_formatted(const string format);
 }
 
 #endif

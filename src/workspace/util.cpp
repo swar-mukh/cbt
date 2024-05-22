@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <ctime>
 #include <filesystem>
 #include <functional>
 #include <iostream>
@@ -113,5 +114,14 @@ namespace workspace::util {
 
     string get_platform_formatted_filename(std::filesystem::path path) {
         return path.make_preferred().string();
+    }
+
+    string get_current_timestamp_formatted(const string format) {
+        std::time_t time = std::time({});
+        char timeString[std::size("yyyy-mm-ddThh:mm:ssZ")];
+
+        std::strftime(std::data(timeString), std::size(timeString), format.c_str(), std::gmtime(&time));
+
+        return string(timeString);
     }
 }
