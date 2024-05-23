@@ -61,10 +61,7 @@ namespace commands {
     }
 
     void create_file(const string file_name) {
-        if (!workspace::scaffold::is_command_invoked_from_workspace()) {
-            cout << "Could not execute command! Are you sure you are inside the project workspace?" << endl;
-            return;
-        }
+        workspace::scaffold::exit_if_command_not_invoked_from_within_workspace();
         
         const auto [is_valid, reason_if_any] = workspace::util::is_valid_file_name(file_name);
 
@@ -85,10 +82,7 @@ namespace commands {
     }
 
     void compile_project() {
-        if (!workspace::scaffold::is_command_invoked_from_workspace()) {
-            cout << "Could not execute command! Are you sure you are inside the project workspace?" << endl;
-            return;
-        }
+        workspace::scaffold::exit_if_command_not_invoked_from_within_workspace();
 
         workspace::scaffold::create_build_tree_as_necessary();
 
@@ -128,10 +122,7 @@ namespace commands {
     }
 
     void clear_build() {
-        if (!workspace::scaffold::is_command_invoked_from_workspace()) {
-            cout << "Could not execute command! Are you sure you are inside the project workspace?" << endl;
-            return;
-        }
+        workspace::scaffold::exit_if_command_not_invoked_from_within_workspace();
 
         if (fs::remove_all(fs::current_path() / "build")) {
             cout << std::right << std::setw(8) << "DELETE " << "build/" << endl;
@@ -143,10 +134,7 @@ namespace commands {
     }
 
     void build_project() {
-        if (!workspace::scaffold::is_command_invoked_from_workspace()) {
-            cout << "Could not execute command! Are you sure you are inside the project workspace?" << endl;
-            return;
-        }
+        workspace::scaffold::exit_if_command_not_invoked_from_within_workspace();
 
         if (!fs::exists("build/")) {
             cout << "Directory 'build/' does not exist!" << endl;
@@ -185,10 +173,7 @@ namespace commands {
     }
 
     void run_unit_tests() {
-        if (!workspace::scaffold::is_command_invoked_from_workspace()) {
-            cout << "Could not execute command! Are you sure you are inside the project workspace?" << endl;
-            return;
-        }
+        workspace::scaffold::exit_if_command_not_invoked_from_within_workspace();
 
         workspace::scaffold::create_build_tree_as_necessary();
          

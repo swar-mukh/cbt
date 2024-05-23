@@ -1,5 +1,6 @@
 #include "workspace/scaffold.hpp"
 
+#include <exception>
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
@@ -172,7 +173,12 @@ namespace workspace::scaffold {
         }
     }
 
-    bool is_command_invoked_from_workspace() {
-        return fs::exists("project.cfg") && fs::exists("headers/") &&fs::exists("src/");
+    void exit_if_command_not_invoked_from_within_workspace() {
+        if ((!fs::exists("project.cfg") || !fs::is_regular_file("project.cfg"))
+            || (!fs::exists("headers/") || !fs::is_directory("headers"))
+            || (!fs::exists("src/") || !fs::is_directory("src"))
+            || (!fs::exists("tests/") || !fs::is_directory("tests"))) {
+            throw std::runtime_error("Are you inside the project workspace?");
+        }
     }
 }
