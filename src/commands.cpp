@@ -119,22 +119,20 @@ namespace commands {
 
     void clear_build() {
         if (fs::remove_all(fs::current_path() / "build")) {
-            cout << std::right << std::setw(8) << "DELETE " << "build/" << endl;
+            cout << std::right << std::setw(8) << "RECREATE " << "build/" << endl;
         }
-
-        cout << endl;
 
         workspace::scaffold::create_build_tree_as_necessary();
     }
 
     void build_project() {
         if (!fs::exists("build/")) {
-            cout << "Directory 'build/' does not exist!" << endl;
+            cout << "Directory 'build/' does not exist! Run 'cbt compile-project' first." << endl;
             return;
         }
         
         if (!fs::exists("build/binaries")) {
-            cout << "Directory 'build/binaries/' does not exist!" << endl;
+            cout << "Directory 'build/binaries/' does not exist! Run 'cbt compile-project' first." << endl;
             return;
         }
 
