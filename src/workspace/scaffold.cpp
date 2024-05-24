@@ -122,13 +122,13 @@ namespace workspace::scaffold {
     }
 
     void create_file(const string project_name, const string file_name) {
-        const string full_path = project_name +  "/" + file_name;
+        const string full_path = (project_name.length() != 0 ? (project_name + "/") : project_name) + file_name;
 
         if (fs::exists(full_path)) {
             cout << std::right << std::setw(8) <<  "SKIP " << full_path << endl;
         } else {
             if (!fs::exists(full_path.substr(0, full_path.find_last_of("/")))) {
-                create_directory(".", full_path.substr(0, full_path.find_last_of("/")), true);
+                create_directory("", full_path.substr(0, full_path.find_last_of("/")), true);
             }
 
             ofstream file_to_write(full_path);
@@ -140,11 +140,9 @@ namespace workspace::scaffold {
     }
 
     bool create_directory(const string project_name, const string sub_directory, bool multi_directory, bool verbose) {
-        string full_path =( project_name + "/" + sub_directory + (sub_directory.length() != 0 ? "/" : ""));
-
-        if (full_path.starts_with("././")) {
-            full_path = full_path.replace(0, 4, "./");
-        }
+        string full_path = (project_name.length() != 0 ? (project_name + "/") : project_name)
+            + sub_directory
+            + (sub_directory.length() != 0 ? "/" : "");
         
         const bool result{ multi_directory ? fs::create_directories(full_path) : fs::create_directory(full_path) };
 
@@ -160,16 +158,16 @@ namespace workspace::scaffold {
 
     void create_build_tree_as_necessary() {
         if (!fs::exists("build/")) {
-            workspace::scaffold::create_directory(string("."), "build", false, false);
+            workspace::scaffold::create_directory("", "build", false, false);
         }
         if (!fs::exists("build/binaries")) {
-            workspace::scaffold::create_directory(string("."), "build/binaries", false, false);
+            workspace::scaffold::create_directory("", "build/binaries", false, false);
         }
         if (!fs::exists("build/test_binaries")) {
-            workspace::scaffold::create_directory(string("."), "build/test_binaries", false, false);
+            workspace::scaffold::create_directory("", "build/test_binaries", false, false);
         }
         if (!fs::exists("build/test_binaries/unit_tests")) {
-            workspace::scaffold::create_directory(string("."), "build/test_binaries/unit_tests", false, false);
+            workspace::scaffold::create_directory("", "build/test_binaries/unit_tests", false, false);
         }
     }
 

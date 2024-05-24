@@ -71,11 +71,11 @@ namespace commands {
         const bool create_only_header_file{ file_name.starts_with("headers/") };
 
         if (create_only_header_file) {
-            workspace::scaffold::create_file(".", file_name + ".hpp");
+            workspace::scaffold::create_file("", file_name + ".hpp");
         } else {
-            workspace::scaffold::create_file(".", string("headers/") + file_name + ".hpp");
-            workspace::scaffold::create_file(".", string("src/") + file_name + ".cpp");
-            workspace::scaffold::create_file(".", string("tests/unit_tests/") + file_name + ".cpp");
+            workspace::scaffold::create_file("", string("headers/") + file_name + ".hpp");
+            workspace::scaffold::create_file("", string("src/") + file_name + ".cpp");
+            workspace::scaffold::create_file("", string("tests/unit_tests/") + file_name + ".cpp");
         }
     }
 
