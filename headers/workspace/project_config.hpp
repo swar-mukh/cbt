@@ -1,7 +1,7 @@
 #ifndef WORKSPACE_PROJECT_CONFIG
 #define WORKSPACE_PROJECT_CONFIG
 
-#include <list>
+#include <set>
 #include <string>
 
 namespace workspace::project_config {
@@ -21,13 +21,19 @@ namespace workspace::project_config {
         string email_id;
     };
 
+    struct __AuthorComparator {
+        bool operator()(const Author &left, const Author &right) const {
+            return left.name > right.name;
+        }
+    };
+
     struct Project {
         string name;
         string description;
         string version;
 
-        std::list<Author> authors;
-        std::list<Platform> platforms;
+        std::set<Author, __AuthorComparator> authors;
+        std::set<Platform> platforms;
     };
 
     string platform_to_string(const Platform platform);
