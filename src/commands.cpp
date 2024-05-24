@@ -82,7 +82,7 @@ namespace commands {
     void compile_project() {
         workspace::scaffold::create_build_tree_as_necessary();
 
-        string gpp_include_paths{"-Iheaders"};
+        const string gpp_include_paths{"-Iheaders"};
         const int literal_length_of_headers = string("headers/").length();
         const int literal_length_of_src = string("src/").length();
         const int literal_length_of_extension = string(".cpp").length();
@@ -90,9 +90,6 @@ namespace commands {
         for (auto const& dir_entry: fs::recursive_directory_iterator("headers")) {
             if (fs::is_directory(dir_entry)) {
                 const string directory = dir_entry.path().string();
-
-                gpp_include_paths += " -I" + directory;
-
                 const string directory_under_check = string("build/binaries/" + directory.substr(literal_length_of_headers));
 
                 if (!fs::exists(directory_under_check)) {
