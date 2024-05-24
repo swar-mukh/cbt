@@ -1,8 +1,10 @@
+#include <cstdlib>
 #include <iostream>
 #include <string>
 #include <vector>
 
 #include "commands.hpp"
+#include "workspace/scaffold.hpp"
 
 using std::cerr;
 using std::cout;
@@ -17,18 +19,23 @@ void parse_commands_and_execute(vector <string> arguments) {
             if (arguments[1].compare("create-project") == 0) {
                 commands::create_project(arguments[2]);
             } else if (arguments[1].compare("create-file") == 0) {
+                workspace::scaffold::exit_if_command_not_invoked_from_within_workspace();
                 commands::create_file(arguments[2]);
             } else {
                 commands::show_usage();
             }
         } else if (arguments.size() == 2) {
             if (arguments[1].compare("compile-project") == 0) {
+                workspace::scaffold::exit_if_command_not_invoked_from_within_workspace();
                 commands::compile_project();
             } else if (arguments[1].compare("clear-build") == 0) {
+                workspace::scaffold::exit_if_command_not_invoked_from_within_workspace();
                 commands::clear_build();
             } else if (arguments[1].compare("build-project") == 0) {
+                workspace::scaffold::exit_if_command_not_invoked_from_within_workspace();
                 commands::build_project();
             } else if (arguments[1].compare("run-unit-tests") == 0) {
+                workspace::scaffold::exit_if_command_not_invoked_from_within_workspace();
                 commands::run_unit_tests();
             } else if (arguments[1].compare("info") == 0) {
                 commands::show_info();
@@ -42,8 +49,10 @@ void parse_commands_and_execute(vector <string> arguments) {
         }
     } catch (const exception & e) {
         cerr << "Exception: " << e.what() << endl;
+        std::exit(EXIT_FAILURE);
     } catch (...) {
         cerr << "Something went wrong!";
+        std::exit(EXIT_FAILURE);
     }
 }
 
