@@ -21,6 +21,13 @@ namespace commands {
             return;
         }
 
+        const auto [is_valid, reason_if_any] = workspace::util::is_valid_project_name(project_name);
+
+        if (!is_valid) {
+            cout << reason_if_any << endl;
+            return;
+        }
+
         if (workspace::scaffold::create_directory(project_name)) {
             workspace::scaffold::create_file(project_name, ".gitignore");
             workspace::scaffold::create_directory(project_name, ".project");

@@ -28,11 +28,11 @@ namespace workspace::util {
         return text;
     }
 
-    bool does_name_contain_special_characters(const string& text) {
+    bool does_name_contain_special_characters(const string& text, const bool is_it_for_project) {
         for (const char ch: text) {
             const auto uch = static_cast<unsigned char>(ch);
 
-            if (!std::isalnum(uch) && !std::isspace(uch) && uch != '_' && uch != '/') {
+            if ((!is_it_for_project && uch == '-') && !std::isalnum(uch) && !std::isspace(uch) && uch != '_' && uch != '/') {
                 return true;
             }
         }
@@ -40,6 +40,18 @@ namespace workspace::util {
         return false;
     }
 
+    std::tuple<bool, string> is_valid_project_name(const string project_name) {
+        const string lowercased_project_name = change_case(project_name, TextCase::LOWER_CASE);
+
+        if (lowercased_project_name.find('/') != lowercased_project_name.npos || lowercased_project_name.find('\\') != lowercased_project_name.npos) {
+            return std::make_tuple(false, "Project name cannot contain '/' or '\\'");
+        } if (does_name_contain_special_characters(lowercased_project_name, true)) {
+            return std::make_tuple(false, "Project name can only contain alphanumeric characters and the underscore character");
+        } else {
+            return std::make_tuple(true, "");
+        }
+    }
+    
     std::tuple<bool, string> is_valid_file_name(const string file_name) {
         const string lowercased_file_name = change_case(file_name, TextCase::LOWER_CASE);
 
@@ -53,7 +65,7 @@ namespace workspace::util {
             return std::make_tuple(false, "File name cannot end with any extension, i.e. '.cpp' or '.hpp'");
         } else if (lowercased_file_name.ends_with("main")) {
             return std::make_tuple(false, "File cannot be named as 'main'");
-        } else if (does_name_contain_special_characters(lowercased_file_name)) {
+        } else if (does_name_contain_special_characters(lowercased_file_name, false)) {
             return std::make_tuple(false, "File name can only contain alphanumeric characters and the underscore character");
         } else {
             return std::make_tuple(true, "");
