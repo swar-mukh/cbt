@@ -104,7 +104,7 @@ For other platforms, or for building from source, read on.
 | 1 | Create a basic workable binary | `✅ Complete` ||
 | 2 | Allow basic `create`, `compile` and `build` functionalities | `✅ Complete` ||
 | 3 | Support scaffold for `test`ing | `⛅ Partially achieved` | _Only unit tests supported currently_ |
-| 4 | Use `project.cfg` as a one-stop configuration file for the entire project workspace management | `⏳ In Progress` |
+| 4 | Use `project.cfg` as a one-stop configuration file for the entire project workspace management | `⛅ Partially achieved` |
 | 5 | Decouple `g++` and all build configurations from source code | `💤 TBD` | _<ul><li>Requires completion of `project.cfg` parser first.</li><li>Need to add other strict and sane compiler flags.</li></ul>_ |
 | 6 | Add support for various other C++ compilers | `💤 TBD` | _Requires a slight forward thinking mindset w.r.t. point 8 below_ |
 | 7 | Support scaffold for shared objects (`.so` and `.dll`) | `💤 TBD` ||

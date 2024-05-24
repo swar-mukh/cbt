@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <ctime>
 #include <filesystem>
 #include <functional>
 #include <iostream>
@@ -44,8 +45,8 @@ namespace workspace::util {
 
         if (lowercased_file_name.starts_with("headers/") && lowercased_file_name.length() == string("headers/").length()) {
             return std::make_tuple(false, "Full file name not provided");
-        } else if (lowercased_file_name.starts_with("src/") || lowercased_file_name.starts_with("test/")) {
-            return std::make_tuple(false, "File name cannot start with 'src/' or 'test/'");
+        } else if (lowercased_file_name.starts_with("src/") || lowercased_file_name.starts_with("tests/")  || lowercased_file_name.starts_with("tests/unit_tests")) {
+            return std::make_tuple(false, "File name cannot start with 'src/' or 'tests/' or 'tests/unit_tests/'");
         } else if (lowercased_file_name.starts_with("/") || lowercased_file_name.ends_with("/")) {
             return std::make_tuple(false, "File name cannot start or end with a slash, i.e. '/'");
         } else if (lowercased_file_name.ends_with(".cpp") || lowercased_file_name.ends_with(".hpp")) {
@@ -113,5 +114,14 @@ namespace workspace::util {
 
     string get_platform_formatted_filename(std::filesystem::path path) {
         return path.make_preferred().string();
+    }
+
+    string get_current_timestamp_formatted(const string format) {
+        std::time_t time = std::time({});
+        char timeString[std::size("yyyy-mm-ddThh:mm:ssZ")];
+
+        std::strftime(std::data(timeString), std::size(timeString), format.c_str(), std::gmtime(&time));
+
+        return string(timeString);
     }
 }

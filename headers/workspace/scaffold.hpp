@@ -14,8 +14,7 @@ namespace workspace::scaffold {
     bool create_directory(const std::string project_name, const std::string sub_directory = "", bool multi_directory = false, bool verbose = true);
     void create_build_tree_as_necessary();
 
-    std::string get_predefined_text_content(const std::string file_name);
-    bool is_command_invoked_from_workspace();
+    void exit_if_command_not_invoked_from_within_workspace();
 }
 
 #endif
