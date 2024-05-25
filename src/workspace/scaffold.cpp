@@ -110,7 +110,7 @@ namespace workspace::scaffold {
                 .version{ workspace::util::get_current_timestamp_formatted("%F") },
                 .authors{
                     { .name{ "Sample LName" }, .email_id{ "sample_lname@domain.tld" } },
-                    { .name{ "Another MName LName" }, .email_id{ "another_nmane_lname@domain.tld" } }
+                    { .name{ "Another MName LName" }, .email_id{ "another_mname_lname@domain.tld" } }
                 },
                 .platforms{ Platform::BSD, Platform::LINUX, Platform::MACOS, Platform::UNIX, Platform::WINDOWS }
             };
