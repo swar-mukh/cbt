@@ -5,6 +5,7 @@
 #include <iostream>
 #include <string>
 
+#include "workspace/project_config.hpp"
 #include "workspace/scaffold.hpp"
 #include "workspace/util.hpp"
 
@@ -14,6 +15,7 @@ namespace commands {
     using std::cout;
     using std::endl;
     using std::string;
+    using namespace workspace::project_config;
     
     void create_project(const string project_name) {
         if (fs::exists(project_name)) {
@@ -94,6 +96,8 @@ namespace commands {
         const int literal_length_of_src = string("src/").length();
         const int literal_length_of_extension = string(".cpp").length();
 
+        const Project project = convert_cfg_to_model();
+
         for (auto const& dir_entry: fs::recursive_directory_iterator("headers")) {
             if (fs::is_directory(dir_entry)) {
                 const string directory = dir_entry.path().string();
@@ -113,7 +117,7 @@ namespace commands {
                 if (stemmed_cpp_file.compare("main") != 0 && !fs::exists("headers/" + stemmed_cpp_file + ".hpp")) {
                     cout << "SKIP " << ("headers/" + stemmed_cpp_file + ".hpp") << " (No corresponding file found!)" << endl;
                 } else {
-                    const int result = system((string("g++ -std=c++2a -Wall -Wextra -pedantic -Os ") + gpp_include_paths + " -c " + cpp_file + " -o build/binaries/" + stemmed_cpp_file + ".o").c_str());
+                    const int result = system((string("g++ -std=" + project.config.cpp_standard + " " + project.config.safety_flags + " " + project.config.compile_time_flags + " ") + gpp_include_paths + " -c " + cpp_file + " -o build/binaries/" + stemmed_cpp_file + ".o").c_str());
 
                     cout << "[COMPILE]" << std::left << std::setw(6) << (result == 0 ? "[OK]" : "[NOK]") << cpp_file <<  endl;
                 }
@@ -155,13 +159,15 @@ namespace commands {
             return;
         }
 
+        const Project project = convert_cfg_to_model();
+
         #if defined(_WIN32) || defined(_WIN64)
-        const string BINARY_NAME = "app.exe";
+        const string BINARY_NAME{ project.name + ".exe" };
         #else
-        const string BINARY_NAME = "app";
+        const string BINARY_NAME{ project.name };
         #endif
 
-        const int result = system((string("g++ -std=c++2a -Wall -Wextra -pedantic -O3 -Os -s ") + binaries + "-o build/" + BINARY_NAME).c_str());
+        const int result = system((string("g++ -std=" + project.config.cpp_standard + " " + project.config.safety_flags + " " + project.config.build_flags + " ") + binaries + "-o build/" + BINARY_NAME).c_str());
 
         cout << "[BUILD]" << std::left << std::setw(6) << (result == 0 ? "[OK]" : "[NOK]") << workspace::util::get_platform_formatted_filename("build/" + BINARY_NAME) << endl;
     }
@@ -173,6 +179,8 @@ namespace commands {
         const string unit_tests_directory{ "tests/unit_tests/" };
         const int literal_length_of_unit_tests = unit_tests_directory.length();
         const int literal_length_of_extension = string(".cpp").length();
+
+        const Project project = convert_cfg_to_model();
 
         #if defined(_WIN32) || defined(_WIN64)
         const string EXTENSION{ ".exe" };
@@ -193,7 +201,7 @@ namespace commands {
                 const string cpp_file = dir_entry.path().string();
                 const string stemmed_cpp_file = cpp_file.substr(literal_length_of_unit_tests, cpp_file.length() - (literal_length_of_unit_tests + literal_length_of_extension));
 
-                const int result = system((string("g++ -std=c++2a -Wall -Wextra -pedantic -O3 -Os -s ") + gpp_include_paths + " " + cpp_file + " -o build/test_binaries/unit_tests/" + stemmed_cpp_file + EXTENSION).c_str());
+                const int result = system((string("g++ -std=" + project.config.cpp_standard + " " + project.config.safety_flags + " " + project.config.test_flags + " ") + gpp_include_paths + " " + cpp_file + " -o build/test_binaries/unit_tests/" + stemmed_cpp_file + EXTENSION).c_str());
                 cout << "[COMPILE]" << std::left << std::setw(6) << (result == 0 ? "[OK]" : "[NOK]") << workspace::util::get_platform_formatted_filename(cpp_file) <<  endl;
             }
         }
