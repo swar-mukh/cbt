@@ -112,7 +112,14 @@ namespace workspace::scaffold {
                     { .name{ "Sample LName" }, .email_id{ "sample_lname@domain.tld" } },
                     { .name{ "Another MName LName" }, .email_id{ "another_mname_lname@domain.tld" } }
                 },
-                .platforms{ Platform::BSD, Platform::LINUX, Platform::MACOS, Platform::UNIX, Platform::WINDOWS }
+                .platforms{ Platform::BSD, Platform::LINUX, Platform::MACOS, Platform::UNIX, Platform::WINDOWS },
+                .config{
+                    .cpp_standard{ "c++2a" },
+                    .safety_flags{ "-Wall -Wextra -pedantic" },
+                    .compile_time_flags{ "-Os -s" },
+                    .build_flags{ "-O3 -Os -s" },
+                    .test_flags{ "-g -Os" }
+                }
             };
 
             return convert_model_to_cfg(project);

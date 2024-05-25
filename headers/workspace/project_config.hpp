@@ -27,6 +27,14 @@ namespace workspace::project_config {
         }
     };
 
+    struct Config {
+        string cpp_standard;
+        string safety_flags;
+        string compile_time_flags;
+        string build_flags;
+        string test_flags;
+    };
+
     struct Project {
         string name;
         string description;
@@ -34,6 +42,7 @@ namespace workspace::project_config {
 
         std::set<Author, __AuthorComparator> authors;
         std::set<Platform> platforms;
+        Config config;
     };
 
     string platform_to_string(const Platform platform);

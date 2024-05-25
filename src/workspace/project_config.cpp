@@ -70,6 +70,16 @@ namespace workspace::project_config {
                     project.authors.insert(Author{ .name{ name }, .email_id{ email_id } });
                 } else if (key.compare("platforms[]") == 0) {
                     project.platforms.insert(string_to_platform(value));
+                } else if (key.compare("config{cpp_standard}") == 0) {
+                    project.config.cpp_standard = value;
+                } else if (key.compare("config{safety_flags}") == 0) {
+                    project.config.safety_flags = value;
+                } else if (key.compare("config{compile_time_flags}") == 0) {
+                    project.config.compile_time_flags = value;
+                } else if (key.compare("config{build_flags}") == 0) {
+                    project.config.build_flags = value;
+                } else if (key.compare("config{test_flags}") == 0) {
+                    project.config.test_flags = value;
                 } else {
                     throw std::runtime_error("Invalid configuration at line " + std::to_string(line_number) + " for key '" + key + "'");
                 }
@@ -89,27 +99,46 @@ namespace workspace::project_config {
     }
 
     string convert_model_to_cfg(const Project project, const bool add_disclaimer_text) {
-        const string disclaimer_text{ std::string("; Since a rudimentary INI parser is used, ensure that the actual `key` and `value` pairs")
-            + "\n; follow the same `key` and `value` format in this file which was provided while creation"
-            + "\n; of the project. Also, ensure that each pair is contained within a single line." };
+        const string disclaimer_text{ std::string("; Since a rudimentary INI parser is used, ensure that the actual `key` and")
+            + "\n; `value` pairs follow the same `key` and `value` format in this file which was"
+            + "\n; provided while creation of the project. Also, ensure that each pair is"
+            + "\n; contained within a single line." };
 
         const string base_text{ std::string("name=") + project.name 
             + "\ndescription=" + project.description
             + "\nversion=" + project.version };
         
-        string authors_text{ std::string("; `authors` is always an array even if there is only one entity. At least one author is required.") };
+        string authors_text{ std::string("; `authors` is always an array even if there is only one entity. At least one")
+            + "\n; author is required." };
 
         for (const Author &author: project.authors) {
             authors_text += std::string("\nauthors[]=") + author.name + AUTHOR_DELIMITER + author.email_id;
         }
 
-        string platforms_text{ std::string("; `platforms` is always an array even if there is only one supported platform and")
-            + "\n; values can be any of 'bsd', 'linux', 'macos', 'unix', `windows`. At least one platform is required." };
+        string platforms_text{ std::string("; `platforms` is always an array even if there is only one supported platform,")
+            + "\n; and values can be any of 'bsd', 'linux', 'macos', 'unix', `windows`. At least"
+            + "\n; one platform is required." };
         
         for (const Platform &platform: project.platforms) {
             platforms_text += std::string("\nplatforms[]=") + platform_to_string(platform);
         }
 
-        return (add_disclaimer_text ? (disclaimer_text + "\n\n") : "") + base_text + "\n\n" + authors_text + "\n\n" + platforms_text + "\n";
+        const string config_text{ std::string("; `config` contains all the set of attributes required to compile, test and")
+            + "\n; build the project."
+            + "\nconfig{cpp_standard}=" + project.config.cpp_standard
+            + "\nconfig{safety_flags}=" + project.config.safety_flags
+            + "\nconfig{compile_time_flags}=" + project.config.compile_time_flags
+            + "\nconfig{build_flags}=" + project.config.build_flags
+            + "\nconfig{test_flags}=" + project.config.test_flags };
+
+        return (add_disclaimer_text ? (disclaimer_text + "\n\n") : "") 
+            + base_text
+            + "\n\n"
+            + authors_text
+            + "\n\n"
+            + platforms_text
+            + "\n\n"
+            + config_text
+            + "\n";
     }
 }
