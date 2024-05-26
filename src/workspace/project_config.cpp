@@ -60,6 +60,12 @@ namespace workspace::project_config {
                 const auto [key, value] = workspace::util::get_key_value_pair_from_line(line, DELIMITER);
             
                 if (key.compare("name") == 0) {
+                    const auto [is_valid, reason_if_any] = workspace::util::is_valid_project_name(value);
+
+                    if (!is_valid) {
+                        throw std::runtime_error(reason_if_any);
+                    }
+
                     project.name = value;
                 } else if (key.compare("description") == 0) {
                     project.description = value;
