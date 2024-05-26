@@ -28,16 +28,33 @@ namespace workspace::util {
         return text;
     }
 
-    bool does_name_contain_special_characters(const string& text, const bool is_it_for_project) {
+    std::tuple<bool, string> does_name_contain_special_characters(const string& text, const bool is_it_for_project) {
+        int i{ 0 };
+
         for (const char ch: text) {
             const auto uch = static_cast<unsigned char>(ch);
 
-            if ((!is_it_for_project && uch == '-') && !std::isalnum(uch) && !std::isspace(uch) && uch != '_' && uch != '/') {
-                return true;
+            if (i == 0 && (uch >= '0' && uch <='9')) {
+                return std::make_tuple(true, string(is_it_for_project ? "Project" : "File") + " name cannot begin with a digit");
+            } else if (std::isspace(uch) || std::isblank(uch)) {
+                return std::make_tuple(true, string(is_it_for_project ? "Project" : "File") + " name cannot contain space or blank characters");
+            } else if (is_it_for_project) {
+                // disallow '/'; if necessary, traverse into the path and invoke
+                if (std::ispunct(uch) && !std::isalnum(uch) && uch != '_' && uch != '-') {
+                    return std::make_tuple(true, "Project name cannot contain punctuation symbols except '_' and '-'");
+                } 
+            } else {
+                if (std::ispunct(uch) && !std::isalnum(uch) && uch != '_' && uch != '/') {
+                    return std::make_tuple(true, "File name cannot contain punctuation symbols except '_' and '/'");
+                } else if (i > 0 && text[i-1] == '/' && (uch >= '0' && uch <='9')) {
+                    return std::make_tuple(true, "File/Directory name cannot start with a digit");
+                }
             }
+
+            ++i;
         }
 
-        return false;
+        return std::make_tuple(false, "");
     }
 
     std::tuple<bool, string> is_valid_project_name(const string project_name) {
@@ -45,10 +62,14 @@ namespace workspace::util {
 
         if (lowercased_project_name.find('/') != lowercased_project_name.npos || lowercased_project_name.find('\\') != lowercased_project_name.npos) {
             return std::make_tuple(false, "Project name cannot contain '/' or '\\'");
-        } if (does_name_contain_special_characters(lowercased_project_name, true)) {
-            return std::make_tuple(false, "Project name can only contain alphanumeric characters and the underscore character");
         } else {
-            return std::make_tuple(true, "");
+            const auto [is_invalid, reason_if_any] = does_name_contain_special_characters(lowercased_project_name, true);
+            
+            if (is_invalid) {
+                return std::make_tuple(false, reason_if_any);
+            } else {
+                return std::make_tuple(true, "");
+            }
         }
     }
     
@@ -65,10 +86,14 @@ namespace workspace::util {
             return std::make_tuple(false, "File name cannot end with any extension, i.e. '.cpp' or '.hpp'");
         } else if (lowercased_file_name.ends_with("main")) {
             return std::make_tuple(false, "File cannot be named as 'main'");
-        } else if (does_name_contain_special_characters(lowercased_file_name, false)) {
-            return std::make_tuple(false, "File name can only contain alphanumeric characters and the underscore character");
         } else {
-            return std::make_tuple(true, "");
+            const auto [is_invalid, reason_if_any] = does_name_contain_special_characters(lowercased_file_name, false);
+
+            if (is_invalid) {
+                return std::make_tuple(false, reason_if_any);
+            } else {
+                return std::make_tuple(true, "");
+            }
         }
     }
 
