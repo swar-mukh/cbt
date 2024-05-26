@@ -1,18 +1,18 @@
 # cbt
 
-`cbt` or "**C**++ **B**uild **T**ool" is a single binary build tool aimed to provide a standard application structure and facilitate code re-use, thereby making working with C++ a breeze.
+`cbt` or "**C**++ **B**uild **T**ool" is a postmodern build tool aimed to provide a standard application structure and facilitate code re-use, thereby making working with C++ a breeze.
 
 ## Philosophy
 
 The one thing lacking in the C++ ecosystem is a simple and lucid build system. While the flexibility of C++ and the low-level target nature of this language has enabled/forced multiple vendors to create their own (both platform-agnostic and platform-dependent) build systems, it is really difficult to interact with such tools due to one or more of the following (a non-enhaustive list) issues:
 
 - Different syntax to learn
-- Some such tools generate output which is then to be fed to some other tool which then builds your application
+- Some such tools generate output which is then to be fed to some other tool which then builds your application, e.g. `Meson`, `Ninja`
 - The language itself (owing to its development history) demanding understanding of intrinsic low-level or operating system specific features which then needs to be made portable
 - Different tools having different folder layout structure adding to cognitive load
-- Need to understand flow of commands in `Make` and family of build tools
-- Some build tools being written in some other interpreted language requiring the end-developer to download extra runtime environments
-- Some tools require knowledge of the [GUI](## "Graphical User Interface") [IDE](## "Integrated Development Environment") that interacts with the underlying build tool; while some [CLI](## "Command Line Interface") tools are so complex that considerable effort has to be made to first understand cryptic flags and arguments
+- Need to understand flow of commands in `Make` and family of build tools, e.g. `CMake`; and also continuously update the MakeFile (and variants) with cryptic glob patterns
+- Some build tools being written in some other interpreted language requiring the end-developer to download extra runtime environments, e.g. `SCons`
+- Some tools require knowledge of the [GUI](## "Graphical User Interface") [IDE](## "Integrated Development Environment") that interacts with the underlying build tool (e.g. Visual C++ Build Tool); while some [CLI](## "Command Line Interface") tools are so complex that considerable effort has to be made to first understand cryptic flags and arguments (e.g. `clang`, `g++`)
 - _And lot more ..._
 
 The reason why proliferation of JavaScript has been so prominent is due to `npm` (later other package managers followed suite) and the one unified `package.json`, both of which have catapulted a once browser-only language to be used in almost all (sometimes even inappropriately) domains.
@@ -24,7 +24,8 @@ The reason why proliferation of JavaScript has been so prominent is due to `npm`
 `cbt` is a very simple build tool made from first principles:
 
 - Entirely command driven, e.g. `cbt create-project my-app`, `cbt create-file some_module/some_util`
-- Simple commands to build and test the project
+- Simple commands to compile, test and build the project
+- Simple, intuitive and maintainable project configuration through `project.cfg`
 - Unlike an `npm` project, ensure that all projects created with `cbt` strictly have the same folder structure
 - Automatically create proper scaffold upon invocation of `cbt create-file <file_name>` (descriptions given below), and thereby reduce cognitive load
 - First-class (and **type-safe**) support for `env` file(s)
@@ -104,8 +105,8 @@ For other platforms, or for building from source, read on.
 | 1 | Create a basic workable binary | `✅ Complete` ||
 | 2 | Allow basic `create`, `compile` and `build` functionalities | `✅ Complete` ||
 | 3 | Support scaffold for `test`ing | `⛅ Partially achieved` | _Only unit tests supported currently_ |
-| 4 | Use `project.cfg` as a one-stop configuration file for the entire project workspace management | `⛅ Partially achieved` |
-| 5 | Decouple `g++` and all build configurations from source code | `💤 TBD` | _<ul><li>Requires completion of `project.cfg` parser first.</li><li>Need to add other strict and sane compiler flags.</li></ul>_ |
+| 4 | Use `project.cfg` as a one-stop configuration file for the entire project workspace management | `✅ Complete` |
+| 5 | Decouple `g++` and all build configurations from source code | `✅ Complete` | _<ul><li>Requires completion of `project.cfg` parser first.</li><li>Need to add other strict and sane compiler flags.</li></ul>_ |
 | 6 | Add support for various other C++ compilers | `💤 TBD` | _Requires a slight forward thinking mindset w.r.t. point 8 below_ |
 | 7 | Support scaffold for shared objects (`.so` and `.dll`) | `💤 TBD` ||
 | 8 | Add support for dependency management | `💤 TBD` | _<ul><li>How to handle dependencies developed with another compiler implementation than current project?</li><li>Scaffold should support generating library code along with executable code during project creation.</li></ul>_ |
