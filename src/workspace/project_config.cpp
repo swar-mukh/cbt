@@ -44,19 +44,25 @@ namespace workspace::project_config {
 
         if (fs::exists(config_file_name)) {
             std::ifstream config_file(config_file_name);
-            string line;
+            string raw_line{ "" }, line{ "" };
             int line_number{ 0 };
 
             Project project;
 
-            while (std::getline(config_file, line)) {
+            while (std::getline(config_file, raw_line)) {
                 ++line_number;
-                std::erase(line, '\r');
+                std::erase(raw_line, '\r');
 
-                if (line.empty() || line.starts_with(LINE_COMMENT)) {
+                if (raw_line.empty() || raw_line.starts_with(LINE_COMMENT)) {
                     continue;
                 }
 
+                const auto index_of_comment = raw_line.find(';');
+                
+                line = index_of_comment != string::npos ?
+                    raw_line.substr(0, index_of_comment)
+                    : raw_line;
+                
                 const auto [key, value] = workspace::util::get_key_value_pair_from_line(line, DELIMITER);
             
                 if (key.compare("name") == 0) {
