@@ -146,13 +146,14 @@ namespace commands {
             return;
         }
 
-        string binaries{ "" };
+        string binaries{ "build/binaries/*.o " };
         int binary_files_count{ 0 };
 
         for (auto const& dir_entry: fs::recursive_directory_iterator("build/binaries")) {
-            if (fs::is_regular_file(dir_entry)) {
+            if (fs::is_directory(dir_entry)) {
+                binaries += dir_entry.path().string() + "/*.o ";
+            } else if (fs::is_regular_file(dir_entry)) {
                 binary_files_count++;
-                binaries += dir_entry.path().string() + " ";
             }
         }
 
@@ -169,7 +170,7 @@ namespace commands {
         const string BINARY_NAME{ project.name };
         #endif
 
-        cout << "[COMMAND] " << ("g++ -std=" + project.config.cpp_standard + " " + project.config.safety_flags + " " + project.config.build_flags + " " + binaries + " -o build/" + BINARY_NAME) << endl << endl;
+        cout << "[COMMAND] " << ("g++ -std=" + project.config.cpp_standard + " " + project.config.safety_flags + " " + project.config.build_flags + " " + binaries + "-o build/" + BINARY_NAME) << endl << endl;
 
         const int result = system((string("g++") + " -std=" + project.config.cpp_standard + " " + project.config.safety_flags + " " + project.config.build_flags + " " + binaries + "-o build/" + BINARY_NAME).c_str());
 
