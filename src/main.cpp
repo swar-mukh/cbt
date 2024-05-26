@@ -48,10 +48,10 @@ void parse_commands_and_execute(vector <string> arguments) {
             commands::show_usage();
         }
     } catch (const exception & e) {
-        cerr << "Exception: " << e.what() << endl;
+        cerr << "Exception: " << e.what() << endl << endl;
         std::exit(EXIT_FAILURE);
     } catch (...) {
-        cerr << "Something went wrong!";
+        cerr << "Something went wrong!" << endl << endl;
         std::exit(EXIT_FAILURE);
     }
 }
