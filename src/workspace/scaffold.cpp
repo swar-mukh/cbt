@@ -118,7 +118,7 @@ namespace workspace::scaffold {
                     .safety_flags{ "-Wall -Wextra -pedantic" },
                     .compile_time_flags{ "-Os -s" },
                     .build_flags{ "-O3 -Os -s" },
-                    .test_flags{ "-g -Os" }
+                    .test_flags{ "-g -Og -s" }
                 }
             };
 
