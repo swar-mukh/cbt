@@ -96,6 +96,14 @@ For other platforms, or for building from source, read on.
 4. Run `./build/cbt help` (or `.\build\cbt.exe` on `Windows`) to get all available commands
 5. Add the binary to your OS' `PATH`.
 
+**Note:** During the `build` stage through `script.sh`, pay attention to the following:
+
+1. If your platform is `Linux` but not `Ubuntu`, update the file-name at line 40.
+2. If you get a message _"Please use a binary that can generate a SHA-256 checksum for this platform"_, then add you respective platform and associated binary that computes the `SHA-256` checksum.
+3. If `uname` is not available on your platform, replace `$(uname -s)` with `"$OSTYPE"` in line 39, and update the options accordingly.
+
+In any of the above case(s), the format for the file-name containing the checksum is `<platform>.sha256.checksum.txt`.
+
 ## Roadmap
 
 **Disclaimer**: The following roadmap may be subjected to change depending on various factors like: bandwidth, priority and/or complexity.

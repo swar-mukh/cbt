@@ -36,7 +36,11 @@ function build() {
     echo "============"
     echo
     echo "[BUILD] build/cbt" && g++ $BUILD_FLAGS $BINARIES_DIR/*.o $BINARIES_DIR/**/*.o -o build/cbt
-    echo "[HASH] build/cbt" && sha256sum build/cbt > build/Ubuntu.sha256.checksum.txt
+    case $(uname -s) in
+        Linux)  echo "[HASH] build/cbt" && sha256sum build/cbt > build/Ubuntu.sha256.checksum.txt;;
+        Darwin) echo "[HASH] build/cbt" && shasum -a 256 build/cbt > build/MacOS.sha256.checksum.txt;;
+        *)      echo "Please use a binary that can generate a SHA-256 checksum for this platform";;
+    esac
 }
 
 function clean() {
@@ -54,18 +58,10 @@ echo
 
 for i in "$@"; do
     case $i in
-        init)
-            init
-            ;;
-        compile)
-            compile
-            ;;
-        build)
-            build
-            ;;
-        clean)
-            clean
-            ;;
+        init)    init;;
+        compile) compile;;
+        build)   build;;
+        clean)   clean;;
         *)
             echo "Invalid option!"
             echo
