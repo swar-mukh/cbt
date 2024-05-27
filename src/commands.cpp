@@ -193,7 +193,7 @@ namespace commands {
         const string EXTENSION{ "" };
         #endif
 
-        cout << "[COMMAND] " << ("g++ -std=" + project.config.cpp_standard + " " + project.config.safety_flags + " " + project.config.test_flags + " " + gpp_include_paths + " src/<FILE> -o build/test_binaries/unit_tests/<FILE>" + EXTENSION) << endl << endl;
+        cout << "[COMMAND] " << ("g++ -std=" + project.config.cpp_standard + " " + project.config.safety_flags + " " + project.config.test_flags + " " + gpp_include_paths + " " + unit_tests_directory + "<FILE> -o build/test_binaries/unit_tests/<FILE>" + EXTENSION) << endl << endl;
 
         for (auto const& dir_entry: fs::recursive_directory_iterator(unit_tests_directory)) {
             if (fs::is_directory(dir_entry)) {
