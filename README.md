@@ -51,15 +51,14 @@ Options:
 
 create-project <project-name>   - Scaffold a new project
 
-create-file <file_name>         - Generate header and respective C++ files under 'headers/', 'src/' and 'test/' directories
+create-file <file_name>         - Generate respective C++ files under 'headers/', 'src/' and 'test/' directories
 create-file <path/to/file_name> - Same as above, but will create necessary sub-directories if required
 
 compile-project                 - Compile all files and generate respective binaries under 'build/binaries/'
-clear-build                     - Delete all object files under 'build/' directory
-
 build-project                   - Perform linking and generate final executable under 'build/' (requires project compilation first)
-
 run-unit-tests                  - Run all test cases under 'tests/unit_tests/' directory
+
+clear-build                     - Delete all object files under 'build/' directory
 
 info                            - Show information regarding cbt
 help                            - Shows this help message
