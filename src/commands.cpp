@@ -248,11 +248,12 @@ namespace commands {
         cout
             << "Usage:" << endl
             << endl
-            << "[env=<an_env_file>] cbt <options> [file_name]" << endl
+            << "1. Globally                      - cbt <options> [file_name]" << endl
+            << "2. From inside a project         - [env=<an_env_file>] cbt <options> [file_name]" << endl
             << endl
             << "Note:" << endl
             << endl
-            << "1. Environment files are located under the `environments/` directory" << endl
+            << "1. Environment files are located under the `<project>/environments/` directory" << endl
             << "2. The '.env.template' file must be provided with all the environment values along with the necessary types" << endl
             << "3. `env` entry defaults to 'local.env' if no `env` entry is provided" << endl
             << "4. Specify the `env` file to be picked up without the '.env' extension, e.g. \"env=production\"" << endl
@@ -265,7 +266,7 @@ namespace commands {
             << "create-file <path/to/file_name> - Same as above, but will create necessary sub-directories if required" << endl
             << endl
             << "compile-project                 - Compile all files and generate respective binaries under 'build/binaries/'" << endl
-            << "build-project                   - Perform linking and generate final executable under 'build/' (requires project compilation first)" << endl
+            << "build-project                   - Perform linking and generate final executable under 'build/'" << endl
             << "run-unit-tests                  - Run all test cases under 'tests/unit_tests/' directory" << endl
             << endl
             << "clear-build                     - Delete all object files under 'build/' directory"  << endl

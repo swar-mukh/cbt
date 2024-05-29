@@ -38,11 +38,12 @@ $ cbt help
 
 Usage:
 
-[env=<an_env_file>] cbt <options> [file_name]
+1. Globally                      - cbt <options> [file_name]
+2. From inside a project         - [env=<an_env_file>] cbt <options> [file_name]
 
 Note:
 
-1. Environment files are located under the `environments/` directory
+1. Environment files are located under the `<project>/environments/` directory
 2. The '.env.template' file must be provided with all the environment values along with the necessary types
 3. `env` entry defaults to 'local.env' if no `env` entry is provided
 4. Specify the `env` file to be picked up without the '.env' extension, e.g. "env=production"
@@ -55,7 +56,7 @@ create-file <file_name>         - Generate respective C++ files under 'headers/'
 create-file <path/to/file_name> - Same as above, but will create necessary sub-directories if required
 
 compile-project                 - Compile all files and generate respective binaries under 'build/binaries/'
-build-project                   - Perform linking and generate final executable under 'build/' (requires project compilation first)
+build-project                   - Perform linking and generate final executable under 'build/'
 run-unit-tests                  - Run all test cases under 'tests/unit_tests/' directory
 
 clear-build                     - Delete all object files under 'build/' directory
@@ -119,6 +120,6 @@ In any of the above case(s), the format for the file-name containing the checksu
 | 8 | Add support for dependency management | `💤 TBD` | _<ul><li>How to handle dependencies developed with another compiler implementation than current project?</li><li>Scaffold should support generating library code along with executable code during project creation.</li></ul>_ |
 | 9 | Add support for documentation during scaffold and as a command (maybe via some 3rd party tools like `doxygen`) | `💤 TBD` ||
 | 10 | Bootstrap `cbt` with `cbt` | `⛅ Partially achieved` ||
-| 11 | Add native support for reading environment values from `env` file(s) | `✅ Complete` | _Need to update the documentation regarding the method of invocation for the application instead of `cbt`_ |
+| 11 | Add native support for reading environment values from `env` file(s) | `✅ Complete` ||
 | 12 | Optimise compilation and building by inspecting dependency graph | `💤 TBD` | _<ul><li>Should we go all in with C++ modules instead?</li><li>How to mix-n-match traditional HPP/CPP files with module files in the same project?</li></ul>_ |
 | 13 | Support scaffold for daemons (*nix) and services (Windows)  | `💤 TBD` ||
