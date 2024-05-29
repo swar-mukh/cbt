@@ -51,7 +51,7 @@ Options:
 
 create-project <project-name>   - Scaffold a new project
 
-create-file <file_name>         - Generate respective C++ files under 'headers/', 'src/' and 'test/' directories
+create-file <file_name>         - Generate respective C++ files under 'headers/', 'src/' and 'tests/' directories
 create-file <path/to/file_name> - Same as above, but will create necessary sub-directories if required
 
 compile-project                 - Compile all files and generate respective binaries under 'build/binaries/'
@@ -98,7 +98,7 @@ For other platforms, or for building from source, read on.
 **Note:** During the `build` stage through `script.sh`, pay attention to the following:
 
 1. If your platform is `Linux` but not `Ubuntu`, update the file-name at line 40.
-2. If you get a message _"Please use a binary that can generate a SHA-256 checksum for this platform"_, then add you respective platform and associated binary that computes the `SHA-256` checksum.
+2. If you get a message _"Please use a binary that can generate a SHA-256 checksum for this platform"_, then add your respective platform and associated binary that computes the `SHA-256` checksum.
 3. If `uname` is not available on your platform, replace `$(uname -s)` with `"$OSTYPE"` in line 39, and update the options accordingly.
 
 In any of the above case(s), the format for the file-name containing the checksum is `<platform>.sha256.checksum.txt`.

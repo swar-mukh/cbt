@@ -261,7 +261,7 @@ namespace commands {
             << endl
             << "create-project <project-name>   - Scaffold a new project" << endl
             << endl
-            << "create-file <file_name>         - Generate respective C++ files under 'headers/', 'src/' and 'test/' directories" << endl
+            << "create-file <file_name>         - Generate respective C++ files under 'headers/', 'src/' and 'tests/' directories" << endl
             << "create-file <path/to/file_name> - Same as above, but will create necessary sub-directories if required" << endl
             << endl
             << "compile-project                 - Compile all files and generate respective binaries under 'build/binaries/'" << endl
