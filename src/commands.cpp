@@ -146,15 +146,23 @@ namespace commands {
             return;
         }
 
-        string binaries{ "build/binaries/*.o " };
+        string binaries{ "" };
         int binary_files_count{ 0 };
 
-        for (auto const& dir_entry: fs::recursive_directory_iterator("build/binaries")) {
-            if (fs::is_directory(dir_entry)) {
-                binaries += dir_entry.path().string() + "/*.o ";
-            } else if (fs::is_regular_file(dir_entry)) {
-                binary_files_count++;
+        for (auto dir_entry = fs::recursive_directory_iterator("build"); dir_entry != fs::recursive_directory_iterator(); ++dir_entry) {
+            if (!dir_entry -> path().string().starts_with("build/binaries")) {
+                dir_entry.disable_recursion_pending();
             }
+            
+            if (fs::is_directory(*dir_entry)) {
+                const int files_count = std::count_if(fs::directory_iterator(dir_entry -> path()), {}, [](auto& x){ return x.is_regular_file(); });
+
+                if (files_count != 0) {
+                    binaries += dir_entry -> path().string() + "/*.o ";
+                    binary_files_count += files_count;
+                }
+            }
+
         }
 
         if (binary_files_count == 0) {
