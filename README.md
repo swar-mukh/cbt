@@ -15,7 +15,7 @@ The one thing lacking in the C++ ecosystem is a simple and lucid build system. W
 - Some tools require knowledge of the [GUI](## "Graphical User Interface") [IDE](## "Integrated Development Environment") that interacts with the underlying build tool (e.g. Visual C++ Build Tool); while some [CLI](## "Command Line Interface") tools are so complex that considerable effort has to be made to first understand cryptic flags and arguments (e.g. `clang`, `g++`)
 - _And lot more ..._
 
-The reason why proliferation of JavaScript has been so prominent is due to `npm` (later other package managers followed suite) and the one unified `package.json`, both of which have catapulted a once browser-only language to be used in almost all (sometimes even inappropriately) domains.
+One reason why proliferation of JavaScript has been so prominent is due to `npm` (later other package managers followed suite) and the one unified `package.json`, both of which have catapulted a once browser-only language to be used in almost all (sometimes even inappropriately) domains.
 
 `cbt` is similar in spirit to `npm` and `package.json`, except it is more about making software development with C++ more approachable to beginners and seasoned developers alike; and equally not raising C++ to such higher abstraction language(s) like Java, C#, etc.
 
@@ -117,9 +117,10 @@ In any of the above case(s), the format for the file-name containing the checksu
 | 5 | Decouple `g++` and all build configurations from source code | `✅ Complete` | _<ul><li>Requires completion of `project.cfg` parser first.</li><li>Need to add other strict and sane compiler flags.</li></ul>_ |
 | 6 | Add support for various other C++ compilers | `💤 TBD` | _Requires a slight forward thinking mindset w.r.t. point 8 below_ |
 | 7 | Support scaffold for shared objects (`.so` and `.dll`) | `💤 TBD` ||
-| 8 | Add support for dependency management | `💤 TBD` | _<ul><li>How to handle dependencies developed with another compiler implementation than current project?</li><li>Scaffold should support generating library code along with executable code during project creation.</li></ul>_ |
+| 8 | Add support for dependency management | `💤 TBD` | _<ul><li>How to handle dependencies developed with another compiler implementation than current project?</li><li>Scaffold should support generating library code along with executable code during project creation.</li><li>Add support for **Software Bill of Materials**</li></ul>_ |
 | 9 | Add support for documentation during scaffold and as a command (maybe via some 3rd party tools like `doxygen`) | `💤 TBD` ||
 | 10 | Bootstrap `cbt` with `cbt` | `⛅ Partially achieved` ||
 | 11 | Add native support for reading environment values from `env` file(s) | `✅ Complete` ||
 | 12 | Optimise compilation and building by inspecting dependency graph | `💤 TBD` | _<ul><li>Should we go all in with C++ modules instead?</li><li>How to mix-n-match traditional HPP/CPP files with module files in the same project?</li></ul>_ |
 | 13 | Support scaffold for daemons (*nix) and services (Windows)  | `💤 TBD` ||
+| 14 | Add support for `lint`ing  | `💤 TBD` | _`cppcheck` seems to be a good fit for integration_ |
