@@ -146,11 +146,11 @@ namespace workspace::util {
     }
 
     string get_platform_formatted_filename(const string file_name) {
-        return std::filesystem::path(file_name).make_preferred().string();
+        return get_platform_formatted_filename(std::filesystem::path(file_name));
     }
 
     string get_platform_formatted_filename(std::filesystem::path path) {
-        return path.make_preferred().string();
+        return std::filesystem::relative(std::filesystem::canonical(path)).make_preferred().string();
     }
 
     string get_ISO_date() {
