@@ -107,7 +107,7 @@ namespace workspace::scaffold {
             const Project project {
                 .name{ project_name },
                 .description{ "Add some description here" },
-                .version{ workspace::util::get_current_timestamp_formatted("%F") },
+                .version{ workspace::util::get_ISO_date() },
                 .authors{
                     { .name{ "Sample LName" }, .email_id{ "sample_lname@domain.tld" } },
                     { .name{ "Another MName LName" }, .email_id{ "another_mname_lname@domain.tld" } }

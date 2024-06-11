@@ -2,7 +2,7 @@
 
 #include <algorithm>
 #include <cctype>
-#include <ctime>
+#include <chrono>
 #include <filesystem>
 #include <functional>
 #include <iostream>
@@ -153,12 +153,17 @@ namespace workspace::util {
         return path.make_preferred().string();
     }
 
-    string get_current_timestamp_formatted(const string format) {
-        std::time_t time = std::time({});
-        char timeString[std::size("yyyy-mm-ddThh:mm:ssZ")];
+    string get_ISO_date() {
+        const std::chrono::year_month_day ymd{ std::chrono::floor<std::chrono::days>(std::chrono::system_clock::now()) };
 
-        std::strftime(std::data(timeString), std::size(timeString), format.c_str(), std::gmtime(&time));
+        const string yyyy = std::to_string(int(ymd.year()));
 
-        return string(timeString);
+        const unsigned month = static_cast<unsigned>(ymd.month());
+        const string mm = (month < 10 ? "0" : "") + std::to_string(month);
+
+        const unsigned day = static_cast<unsigned>(ymd.day());
+        const string dd = (day < 10 ? "0" : "") + std::to_string(day);
+
+        return yyyy + "-" + mm + "-" + dd;
     }
 }
