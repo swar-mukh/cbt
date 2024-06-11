@@ -148,17 +148,25 @@ namespace commands {
 
         string binaries{ "" };
         int binary_files_count{ 0 };
+        const string BUILD_PATH{ workspace::util::get_platform_formatted_filename(fs::path("build/binaries")) };
+        const string SEPARATOR{ fs::path::preferred_separator };
 
         for (auto dir_entry = fs::recursive_directory_iterator("build"); dir_entry != fs::recursive_directory_iterator(); ++dir_entry) {
-            if (!dir_entry -> path().string().starts_with("build/binaries")) {
+            const string normalised_path{ workspace::util::get_platform_formatted_filename(dir_entry -> path().string()) };
+
+            if (!normalised_path.starts_with(BUILD_PATH)) {
                 dir_entry.disable_recursion_pending();
             }
             
             if (fs::is_directory(*dir_entry)) {
-                const int files_count = std::count_if(fs::directory_iterator(dir_entry -> path()), {}, [](auto& x){ return x.is_regular_file(); });
+                const int files_count = std::count_if(
+                    fs::directory_iterator(dir_entry -> path()),
+                    {}, 
+                    [](auto& file){ return file.is_regular_file(); }
+                );
 
                 if (files_count != 0) {
-                    binaries += dir_entry -> path().string() + "/*.o ";
+                    binaries += normalised_path + SEPARATOR + "*.o ";
                     binary_files_count += files_count;
                 }
             }
@@ -178,9 +186,11 @@ namespace commands {
         const string BINARY_NAME{ project.name };
         #endif
 
-        cout << "[COMMAND] " << ("g++ -std=" + project.config.cpp_standard + " " + project.config.safety_flags + " " + project.config.build_flags + " " + binaries + "-o build/" + BINARY_NAME) << endl << endl;
+        const string command{ "g++ -std=" + project.config.cpp_standard + " " + project.config.safety_flags + " " + project.config.build_flags + " " + binaries + "-o build" + SEPARATOR + BINARY_NAME };
 
-        const int result = system((string("g++") + " -std=" + project.config.cpp_standard + " " + project.config.safety_flags + " " + project.config.build_flags + " " + binaries + "-o build/" + BINARY_NAME).c_str());
+        cout << "[COMMAND] " << command << endl << endl;
+
+        const int result = system(command.c_str());
 
         cout << "[BUILD]" << std::left << std::setw(6) << (result == 0 ? "[OK]" : "[NOK]") << workspace::util::get_platform_formatted_filename("build/" + BINARY_NAME) << endl;
     }
