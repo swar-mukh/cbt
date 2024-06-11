@@ -266,8 +266,8 @@ namespace commands {
         cout
             << "Usage:" << endl
             << endl
-            << "1. Globally                      - cbt <options> [file_name]" << endl
-            << "2. From inside a project         - [env=<an_env_file>] cbt <options> [file_name]" << endl
+            << "1. Globally                     - cbt <options> [file_name]" << endl
+            << "2. From inside a project        - [env=<an_env_file>] cbt <options> [file_name]" << endl
             << endl
             << "Note:" << endl
             << endl

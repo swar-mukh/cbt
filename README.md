@@ -38,8 +38,8 @@ $ cbt help
 
 Usage:
 
-1. Globally                      - cbt <options> [file_name]
-2. From inside a project         - [env=<an_env_file>] cbt <options> [file_name]
+1. Globally                     - cbt <options> [file_name]
+2. From inside a project        - [env=<an_env_file>] cbt <options> [file_name]
 
 Note:
 
