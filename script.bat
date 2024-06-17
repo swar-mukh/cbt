@@ -47,6 +47,7 @@ exit /b 0
     echo "=============="
     echo.
     echo "[COMPILE] src/workspace/env_manager.cpp" && g++ %COMPILE_FLAGS% src/workspace/env_manager.cpp -o %BINARIES_DIR%/workspace/env_manager.o
+    echo "[COMPILE] src/workspace/modification_identifier.cpp" && g++ %COMPILE_FLAGS% src/workspace/modification_identifier.cpp -o %BINARIES_DIR%/workspace/modification_identifier.o
     echo "[COMPILE] src/workspace/project_config.cpp" && g++ %COMPILE_FLAGS% src/workspace/project_config.cpp -o %BINARIES_DIR%/workspace/project_config.o
     echo "[COMPILE] src/workspace/scaffold.cpp" && g++ %COMPILE_FLAGS% src/workspace/scaffold.cpp -o %BINARIES_DIR%/workspace/scaffold.o
     echo "[COMPILE] src/workspace/util.cpp" && g++ %COMPILE_FLAGS% src/workspace/util.cpp -o %BINARIES_DIR%/workspace/util.o

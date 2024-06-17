@@ -5,6 +5,7 @@
 #include <iostream>
 #include <string>
 
+#include "workspace/modification_identifier.hpp"
 #include "workspace/project_config.hpp"
 #include "workspace/scaffold.hpp"
 #include "workspace/util.hpp"
@@ -32,7 +33,9 @@ namespace commands {
 
         if (workspace::scaffold::create_directory(project_name)) {
             workspace::scaffold::create_file(project_name, ".gitignore");
-            workspace::scaffold::create_directory(project_name, ".project");
+            workspace::scaffold::create_directory(project_name, ".internals");
+            workspace::scaffold::create_directory(project_name, ".internals/tmp");
+            workspace::scaffold::create_file(project_name, ".internals/timestamps.txt");
             workspace::scaffold::create_directory(project_name, "build");
             workspace::scaffold::create_directory(project_name, "build/binaries");
             workspace::scaffold::create_directory(project_name, "build/test_binaries");
@@ -98,6 +101,20 @@ namespace commands {
 
         const Project project = convert_cfg_to_model();
 
+        workspace::modification_identifier::SourceFiles annotated_files = workspace::modification_identifier::list_all_files_annotated(project);
+        int number_of_cpp_files_to_compile{ 0 };
+
+        for (auto const& file: annotated_files) {
+            if (file.file_name.ends_with(".cpp") && file.affected) {
+                ++number_of_cpp_files_to_compile;
+            }
+        }
+
+        if (number_of_cpp_files_to_compile == 0) {
+            cout << "[INFO] Nothing to compile: all files are up-to-date!" << endl;
+            return;
+        }
+
         for (auto const& dir_entry: fs::recursive_directory_iterator("headers")) {
             if (fs::is_directory(dir_entry)) {
                 const string directory = dir_entry.path().string();
@@ -111,20 +128,26 @@ namespace commands {
 
         cout << "[COMMAND] " << ("g++ -std=" + project.config.cpp_standard + " " + project.config.safety_flags + " " + project.config.compile_time_flags + " " + gpp_include_paths + " -c src/<FILE> -o build/binaries/<FILE>.o") << endl << endl;
 
-        for (auto const& dir_entry: fs::recursive_directory_iterator("src")) {
-            if (fs::is_regular_file(dir_entry)) {
-                const string cpp_file = dir_entry.path().string();
-                const string stemmed_cpp_file = cpp_file.substr(literal_length_of_src, cpp_file.length() - (literal_length_of_src + literal_length_of_extension));
+        for (auto& file: annotated_files) {
+            if (file.file_name.ends_with(".cpp") && file.affected) {
+                const string stemmed_cpp_file = file.file_name.substr(literal_length_of_src, file.file_name.length() - (literal_length_of_src + literal_length_of_extension));
 
                 if (stemmed_cpp_file.compare("main") != 0 && !fs::exists("headers/" + stemmed_cpp_file + ".hpp")) {
                     cout << "SKIP " << ("headers/" + stemmed_cpp_file + ".hpp") << " (No corresponding file found!)" << endl;
                 } else {
-                    const int result = system((string("g++") + " -std=" + project.config.cpp_standard + " " + project.config.safety_flags + " " + project.config.compile_time_flags + " " + gpp_include_paths + " -c " + cpp_file + " -o build/binaries/" + stemmed_cpp_file + ".o").c_str());
+                    file.compilation_start_timestamp = workspace::modification_identifier::get_current_fileclock_timestamp();
 
-                    cout << "[COMPILE]" << std::left << std::setw(6) << (result == 0 ? "[OK]" : "[NOK]") << cpp_file <<  endl;
+                    const int result = system((string("g++") + " -std=" + project.config.cpp_standard + " " + project.config.safety_flags + " " + project.config.compile_time_flags + " " + gpp_include_paths + " -c " + file.file_name + " -o build/binaries/" + stemmed_cpp_file + ".o").c_str());
+
+                    file.compilation_end_timestamp = workspace::modification_identifier::get_current_fileclock_timestamp();
+                    file.was_successful = (result == 0);
+
+                    cout << "[COMPILE]" << std::left << std::setw(6) << (result == 0 ? "[OK]" : "[NOK]") << file.file_name <<  endl;
                 }
             }
         }
+
+        workspace::modification_identifier::persist_annotations(annotated_files);
     }
 
     void clear_build() {
