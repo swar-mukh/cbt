@@ -128,21 +128,25 @@ namespace workspace::scaffold {
         }
     }
 
-    void create_file(const string project_name, const string file_name) {
+    void create_file(const string project_name, const string file_name, const bool verbose) {
         const string full_path = (project_name.length() != 0 ? (project_name + "/") : project_name) + file_name;
 
         if (fs::exists(full_path)) {
-            cout << std::right << std::setw(8) <<  "SKIP " << full_path << endl;
+            if (verbose) {
+                cout << std::right << std::setw(8) <<  "SKIP " << full_path << endl;
+            }
         } else {
             if (!fs::exists(full_path.substr(0, full_path.find_last_of("/")))) {
-                create_directory("", full_path.substr(0, full_path.find_last_of("/")), true);
+                create_directory("", full_path.substr(0, full_path.find_last_of("/")), true, verbose);
             }
 
             ofstream file_to_write(full_path);
             file_to_write << __get_predefined_text_content(file_name, project_name);
             file_to_write.close();
 
-            cout << std::right << std::setw(8) << "CREATE " << workspace::util::get_platform_formatted_filename(full_path) << endl;
+            if (verbose) {
+                cout << std::right << std::setw(8) << "CREATE " << workspace::util::get_platform_formatted_filename(full_path) << endl;
+            }
         }
     }
 
@@ -175,6 +179,18 @@ namespace workspace::scaffold {
         }
         if (!fs::exists("build/test_binaries/unit_tests")) {
             workspace::scaffold::create_directory("", "build/test_binaries/unit_tests", false, false);
+        }
+    }
+
+    void create_internals_tree_as_necessary() {
+        if (!fs::exists(".internals/")) {
+            workspace::scaffold::create_directory("", ".internals", false, false);
+        }
+        if (!fs::exists(".internals/tmp")) {
+            workspace::scaffold::create_directory("", ".internals/tmp", false, false);
+        }
+        if (!fs::exists(".internals/timestamps.txt")) {
+            workspace::scaffold::create_file("", ".internals/timestamps.txt", false);
         }
     }
 

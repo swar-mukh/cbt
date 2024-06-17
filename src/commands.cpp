@@ -93,6 +93,7 @@ namespace commands {
 
     void compile_project() {
         workspace::scaffold::create_build_tree_as_necessary();
+        workspace::scaffold::create_internals_tree_as_necessary();
 
         const string gpp_include_paths{"-Iheaders"};
         const int literal_length_of_headers = string("headers/").length();
@@ -156,6 +157,12 @@ namespace commands {
         }
 
         workspace::scaffold::create_build_tree_as_necessary();
+
+        if (fs::remove_all(fs::current_path() / ".internals")) {
+            cout << std::right << std::setw(8) << "RECREATE " << ".internals/" << endl;
+        }
+
+        workspace::scaffold::create_internals_tree_as_necessary();
     }
 
     void build_project() {
