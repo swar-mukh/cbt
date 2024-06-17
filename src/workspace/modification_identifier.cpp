@@ -133,7 +133,12 @@ namespace workspace::modification_identifier {
             bool keep_continuing{ false };
             string current_file{""};
             const string DELIMITER{ ": " };
+
+            #if defined(_WIN32) || defined(_WIN64)
             const std::regex pattern("([\\w\\/\\.\\-\\\\]+)");
+            #else
+            const std::regex pattern("([\\w\\/\\.\\-]+)");
+            #endif
 
             while (std::getline(makefile, line)) {
                 std::erase(line, '\r');
