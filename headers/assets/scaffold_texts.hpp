@@ -7,8 +7,8 @@ namespace assets::scaffold_texts {
     using std::string;
 
   const string GITIGNORE = R"(
+    .internals
     build
-    test
     environments/*.env
     )";
 
