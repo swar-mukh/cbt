@@ -150,7 +150,7 @@ namespace workspace::scaffold {
         }
     }
 
-    bool create_directory(const string project_name, const string sub_directory, bool multi_directory, bool verbose) {
+    bool create_directory(const string project_name, const string sub_directory, const bool multi_directory, const bool verbose) {
         string full_path = (project_name.length() != 0 ? (project_name + "/") : project_name)
             + sub_directory
             + (sub_directory.length() != 0 ? "/" : "");
