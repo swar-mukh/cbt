@@ -116,6 +116,8 @@ namespace commands {
             return;
         }
 
+        cout << "[INFO] Number of file(s) to compile: " << number_of_cpp_files_to_compile << endl << endl;
+
         for (auto const& dir_entry: fs::recursive_directory_iterator("headers")) {
             if (fs::is_directory(dir_entry)) {
                 const string directory = dir_entry.path().string();
@@ -128,6 +130,8 @@ namespace commands {
         }
 
         cout << "[COMMAND] " << ("g++ -std=" + project.config.cpp_standard + " " + project.config.safety_flags + " " + project.config.compile_time_flags + " " + gpp_include_paths + " -c src/<FILE> -o build/binaries/<FILE>.o") << endl << endl;
+
+        int files_succesfully_compiled_count{ 0 };
 
         for (auto& file: annotated_files) {
             if (file.file_name.ends_with(".cpp") && file.affected) {
@@ -143,10 +147,16 @@ namespace commands {
                     file.compilation_end_timestamp = workspace::modification_identifier::get_current_fileclock_timestamp();
                     file.was_successful = (result == 0);
 
-                    cout << "[COMPILE]" << std::left << std::setw(6) << (result == 0 ? "[OK]" : "[NOK]") << file.file_name <<  endl;
+                    cout << "[COMPILE]" << std::left << std::setw(6) << (file.was_successful ? "[OK]" : "[NOK]") << file.file_name <<  endl;
+
+                    if (file.was_successful) {
+                        ++files_succesfully_compiled_count;
+                    }
                 }
             }
         }
+
+        cout << endl << "[INFO] File(s) successfully compiled: " << files_succesfully_compiled_count << " out of " << number_of_cpp_files_to_compile << endl;
 
         workspace::modification_identifier::persist_annotations(annotated_files);
     }
