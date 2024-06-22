@@ -158,6 +158,7 @@ namespace commands {
 
         cout << endl << "[INFO] File(s) successfully compiled: " << files_succesfully_compiled_count << " out of " << number_of_cpp_files_to_compile << endl;
 
+        workspace::scaffold::purge_old_binaries("build/binaries/", annotated_files);
         workspace::modification_identifier::persist_annotations(annotated_files);
     }
 
