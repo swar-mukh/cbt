@@ -118,7 +118,7 @@ namespace workspace::scaffold {
                     .cpp_standard{ "c++2a" },
                     .safety_flags{ "-Wall -Wextra -pedantic" },
                     .compile_time_flags{ "-Os -s" },
-                    .build_flags{ "-O3 -Os -s" },
+                    .build_flags{ "-O3 -s" },
                     .test_flags{ "-g -Og -s" }
                 }
             };

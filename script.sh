@@ -6,7 +6,7 @@ readonly BUILD_DIR="build"
 readonly BINARIES_DIR="$BUILD_DIR/binaries"
 
 readonly COMPILE_FLAGS="-std=$CPP_STANDARD $SAFETY_FLAGS -Os -s -c -I$HEADERS_DIR/"
-readonly BUILD_FLAGS="-std=$CPP_STANDARD $SAFETY_FLAGS -O3 -Os -s"
+readonly BUILD_FLAGS="-std=$CPP_STANDARD $SAFETY_FLAGS -O3 -s"
 
 function init() {
     echo "==========="
