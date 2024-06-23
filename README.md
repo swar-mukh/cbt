@@ -121,6 +121,6 @@ In any of the above case(s), the format for the file-name containing the checksu
 | 9 | Add support for documentation during scaffold and as a command (maybe via some 3rd party tools like `doxygen`) | `💤 TBD` ||
 | 10 | Bootstrap `cbt` with `cbt` | `⛅ Partially achieved` ||
 | 11 | Add native support for reading environment values from `env` file(s) | `✅ Complete` ||
-| 12 | Optimise compilation and building by inspecting dependency graph | `💤 TBD` | _<ul><li>Should we go all in with C++ modules instead?</li><li>How to mix-n-match traditional HPP/CPP files with module files in the same project?</li></ul>_ |
+| 12 | Optimise compilation and building by inspecting dependency graph | `✅ Complete` | _<ul><li>Should we go all in with C++ modules instead? (**Update: Postponed for now**)</li><li>How to mix-n-match traditional HPP/CPP files with module files in the same project? (**Update: Postponed for now**)</li></ul>_ |
 | 13 | Support scaffold for daemons (*nix) and services (Windows)  | `💤 TBD` ||
 | 14 | Add support for `lint`ing  | `💤 TBD` | _`cppcheck` seems to be a good fit for integration_ |
