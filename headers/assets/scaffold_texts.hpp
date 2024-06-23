@@ -331,6 +331,7 @@ namespace assets::scaffold_texts {
     const string MAIN_CPP = R"(
     #include <iostream>
     #include <map>
+    #include <vector>
 
     #include "cbt_tools/env_manager.hpp"
     #include "cbt_tools/utils.hpp"
@@ -369,7 +370,6 @@ namespace assets::scaffold_texts {
     #include "@FILE_NAME"
 
     #include <iostream>
-    #include <vector>
 
     namespace @NAMESPACE {
         int sum(const int a, const int b) {
