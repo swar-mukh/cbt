@@ -87,7 +87,7 @@ namespace workspace::modification_identifier {
             while (std::getline(timestamps_file, line)) {
                 std::erase(line, '\r');
 
-                if (line.empty()) {
+                if (line.empty() || line.starts_with(";")) {
                     continue;
                 }
 
@@ -290,6 +290,8 @@ namespace workspace::modification_identifier {
         }
 
         std::ofstream file_to_write(TIMESTAMPS_PATH);
+
+        file_to_write << "; CBT generated. DO NOT EDIT!\n";
 
         for(auto const& source_file: bucket) {
             file_to_write << source_file.hash
