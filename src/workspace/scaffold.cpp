@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "assets/scaffold_texts.hpp"
+#include "workspace/modification_identifier.hpp"
 #include "workspace/project_config.hpp"
 #include "workspace/util.hpp"
 
@@ -128,25 +129,29 @@ namespace workspace::scaffold {
         }
     }
 
-    void create_file(const string project_name, const string file_name) {
+    void create_file(const string project_name, const string file_name, const bool verbose) {
         const string full_path = (project_name.length() != 0 ? (project_name + "/") : project_name) + file_name;
 
         if (fs::exists(full_path)) {
-            cout << std::right << std::setw(8) <<  "SKIP " << full_path << endl;
+            if (verbose) {
+                cout << std::right << std::setw(8) <<  "SKIP " << full_path << endl;
+            }
         } else {
             if (!fs::exists(full_path.substr(0, full_path.find_last_of("/")))) {
-                create_directory("", full_path.substr(0, full_path.find_last_of("/")), true);
+                create_directory("", full_path.substr(0, full_path.find_last_of("/")), true, verbose);
             }
 
             ofstream file_to_write(full_path);
             file_to_write << __get_predefined_text_content(file_name, project_name);
             file_to_write.close();
 
-            cout << std::right << std::setw(8) << "CREATE " << workspace::util::get_platform_formatted_filename(full_path) << endl;
+            if (verbose) {
+                cout << std::right << std::setw(8) << "CREATE " << workspace::util::get_platform_formatted_filename(full_path) << endl;
+            }
         }
     }
 
-    bool create_directory(const string project_name, const string sub_directory, bool multi_directory, bool verbose) {
+    bool create_directory(const string project_name, const string sub_directory, const bool multi_directory, const bool verbose) {
         string full_path = (project_name.length() != 0 ? (project_name + "/") : project_name)
             + sub_directory
             + (sub_directory.length() != 0 ? "/" : "");
@@ -175,6 +180,60 @@ namespace workspace::scaffold {
         }
         if (!fs::exists("build/test_binaries/unit_tests")) {
             workspace::scaffold::create_directory("", "build/test_binaries/unit_tests", false, false);
+        }
+    }
+
+    void create_internals_tree_as_necessary() {
+        if (!fs::exists(".internals/")) {
+            workspace::scaffold::create_directory("", ".internals", false, false);
+        }
+        if (!fs::exists(".internals/tmp")) {
+            workspace::scaffold::create_directory("", ".internals/tmp", false, false);
+        }
+        if (!fs::exists(".internals/timestamps.txt")) {
+            workspace::scaffold::create_file("", ".internals/timestamps.txt", false);
+        }
+    }
+
+    void purge_old_binaries(const string path, workspace::modification_identifier::SourceFiles& annotated_files) {
+        if (path.compare("build/binaries/") != 0 && path.compare("build/test_binaries/unit_tests/") != 0) {
+            throw std::domain_error("Unknown path '" + path + "' provided for purging. Only 'build/binaries/' and 'build/test_binaries/unit_tests/' allowed.");
+        }
+
+        std::vector<string> cpp_files{};
+
+        const string MAIN_FILE{ "src" + string(1, fs::path::preferred_separator) + "main.cpp" };
+
+        const auto literal_length_of_src{ string("src/").length() };
+        const auto literal_length_of_source_file_extension{ string(".cpp").length() };
+        const auto literal_length_of_binary_file_extension{ string(".o").length() };
+
+        for (auto const& source_file: annotated_files) {
+            if (source_file.file_name.ends_with(".cpp")) {
+                cpp_files.push_back(source_file.file_name.substr(literal_length_of_src, source_file.file_name.length() - literal_length_of_src - literal_length_of_source_file_extension));
+            }
+        }
+
+        for (auto const& dir_entry: fs::recursive_directory_iterator(path)) {
+            if (fs::is_regular_file(dir_entry)) {
+                const string binary_name{ workspace::util::get_platform_formatted_filename(dir_entry) };
+
+                if (binary_name.ends_with(".o")) {
+                    const string stemmed_name{ binary_name.substr(path.length(), binary_name.length() - path.length() - literal_length_of_binary_file_extension) };
+                    bool adjacent_binary_found{ false };
+
+                    for (auto const& file: cpp_files) {
+                        if (stemmed_name.compare(file) == 0) {
+                            adjacent_binary_found = true;
+                            break;
+                        }
+                    }
+
+                    if (!adjacent_binary_found) {
+                        fs::remove(dir_entry);
+                    }
+                }
+            }
         }
     }
 
