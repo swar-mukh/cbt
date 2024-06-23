@@ -324,9 +324,9 @@ namespace commands {
             << "create-file <file_name>         - Generate respective C++ files under 'headers/', 'src/' and 'tests/' directories" << endl
             << "create-file <path/to/file_name> - Same as above, but will create necessary sub-directories if required" << endl
             << endl
-            << "compile-project                 - Compile all files and generate respective binaries under 'build/binaries/'" << endl
+            << "compile-project                 - Compile all files (timestamp-aware) and generate respective binaries under 'build/binaries/'" << endl
             << "build-project                   - Perform linking and generate final executable under 'build/'" << endl
-            << "run-unit-tests                  - Run all test cases under 'tests/unit_tests/' directory" << endl
+            << "run-unit-tests                  - Run all test cases (timestamp-unaware) under 'tests/unit_tests/' directory" << endl
             << endl
             << "clear-build                     - Delete all object files under 'build/' directory"  << endl
             << endl
