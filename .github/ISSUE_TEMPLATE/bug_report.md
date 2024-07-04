@@ -7,26 +7,50 @@ assignees: ''
 
 ---
 
-**Describe the bug**
+<!-- Do not club multiple bugs under one report! File separate bug reports if that's the case. -->
+
+### Describe the bug
+
 A clear and concise description of what the bug is.
 
-**To Reproduce**
-Steps to reproduce the behavior:
-1. Go to '...'
-2. Click on '....'
-3. Scroll down to '....'
-4. See error
+```sh
+# Dump part or parts of the error output here if necessary.
+```
 
-**Expected behavior**
-A clear and concise description of what you expected to happen.
+### `cbt` information
 
-**Screenshots**
-If applicable, add screenshots to help explain your problem.
+ - When encountered (select one): `Building from source` or `Using a readymade binary`
+ - Release ID (if using a readymade binary): [e.g. `cbt-2024.06.23`]
 
-**Desktop (please complete the following information):**
- - OS: [e.g. iOS]
- - Browser [e.g. chrome, safari]
- - Version [e.g. 22]
+### Environment
 
-**Additional context**
-Add any other context about the problem here.
+ - OS (with version): [e.g. `Windows 11`, `Ubuntu 20.04`, `FreeBSD 13.3`, etc.]
+ - Architecture: [e.g. `ia-32`, `x86-64`, `arm64`, `m3`, etc.]
+ - Compiler:  [e.g. `g++`, `clang`, etc.]
+ - Compiler details:
+ ```sh
+# Run `g++ -v` or `clang -v` or `whatever-compiler -<version-flag>` and paste the output below
+
+> g++ -v # Update this if necessary
+# Paste output here...
+```
+
+### Screenshots (optional)
+
+If applicable, add screenshots to help explain your problem. If not, **remove** this section altogether.
+
+### To reproduce
+
+Steps to reproduce the behaviour:
+
+1. Run '...'
+2. Check this '....'
+3. See error
+
+### Expected behaviour (optional)
+
+A clear and concise description of what you expected to happen. If no idea, **remove** this section altogether.
+
+### Additional context (optional)
+
+Add any other context about the problem here. If not applicable, **remove** this section altogether.
