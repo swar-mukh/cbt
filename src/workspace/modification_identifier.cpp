@@ -103,10 +103,21 @@ namespace workspace::modification_identifier {
 
     void __generate_makefile(const workspace::project_config::Project& project) {
         string files{ "src/*.cpp " };
+        const string SEPARATOR{ fs::path::preferred_separator };
 
-        for (auto const& dir_entry: fs::recursive_directory_iterator("src")) {
-            if (fs::is_directory(dir_entry)) {
-                files += dir_entry.path().string() + "/*.cpp ";
+        for (auto dir_entry = fs::recursive_directory_iterator("src"); dir_entry != fs::recursive_directory_iterator(); ++dir_entry) {
+            const string normalised_path{ workspace::util::get_platform_formatted_filename(dir_entry -> path().string()) };
+
+            if (fs::is_directory(*dir_entry)) {
+                const int files_count = std::count_if(
+                    fs::directory_iterator(dir_entry -> path()),
+                    {}, 
+                    [](auto& file){ return file.is_regular_file(); }
+                );
+
+                if (files_count != 0) {
+                    files += normalised_path + SEPARATOR + "*.cpp ";
+                }
             }
         }
 

@@ -211,7 +211,6 @@ namespace commands {
                     binary_files_count += files_count;
                 }
             }
-
         }
 
         if (binary_files_count == 0) {
