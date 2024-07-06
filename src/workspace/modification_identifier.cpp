@@ -30,7 +30,7 @@ namespace workspace::modification_identifier {
         const string normalised_file_name = workspace::util::get_platform_formatted_filename(file_name);
         const fs::path normalised_path = fs::path(normalised_file_name);
 
-        return std::make_tuple(std::hash<fs::path>{}(normalised_file_name), normalised_path);
+        return std::make_tuple(fs::hash_value(normalised_file_name), normalised_path);
     }
 
     std::size_t __get_last_modified_timestamp(const fs::path path) {
