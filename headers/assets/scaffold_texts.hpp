@@ -283,6 +283,8 @@ namespace assets::scaffold_texts {
     #include <vector>
 
     namespace @NAMESPACE {
+        void a_function();
+
         int sum(const int a, const int b);
 
         enum class Sex {
@@ -371,7 +373,22 @@ namespace assets::scaffold_texts {
 
     #include <iostream>
 
+    namespace {
+        using namespace @NAMESPACE;
+
+        // Define all private functionalities here. These are auxiliary items
+        // that will be available only in this file.
+
+        void some_helper() {
+            std::cout << "Helper called!";
+        }
+    }
+
     namespace @NAMESPACE {
+        void a_function() {
+            some_helper();
+        }
+
         int sum(const int a, const int b) {
             return a + b;
         }
