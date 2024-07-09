@@ -39,8 +39,8 @@ namespace assets::scaffold_texts {
 
         using ALLOWED_ENV_DATA_TYPES = std::variant<bool, int, float, string>;
 
-        ALLOWED_ENV_DATA_TYPES get_env(const string key);
-        void prepare_env(std::map<string, string> env);
+        ALLOWED_ENV_DATA_TYPES get_env(const string& key);
+        void prepare_env(std::map<string, string>& env);
     }
 
     #endif
@@ -61,7 +61,9 @@ namespace assets::scaffold_texts {
 
     #include "cbt_tools/utils.hpp"
 
-    namespace cbt_tools::env_manager {
+    namespace {
+        using namespace cbt_tools::env_manager;
+
         namespace fs = std::filesystem;
 
         using std::cerr;
@@ -76,36 +78,36 @@ namespace assets::scaffold_texts {
         std::map<string, ALLOWED_ENV_DATA_TYPES> env_values;
 
         // Add/update necessary parsers as required
-        std::map<string, std::function<ALLOWED_ENV_DATA_TYPES(const string, const string)>> PARSERS{
-            { "bool", [](const string key, const string value) {
+        std::map<string, std::function<ALLOWED_ENV_DATA_TYPES(const string&, const string&)>> PARSERS{
+            { "bool", [](const string& key, const string& value) {
                 if (value.compare("true") == 0 || value.compare("false") == 0) {
                     return value.compare("true") == 0 ? true : false;
                 } else {
                     throw std::invalid_argument("Could not parse value for '" + key + "' to 'bool' type. Expected either 'true' or 'false'.");
                 }
             }},
-            { "int", [](const string key, const string value) {
+            { "int", [](const string& key, const string& value) {
                 try {
                     return std::stoi(value);
-                } catch (const std::invalid_argument &e) {
+                } catch (const std::invalid_argument& e) {
                     throw std::invalid_argument("Could not parse value for '" + key + "' to 'int' type.");
-                } catch (const std::out_of_range &e) {
+                } catch (const std::out_of_range& e) {
                     throw std::invalid_argument("Value for '" + key + "' falls out of range of 'int' type.");
                 }
             }},
-            { "float", [](const string key, const string value) {
+            { "float", [](const string& key, const string& value) {
                 try {
                     return std::stof(value);
-                } catch (const std::invalid_argument &e) {
+                } catch (const std::invalid_argument& e) {
                     throw std::invalid_argument("Could not parse value for '" + key + "' to 'float' type.");
-                } catch (const std::out_of_range &e) {
+                } catch (const std::out_of_range& e) {
                     throw std::invalid_argument("Value for '" + key + "' falls out of range of 'float' type.");
                 }
             }},
-            { "string", []([[maybe_unused]] const string _, const string value) { return value; } },
+            { "string", []([[maybe_unused]] const string& _, const string& value) { return value; } },
         };
 
-        void __set(const string key, const string value) {
+        void set(const string& key, const string& value) {
             // Use the below conditional checks and keep adding the keys
             // that have been defined in 'environments/.env.template' file
 
@@ -121,16 +123,7 @@ namespace assets::scaffold_texts {
         }
 
         // You would typically not need to touch this function
-        ALLOWED_ENV_DATA_TYPES get_env(const string key) {
-            if (env_values.contains(key)) {
-                return env_values[key];
-            } else {
-                throw std::invalid_argument("Trying to access invalid key '" + key + "'");
-            }
-        }
-        
-        // You would typically not need to touch this function
-        void __read_template_file() {
+        void read_template_file() {
             const string template_file_name{ "environments/.env.template" };
 
             if (fs::exists(template_file_name)) {
@@ -154,7 +147,7 @@ namespace assets::scaffold_texts {
         }
 
         // You would typically not need to touch this function
-        void __read_env_file(const string env) {
+        void read_env_file(const string& env) {
             const string env_file_name{ "environments/" + env + ".env" };
 
             ifstream env_file(env_file_name);
@@ -168,22 +161,33 @@ namespace assets::scaffold_texts {
                 if (!env_template.contains(key)) {
                     throw std::domain_error("Key '" + key + "' absent in 'environments/.env.template'");
                 } else {
-                    __set(key, value);
+                    set(key, value);
                 }
+            }
+        }
+    }
+
+    namespace cbt_tools::env_manager {
+        // You would typically not need to touch this function
+        ALLOWED_ENV_DATA_TYPES get_env(const string& key) {
+            if (env_values.contains(key)) {
+                return env_values[key];
+            } else {
+                throw std::invalid_argument("Trying to access invalid key '" + key + "'");
             }
         }
 
         // You would typically not need to touch this function
-        void prepare_env(std::map<string, string> env) {
+        void prepare_env(std::map<string, string>& env) {
             try {
-                __read_template_file();
+                read_template_file();
 
                 if (env["env"].length() != 0) {
-                    __read_env_file(env["env"]);
+                    read_env_file(env["env"]);
                 } else {
-                    __read_env_file("local");
+                    read_env_file("local");
                 }
-            } catch (const std::exception &e) {
+            } catch (const std::exception& e) {
                 cerr << endl << "Exception: " << e.what() << endl << endl;
                 std::exit(EXIT_FAILURE);
             }
@@ -206,7 +210,7 @@ namespace assets::scaffold_texts {
         // Note: Edit this parent class *only if* the harness provided is not upto your requirements
         class TestSuite {
         public:
-            virtual void add_test_case(const std::string title, std::function<void()> test_case) final {
+            virtual void add_test_case(const std::string& title, std::function<void()> test_case) final {
                 test_cases.push_back(std::make_tuple(title, test_case));
             }
             virtual void run() final {
@@ -249,7 +253,7 @@ namespace assets::scaffold_texts {
     namespace cbt_tools::utils {
         using std::string;
 
-        std::tuple<string, string> get_key_value_pair_from_line(const string line, const string delimiter);
+        std::tuple<string, string> get_key_value_pair_from_line(const string& line, const string& delimiter);
     }
 
     #endif
@@ -264,7 +268,7 @@ namespace assets::scaffold_texts {
     namespace cbt_tools::utils {
         using std::string;
 
-        std::tuple<string, string> get_key_value_pair_from_line(const string line, const string delimiter) {
+        std::tuple<string, string> get_key_value_pair_from_line(const string& line, const string& delimiter) {
             const int delimiter_position = line.find(delimiter);
 
             const string key = line.substr(0, delimiter_position);
@@ -312,11 +316,11 @@ namespace assets::scaffold_texts {
 
         class SampleCompany {
         public:
-            SampleCompany(const std::string location);
-            bool fire(const std::string employee_id, const std::string reason);
+            SampleCompany(const std::string& location);
+            bool fire(const std::string& employee_id, const std::string& reason);
             std::string get_location() const;
-            Employee hire(const Person person);
-            bool is_candidate_eligible(const Person person) const;
+            Employee hire(const Person& person);
+            bool is_candidate_eligible(const Person& person) const;
             std::vector<Employee> list_absentees() const;
             friend std::ostream& operator<<(std::ostream& out, const SampleCompany& company);
         
@@ -403,7 +407,7 @@ namespace assets::scaffold_texts {
             return out;
         }
 
-        SampleCompany::SampleCompany(std::string location): location(location){}
+        SampleCompany::SampleCompany(const std::string& location): location(location){}
 
         std::string SampleCompany::get_location() const {
             return this->location;
