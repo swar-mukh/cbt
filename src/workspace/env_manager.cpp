@@ -28,15 +28,15 @@ namespace {
     std::map<string, string> env_template;
     std::map<string, ALLOWED_ENV_DATA_TYPES> env_values;
 
-    std::map<string, std::function<ALLOWED_ENV_DATA_TYPES(const string, const string)>> PARSERS{
-        { "bool", [](const string key, const string value) {
+    std::map<string, std::function<ALLOWED_ENV_DATA_TYPES(const string&, const string&)>> PARSERS{
+        { "bool", [](const string& key, const string& value) {
             if (value.compare("true") == 0 || value.compare("false") == 0) {
                 return value.compare("true") == 0 ? true : false;
             } else {
                 throw std::invalid_argument("Could not parse value for '" + key + "' to 'bool' type. Expected either 'true' or 'false'.");
             }
         }},
-        { "int", [](const string key, const string value) {
+        { "int", [](const string& key, const string& value) {
             try {
                 return std::stoi(value);
             } catch (const std::invalid_argument &e) {
@@ -45,7 +45,7 @@ namespace {
                 throw std::invalid_argument("Value for '" + key + "' falls out of range of 'int' type.");
             }
         }},
-        { "float", [](const string key, const string value) {
+        { "float", [](const string& key, const string& value) {
             try {
                 return std::stof(value);
             } catch (const std::invalid_argument &e) {
@@ -54,10 +54,10 @@ namespace {
                 throw std::invalid_argument("Value for '" + key + "' falls out of range of 'float' type.");
             }
         }},
-        { "string", []([[maybe_unused]] const string _, const string value) { return value; } },
+        { "string", []([[maybe_unused]] const string& _, const string& value) { return value; } },
     };
 
-    void set_kv(const string key, const string value) {
+    void set_kv(const string& key, const string& value) {
         if (key.compare("a_bool_entry") == 0) {
             env_values["a_bool_entry"] = PARSERS["bool"](key, value);
         } else if (key.compare("an_int_entry") == 0) {
@@ -92,7 +92,7 @@ namespace {
         }
     }
 
-    void read_env_file(const string env) {
+    void read_env_file(const string& env) {
         const string env_file_name{ "environments/" + env + ".env" };
 
         ifstream env_file(env_file_name);
@@ -113,7 +113,7 @@ namespace {
 }
 
 namespace workspace::env_manager {
-    ALLOWED_ENV_DATA_TYPES get_env(const string key) {
+    ALLOWED_ENV_DATA_TYPES get_env(const string& key) {
         if (env_values.contains(key)) {
             return env_values[key];
         } else {
@@ -121,7 +121,7 @@ namespace workspace::env_manager {
         }
     }
     
-    void prepare_env(std::map<string, string> env) {
+    void prepare_env(std::map<string, string>& env) {
         try {
             read_template_file();
 

@@ -18,7 +18,7 @@ namespace commands {
     using std::string;
     using namespace workspace::project_config;
     
-    void create_project(const string project_name) {
+    void create_project(const string& project_name) {
         if (fs::exists(project_name)) {
             cout << "Directory '" << project_name << "' already exists!" << endl;
             return;
@@ -72,7 +72,7 @@ namespace commands {
         }
     }
 
-    void create_file(const string file_name) {
+    void create_file(const string& file_name) {
         const auto [is_valid, reason_if_any] = workspace::util::is_valid_file_name(file_name);
 
         if (!is_valid) {

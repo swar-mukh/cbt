@@ -32,7 +32,7 @@ namespace workspace::modification_identifier {
 
     std::size_t get_current_fileclock_timestamp();
     SourceFiles list_all_files_annotated(const workspace::project_config::Project& project);
-    void persist_annotations(SourceFiles& bucket);
+    void persist_annotations(const SourceFiles& bucket);
 }
 
 #endif

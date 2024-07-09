@@ -28,18 +28,18 @@ namespace {
     const string MAKEFILE_PATH{ ".internals/tmp/makefile" };
     const string TIMESTAMPS_PATH{ ".internals/timestamps.txt" };
     
-    std::tuple<std::size_t, fs::path> compute_hash_and_file_pair(const string file_name) {
+    std::tuple<std::size_t, fs::path> compute_hash_and_file_pair(const string& file_name) {
         const string normalised_file_name = workspace::util::get_platform_formatted_filename(file_name);
         const fs::path normalised_path = fs::path(normalised_file_name);
 
         return std::make_tuple(fs::hash_value(normalised_file_name), normalised_path);
     }
 
-    std::size_t get_last_modified_timestamp(const fs::path path) {
+    std::size_t get_last_modified_timestamp(const fs::path& path) {
         return static_cast<std::size_t>(cr::duration_cast<cr::seconds>(fs::last_write_time(path).time_since_epoch()).count());
     }
 
-    std::tuple<std::size_t, SourceFile> parse_line(const string line) {
+    std::tuple<std::size_t, SourceFile> parse_line(const string& line) {
         std::stringstream stream(line);
 
         std::size_t hash;
@@ -197,7 +197,7 @@ namespace {
         }
     }
 
-    RawDependencyTree convert_to_hpp_pov(RawDependencyTree& cpp_pov) {
+    RawDependencyTree convert_to_hpp_pov(const RawDependencyTree& cpp_pov) {
         RawDependencyTree hpp_pov;
 
         for (auto const& [file, dependencies]: cpp_pov) {
@@ -213,7 +213,7 @@ namespace {
         return hpp_pov;
     }
    
-    SourceFile get_or_construct_source_file(const string file_name, DB& timestamps_history) {
+    SourceFile get_or_construct_source_file(const string& file_name, DB& timestamps_history) {
         const auto [hash, file_path] = compute_hash_and_file_pair(file_name);
 
         if (timestamps_history.contains(hash)) {
@@ -299,7 +299,7 @@ namespace workspace::modification_identifier {
         return bucket;
     }
 
-    void persist_annotations(SourceFiles& bucket) {
+    void persist_annotations(const SourceFiles& bucket) {
         if (fs::exists(TIMESTAMPS_PATH)) {
             fs::remove(TIMESTAMPS_PATH);
         }

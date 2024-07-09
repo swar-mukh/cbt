@@ -45,11 +45,11 @@ namespace workspace::project_config {
         Config config;
     };
 
-    string platform_to_string(const Platform platform);
-    Platform string_to_platform(const string platform);
+    string platform_to_string(const Platform& platform);
+    Platform string_to_platform(const string& platform);
 
     Project convert_cfg_to_model();
-    string convert_model_to_cfg(const Project project, const bool add_disclaimer_text = true);
+    string convert_model_to_cfg(const Project& project, const bool add_disclaimer_text = true);
 }
 
 #endif

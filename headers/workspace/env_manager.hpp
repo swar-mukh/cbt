@@ -10,8 +10,8 @@ namespace workspace::env_manager {
 
     using ALLOWED_ENV_DATA_TYPES = std::variant<bool, int, float, string>;
 
-    ALLOWED_ENV_DATA_TYPES get_env(const string key);
-    void prepare_env(std::map<string, string> env);
+    ALLOWED_ENV_DATA_TYPES get_env(const string& key);
+    void prepare_env(std::map<string, string>& env);
 }
 
 #endif

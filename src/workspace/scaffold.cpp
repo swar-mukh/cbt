@@ -28,7 +28,7 @@ namespace {
     using std::stringstream;
     using std::vector;
 
-    string remove_raw_literal_indentations(const string raw_literal) {
+    string remove_raw_literal_indentations(const string& raw_literal) {
         string line, final_string;
         stringstream stream(raw_literal);
         vector<string> lines;
@@ -47,7 +47,7 @@ namespace {
         return final_string;
     }
 
-    string get_predefined_text_content(const string file_name, const string project_name) {
+    string get_predefined_text_content(const string& file_name, const string& project_name) {
         if (file_name.compare(".gitignore") == 0) {
             return remove_raw_literal_indentations(GITIGNORE);
         } else if (file_name.compare("docs/LICENSE.txt") == 0) {
@@ -133,7 +133,7 @@ namespace {
 }
 
 namespace workspace::scaffold {
-    void create_file(const string project_name, const string file_name, const bool verbose) {
+    void create_file(const string& project_name, const string& file_name, const bool verbose) {
         const string full_path = (project_name.length() != 0 ? (project_name + "/") : project_name) + file_name;
 
         if (fs::exists(full_path)) {
@@ -155,7 +155,7 @@ namespace workspace::scaffold {
         }
     }
 
-    bool create_directory(const string project_name, const string sub_directory, const bool multi_directory, const bool verbose) {
+    bool create_directory(const string& project_name, const string& sub_directory, const bool multi_directory, const bool verbose) {
         string full_path = (project_name.length() != 0 ? (project_name + "/") : project_name)
             + sub_directory
             + (sub_directory.length() != 0 ? "/" : "");
@@ -199,14 +199,12 @@ namespace workspace::scaffold {
         }
     }
 
-    void purge_old_binaries(const string path, workspace::modification_identifier::SourceFiles& annotated_files) {
+    void purge_old_binaries(const string& path, const workspace::modification_identifier::SourceFiles& annotated_files) {
         if (path.compare("build/binaries/") != 0 && path.compare("build/test_binaries/unit_tests/") != 0) {
             throw std::domain_error("Unknown path '" + path + "' provided for purging. Only 'build/binaries/' and 'build/test_binaries/unit_tests/' allowed.");
         }
 
         std::vector<string> cpp_files{};
-
-        const string MAIN_FILE{ "src" + string(1, fs::path::preferred_separator) + "main.cpp" };
 
         const auto literal_length_of_src{ string("src/").length() };
         const auto literal_length_of_source_file_extension{ string(".cpp").length() };
