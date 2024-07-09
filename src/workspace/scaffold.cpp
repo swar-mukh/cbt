@@ -15,7 +15,9 @@
 #include "workspace/project_config.hpp"
 #include "workspace/util.hpp"
 
-namespace workspace::scaffold {
+namespace {
+    using namespace workspace::scaffold;
+
     namespace fs = std::filesystem;
     
     using namespace assets::scaffold_texts;
@@ -26,7 +28,7 @@ namespace workspace::scaffold {
     using std::stringstream;
     using std::vector;
 
-    string __remove_raw_literal_indentations(const string raw_literal) {
+    string remove_raw_literal_indentations(const string raw_literal) {
         string line, final_string;
         stringstream stream(raw_literal);
         vector<string> lines;
@@ -45,29 +47,29 @@ namespace workspace::scaffold {
         return final_string;
     }
 
-    string __get_predefined_text_content(const string file_name, const string project_name) {
+    string get_predefined_text_content(const string file_name, const string project_name) {
         if (file_name.compare(".gitignore") == 0) {
-            return __remove_raw_literal_indentations(GITIGNORE);
+            return remove_raw_literal_indentations(GITIGNORE);
         } else if (file_name.compare("docs/LICENSE.txt") == 0) {
-            return __remove_raw_literal_indentations(LICENSE_TXT);
+            return remove_raw_literal_indentations(LICENSE_TXT);
         } else if (file_name.compare("docs/Roadmap.md") == 0) {
-            return __remove_raw_literal_indentations(ROADMAP_MD);
+            return remove_raw_literal_indentations(ROADMAP_MD);
         } else if (file_name.compare("environments/.env.template") == 0) {
-            return __remove_raw_literal_indentations(ENV_TEMPLATE);
+            return remove_raw_literal_indentations(ENV_TEMPLATE);
         } else if (file_name.starts_with("environments/") && file_name.ends_with(".env")) {
-            return __remove_raw_literal_indentations(ENV_FILE);
+            return remove_raw_literal_indentations(ENV_FILE);
         } else if (file_name.compare("headers/cbt_tools/env_manager.hpp") == 0) {
-            return __remove_raw_literal_indentations(CBT_TOOLS_ENV_MANAGER_HPP);
+            return remove_raw_literal_indentations(CBT_TOOLS_ENV_MANAGER_HPP);
         } else if (file_name.compare("headers/cbt_tools/test_harness.hpp") == 0) {
-            return __remove_raw_literal_indentations(CBT_TOOLS_TEST_HARNESS_HPP);
+            return remove_raw_literal_indentations(CBT_TOOLS_TEST_HARNESS_HPP);
         } else if (file_name.compare("headers/cbt_tools/utils.hpp") == 0) {
-            return __remove_raw_literal_indentations(CBT_TOOLS_UTILS_HPP);
+            return remove_raw_literal_indentations(CBT_TOOLS_UTILS_HPP);
         } else if (file_name.compare("src/cbt_tools/env_manager.cpp") == 0) {
-            return __remove_raw_literal_indentations(CBT_TOOLS_ENV_MANAGER_CPP);
+            return remove_raw_literal_indentations(CBT_TOOLS_ENV_MANAGER_CPP);
         } else if (file_name.compare("src/cbt_tools/utils.cpp") == 0) {
-            return __remove_raw_literal_indentations(CBT_TOOLS_UTILS_CPP);
+            return remove_raw_literal_indentations(CBT_TOOLS_UTILS_CPP);
         } else if (file_name.ends_with(".hpp")) {
-            const string text{ __remove_raw_literal_indentations(SAMPLE_HPP) };
+            const string text{ remove_raw_literal_indentations(SAMPLE_HPP) };
             const auto [stemmed_name, guard_name, namespace_name] = workspace::util::get_qualified_names(file_name);
             
             const string with_guard = std::regex_replace(text, GUARD_R, guard_name);
@@ -76,9 +78,9 @@ namespace workspace::scaffold {
             
             return final_text;
         } else if (file_name.compare("src/main.cpp") == 0) {
-            return __remove_raw_literal_indentations(MAIN_CPP);
+            return remove_raw_literal_indentations(MAIN_CPP);
         } else if (file_name.starts_with("tests/unit_tests/")) {
-            const string text{ __remove_raw_literal_indentations(SAMPLE_TEST_CPP) };
+            const string text{ remove_raw_literal_indentations(SAMPLE_TEST_CPP) };
             const auto [stemmed_name, _, namespace_name] = workspace::util::get_qualified_names(file_name);
 
             const string with_import = std::regex_replace(text, IMPORT_R, stemmed_name + ".cpp");
@@ -93,7 +95,7 @@ namespace workspace::scaffold {
             
             return final_text;
         } else if (file_name.ends_with(".cpp")) {
-            const string text{ __remove_raw_literal_indentations(SAMPLE_CPP) };
+            const string text{ remove_raw_literal_indentations(SAMPLE_CPP) };
             const auto [stemmed_name, _, namespace_name] = workspace::util::get_qualified_names(file_name);
             
             const string with_import = std::regex_replace(text, IMPORT_R, stemmed_name + ".hpp");
@@ -101,7 +103,7 @@ namespace workspace::scaffold {
             
             return final_text;
         } else if (file_name.compare("README.md") == 0) {
-            return __remove_raw_literal_indentations(README_MD);
+            return remove_raw_literal_indentations(README_MD);
         } else if (file_name.compare("project.cfg") == 0) {
             using namespace workspace::project_config;
 
@@ -128,7 +130,9 @@ namespace workspace::scaffold {
             return "";
         }
     }
+}
 
+namespace workspace::scaffold {
     void create_file(const string project_name, const string file_name, const bool verbose) {
         const string full_path = (project_name.length() != 0 ? (project_name + "/") : project_name) + file_name;
 
@@ -142,7 +146,7 @@ namespace workspace::scaffold {
             }
 
             ofstream file_to_write(full_path);
-            file_to_write << __get_predefined_text_content(file_name, project_name);
+            file_to_write << get_predefined_text_content(file_name, project_name);
             file_to_write.close();
 
             if (verbose) {

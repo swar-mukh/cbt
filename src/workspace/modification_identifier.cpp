@@ -14,7 +14,9 @@
 #include "workspace/project_config.hpp"
 #include "workspace/util.hpp"
 
-namespace workspace::modification_identifier {
+namespace {
+    using namespace workspace::modification_identifier;
+
     namespace cr = std::chrono;
     namespace fs = std::filesystem;
 
@@ -25,19 +27,19 @@ namespace workspace::modification_identifier {
 
     const string MAKEFILE_PATH{ ".internals/tmp/makefile" };
     const string TIMESTAMPS_PATH{ ".internals/timestamps.txt" };
-
-    std::tuple<std::size_t, fs::path> __compute_hash_and_file_pair(const string file_name) {
+    
+    std::tuple<std::size_t, fs::path> compute_hash_and_file_pair(const string file_name) {
         const string normalised_file_name = workspace::util::get_platform_formatted_filename(file_name);
         const fs::path normalised_path = fs::path(normalised_file_name);
 
         return std::make_tuple(fs::hash_value(normalised_file_name), normalised_path);
     }
 
-    std::size_t __get_last_modified_timestamp(const fs::path path) {
+    std::size_t get_last_modified_timestamp(const fs::path path) {
         return static_cast<std::size_t>(cr::duration_cast<cr::seconds>(fs::last_write_time(path).time_since_epoch()).count());
     }
 
-    std::tuple<std::size_t, SourceFile> __parse_line(const string line) {
+    std::tuple<std::size_t, SourceFile> parse_line(const string line) {
         std::stringstream stream(line);
 
         std::size_t hash;
@@ -76,7 +78,7 @@ namespace workspace::modification_identifier {
         });
     }
 
-    DB __read_internal_timestamps_file() {
+    DB read_internal_timestamps_file() {
         const string timestamps_file_name{ ".internals/timestamps.txt" };
         DB files_with_timestamps{};
 
@@ -91,7 +93,7 @@ namespace workspace::modification_identifier {
                     continue;
                 }
 
-                const auto [hash, source_file] = __parse_line(line);
+                const auto [hash, source_file] = parse_line(line);
                 files_with_timestamps[hash] = source_file;
             }
         } else {
@@ -101,7 +103,7 @@ namespace workspace::modification_identifier {
         return files_with_timestamps;
     }
 
-    void __generate_makefile(const workspace::project_config::Project& project) {
+    void generate_makefile(const workspace::project_config::Project& project) {
         string files{ "src/*.cpp " };
         const string SEPARATOR{ fs::path::preferred_separator };
 
@@ -132,7 +134,7 @@ namespace workspace::modification_identifier {
         }
     }
 
-    RawDependencyTree __parse_makefile() {
+    RawDependencyTree parse_makefile() {
         const string makefile_name{ MAKEFILE_PATH };
 
         if (fs::exists(makefile_name)) {
@@ -195,7 +197,7 @@ namespace workspace::modification_identifier {
         }
     }
 
-    RawDependencyTree __convert_to_hpp_pov(RawDependencyTree& cpp_pov) {
+    RawDependencyTree convert_to_hpp_pov(RawDependencyTree& cpp_pov) {
         RawDependencyTree hpp_pov;
 
         for (auto const& [file, dependencies]: cpp_pov) {
@@ -211,13 +213,13 @@ namespace workspace::modification_identifier {
         return hpp_pov;
     }
    
-    SourceFile __get_or_construct_source_file(const string file_name, DB& timestamps_history) {
-        const auto [hash, file_path] = __compute_hash_and_file_pair(file_name);
+    SourceFile get_or_construct_source_file(const string file_name, DB& timestamps_history) {
+        const auto [hash, file_path] = compute_hash_and_file_pair(file_name);
 
         if (timestamps_history.contains(hash)) {
             SourceFile source_file = timestamps_history[hash];
 
-            const std::size_t file_last_modified_timestamp = __get_last_modified_timestamp(file_path);
+            const std::size_t file_last_modified_timestamp = get_last_modified_timestamp(file_path);
 
             source_file.file_name = workspace::util::get_platform_formatted_filename(file_path);
             
@@ -235,7 +237,7 @@ namespace workspace::modification_identifier {
             return SourceFile{
                 .hash{ hash },
                 .file_name{ workspace::util::get_platform_formatted_filename(file_path) },
-                .last_modified_timestamp{ __get_last_modified_timestamp(file_path) },
+                .last_modified_timestamp{ get_last_modified_timestamp(file_path) },
                 .compilation_start_timestamp{ static_cast<std::size_t>(0) },
                 .compilation_end_timestamp{ static_cast<std::size_t>(0) },
                 .affected { true },
@@ -244,18 +246,18 @@ namespace workspace::modification_identifier {
         }
     }
 
-    SourceFiles __construct_annotated_list_of_source_files(
+    SourceFiles construct_annotated_list_of_source_files(
         RawDependencyTree& hpp_pov,
         DB& timestamps_history
     ) {
         SourceFiles bucket{};
         
         for (auto& [header_file, dependants]: hpp_pov) {
-            SourceFile hpp_file{ __get_or_construct_source_file(header_file, timestamps_history) };
+            SourceFile hpp_file{ get_or_construct_source_file(header_file, timestamps_history) };
             bucket.insert(hpp_file);
 
             for (auto& dependant: dependants) {
-                SourceFile cpp_file{ __get_or_construct_source_file(dependant, timestamps_history) };
+                SourceFile cpp_file{ get_or_construct_source_file(dependant, timestamps_history) };
 
                 if (hpp_file.affected) {
                     cpp_file.affected = true;
@@ -275,20 +277,22 @@ namespace workspace::modification_identifier {
 
         return bucket;
     }
+}
 
+namespace workspace::modification_identifier {
     std::size_t get_current_fileclock_timestamp() {
         return static_cast<std::size_t>(cr::duration_cast<cr::seconds>(cr::file_clock::now().time_since_epoch()).count());
     }
 
     SourceFiles list_all_files_annotated(const workspace::project_config::Project& project) {
-        DB timestamps_history = __read_internal_timestamps_file();
+        DB timestamps_history = read_internal_timestamps_file();
 
-        __generate_makefile(project);
+        generate_makefile(project);
 
-        RawDependencyTree cpp_pov = __parse_makefile();
-        RawDependencyTree hpp_pov = __convert_to_hpp_pov(cpp_pov);
+        RawDependencyTree cpp_pov = parse_makefile();
+        RawDependencyTree hpp_pov = convert_to_hpp_pov(cpp_pov);
 
-        SourceFiles bucket = __construct_annotated_list_of_source_files(hpp_pov, timestamps_history);
+        SourceFiles bucket = construct_annotated_list_of_source_files(hpp_pov, timestamps_history);
 
         fs::remove(MAKEFILE_PATH);
 
