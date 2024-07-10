@@ -4,14 +4,17 @@
 #include <filesystem>
 #include <set>
 #include <string>
+#include <utility>
 
 #include "workspace/project_config.hpp"
 
 namespace workspace::modification_identifier {
     namespace fs = std::filesystem;
 
+    using FileHash = decltype(fs::hash_value(std::declval<fs::path>()));
+
     struct SourceFile {
-        std::size_t hash;
+        FileHash hash;
         std::string file_name;
 
         std::size_t last_modified_timestamp;

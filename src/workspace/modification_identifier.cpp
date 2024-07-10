@@ -22,13 +22,13 @@ namespace {
 
     using std::string;
 
-    using DB = std::map<std::size_t, SourceFile>;
+    using DB = std::map<FileHash, SourceFile>;
     using RawDependencyTree = std::map<string, std::vector<string>>;
 
     const string MAKEFILE_PATH{ ".internals/tmp/makefile" };
     const string TIMESTAMPS_PATH{ ".internals/timestamps.txt" };
     
-    std::tuple<std::size_t, fs::path> compute_hash_and_file_pair(const string& file_name) {
+    std::tuple<FileHash, fs::path> compute_hash_and_file_pair(const string& file_name) {
         const string normalised_file_name = workspace::util::get_platform_formatted_filename(file_name);
         const fs::path normalised_path = fs::path(normalised_file_name);
 
@@ -39,10 +39,10 @@ namespace {
         return static_cast<std::size_t>(cr::duration_cast<cr::seconds>(fs::last_write_time(path).time_since_epoch()).count());
     }
 
-    std::tuple<std::size_t, SourceFile> parse_line(const string& line) {
+    std::tuple<FileHash, SourceFile> parse_line(const string& line) {
         std::stringstream stream(line);
 
-        std::size_t hash;
+        FileHash hash;
         stream >> hash;
 
         stream.ignore(1);
@@ -219,7 +219,7 @@ namespace {
         if (timestamps_history.contains(hash)) {
             SourceFile source_file = timestamps_history[hash];
 
-            const std::size_t file_last_modified_timestamp = get_last_modified_timestamp(file_path);
+            const FileHash file_last_modified_timestamp = get_last_modified_timestamp(file_path);
 
             source_file.file_name = workspace::util::get_platform_formatted_filename(file_path);
             
