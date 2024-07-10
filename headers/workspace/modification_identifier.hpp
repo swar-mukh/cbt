@@ -20,15 +20,13 @@ namespace workspace::modification_identifier {
 
         mutable bool affected;
         mutable bool was_successful;
-    };
 
-    struct __SourceFileComparator {
-        bool operator()(const SourceFile& left, const SourceFile& right) const {
-            return left.hash < right.hash;
+        bool operator<(const SourceFile& another_file) const {
+            return this->hash < another_file.hash;
         }
     };
 
-    using SourceFiles = std::set<SourceFile, __SourceFileComparator>;
+    using SourceFiles = std::set<SourceFile>;
 
     std::size_t get_current_fileclock_timestamp();
     SourceFiles list_all_files_annotated(const workspace::project_config::Project& project);
