@@ -9,6 +9,7 @@
 namespace workspace::scaffold {
     using std::string;
 
+    const std::regex PROJECT_NAME_R{ "@PROJECT_NAME" };
     const std::regex IMPORT_R{ "@FILE_NAME" };
     const std::regex GUARD_R{ "@GUARD" };
     const std::regex NAMESPACE_R{ "@NAMESPACE" };

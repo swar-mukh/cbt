@@ -103,7 +103,10 @@ namespace {
             
             return final_text;
         } else if (file_name.compare("README.md") == 0) {
-            return remove_raw_literal_indentations(README_MD);
+            const string text{ remove_raw_literal_indentations(README_MD) };
+            const string with_project_name = std::regex_replace(text, PROJECT_NAME_R, project_name);
+
+            return with_project_name;
         } else if (file_name.compare("project.cfg") == 0) {
             using namespace workspace::project_config;
 

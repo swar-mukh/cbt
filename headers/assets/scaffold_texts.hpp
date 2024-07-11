@@ -13,7 +13,7 @@ namespace assets::scaffold_texts {
     )";
 
     const string README_MD = R"(
-    # Project name
+    # @PROJECT_NAME
 
     This project was made using `cbt`
 
