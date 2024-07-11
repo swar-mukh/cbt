@@ -6,7 +6,7 @@
 namespace assets::scaffold_texts {
     using std::string;
 
-  const string GITIGNORE = R"(
+    const string GITIGNORE = R"(
     .internals
     build
     environments/*.env
@@ -39,8 +39,8 @@ namespace assets::scaffold_texts {
 
         using ALLOWED_ENV_DATA_TYPES = std::variant<bool, int, float, string>;
 
-        ALLOWED_ENV_DATA_TYPES get_env(const string key);
-        void prepare_env(std::map<string, string> env);
+        ALLOWED_ENV_DATA_TYPES get_env(const string& key);
+        void prepare_env(std::map<string, string>& env);
     }
 
     #endif
@@ -61,7 +61,9 @@ namespace assets::scaffold_texts {
 
     #include "cbt_tools/utils.hpp"
 
-    namespace cbt_tools::env_manager {
+    namespace {
+        using namespace cbt_tools::env_manager;
+
         namespace fs = std::filesystem;
 
         using std::cerr;
@@ -76,36 +78,36 @@ namespace assets::scaffold_texts {
         std::map<string, ALLOWED_ENV_DATA_TYPES> env_values;
 
         // Add/update necessary parsers as required
-        std::map<string, std::function<ALLOWED_ENV_DATA_TYPES(const string, const string)>> PARSERS{
-            { "bool", [](const string key, const string value) {
+        std::map<string, std::function<ALLOWED_ENV_DATA_TYPES(const string&, const string&)>> PARSERS{
+            { "bool", [](const string& key, const string& value) {
                 if (value.compare("true") == 0 || value.compare("false") == 0) {
                     return value.compare("true") == 0 ? true : false;
                 } else {
                     throw std::invalid_argument("Could not parse value for '" + key + "' to 'bool' type. Expected either 'true' or 'false'.");
                 }
             }},
-            { "int", [](const string key, const string value) {
+            { "int", [](const string& key, const string& value) {
                 try {
                     return std::stoi(value);
-                } catch (const std::invalid_argument &e) {
+                } catch (const std::invalid_argument& e) {
                     throw std::invalid_argument("Could not parse value for '" + key + "' to 'int' type.");
-                } catch (const std::out_of_range &e) {
+                } catch (const std::out_of_range& e) {
                     throw std::invalid_argument("Value for '" + key + "' falls out of range of 'int' type.");
                 }
             }},
-            { "float", [](const string key, const string value) {
+            { "float", [](const string& key, const string& value) {
                 try {
                     return std::stof(value);
-                } catch (const std::invalid_argument &e) {
+                } catch (const std::invalid_argument& e) {
                     throw std::invalid_argument("Could not parse value for '" + key + "' to 'float' type.");
-                } catch (const std::out_of_range &e) {
+                } catch (const std::out_of_range& e) {
                     throw std::invalid_argument("Value for '" + key + "' falls out of range of 'float' type.");
                 }
             }},
-            { "string", []([[maybe_unused]] const string _, const string value) { return value; } },
+            { "string", []([[maybe_unused]] const string& _, const string& value) { return value; } },
         };
 
-        void __set(const string key, const string value) {
+        void set(const string& key, const string& value) {
             // Use the below conditional checks and keep adding the keys
             // that have been defined in 'environments/.env.template' file
 
@@ -121,16 +123,7 @@ namespace assets::scaffold_texts {
         }
 
         // You would typically not need to touch this function
-        ALLOWED_ENV_DATA_TYPES get_env(const string key) {
-            if (env_values.contains(key)) {
-                return env_values[key];
-            } else {
-                throw std::invalid_argument("Trying to access invalid key '" + key + "'");
-            }
-        }
-        
-        // You would typically not need to touch this function
-        void __read_template_file() {
+        void read_template_file() {
             const string template_file_name{ "environments/.env.template" };
 
             if (fs::exists(template_file_name)) {
@@ -154,7 +147,7 @@ namespace assets::scaffold_texts {
         }
 
         // You would typically not need to touch this function
-        void __read_env_file(const string env) {
+        void read_env_file(const string& env) {
             const string env_file_name{ "environments/" + env + ".env" };
 
             ifstream env_file(env_file_name);
@@ -168,22 +161,33 @@ namespace assets::scaffold_texts {
                 if (!env_template.contains(key)) {
                     throw std::domain_error("Key '" + key + "' absent in 'environments/.env.template'");
                 } else {
-                    __set(key, value);
+                    set(key, value);
                 }
+            }
+        }
+    }
+
+    namespace cbt_tools::env_manager {
+        // You would typically not need to touch this function
+        ALLOWED_ENV_DATA_TYPES get_env(const string& key) {
+            if (env_values.contains(key)) {
+                return env_values[key];
+            } else {
+                throw std::invalid_argument("Trying to access invalid key '" + key + "'");
             }
         }
 
         // You would typically not need to touch this function
-        void prepare_env(std::map<string, string> env) {
+        void prepare_env(std::map<string, string>& env) {
             try {
-                __read_template_file();
+                read_template_file();
 
                 if (env["env"].length() != 0) {
-                    __read_env_file(env["env"]);
+                    read_env_file(env["env"]);
                 } else {
-                    __read_env_file("local");
+                    read_env_file("local");
                 }
-            } catch (const std::exception &e) {
+            } catch (const std::exception& e) {
                 cerr << endl << "Exception: " << e.what() << endl << endl;
                 std::exit(EXIT_FAILURE);
             }
@@ -206,7 +210,7 @@ namespace assets::scaffold_texts {
         // Note: Edit this parent class *only if* the harness provided is not upto your requirements
         class TestSuite {
         public:
-            virtual void add_test_case(const std::string title, std::function<void()> test_case) final {
+            virtual void add_test_case(const std::string& title, std::function<void()> test_case) final {
                 test_cases.push_back(std::make_tuple(title, test_case));
             }
             virtual void run() final {
@@ -249,7 +253,7 @@ namespace assets::scaffold_texts {
     namespace cbt_tools::utils {
         using std::string;
 
-        std::tuple<string, string> get_key_value_pair_from_line(const string line, const string delimiter);
+        std::tuple<string, string> get_key_value_pair_from_line(const string& line, const string& delimiter);
     }
 
     #endif
@@ -264,7 +268,7 @@ namespace assets::scaffold_texts {
     namespace cbt_tools::utils {
         using std::string;
 
-        std::tuple<string, string> get_key_value_pair_from_line(const string line, const string delimiter) {
+        std::tuple<string, string> get_key_value_pair_from_line(const string& line, const string& delimiter) {
             const int delimiter_position = line.find(delimiter);
 
             const string key = line.substr(0, delimiter_position);
@@ -283,12 +287,13 @@ namespace assets::scaffold_texts {
     #include <vector>
 
     namespace @NAMESPACE {
+        void a_function();
+
         int sum(const int a, const int b);
 
         enum class Sex {
             MALE,
-            FEMALE,
-            NON_BINARY
+            FEMALE
         };
 
         struct Person {
@@ -310,18 +315,26 @@ namespace assets::scaffold_texts {
 
         class SampleCompany {
         public:
-            SampleCompany(const std::string location);
-            bool fire(const std::string employee_id, const std::string reason);
+            explicit SampleCompany(const std::string& name, const std::string& location, const Employee& founder);
+
+            std::string get_name() const;
             std::string get_location() const;
-            Employee hire(const Person person);
-            bool is_candidate_eligible(const Person person) const;
+            Employee get_founder() const;
+            int strength() const;
+
+            bool is_candidate_eligible(const Person& person) const;
+            void hire(const Person& person);
+            bool fire(const std::string& employee_id, const std::string& reason);
+            
             std::vector<Employee> list_absentees() const;
+
             friend std::ostream& operator<<(std::ostream& out, const SampleCompany& company);
         
         private:
+            std::string name;
+            std::string location;
             Employee founder;
             std::vector<Employee> employees;
-            std::string location;
         };
     }
 
@@ -350,7 +363,7 @@ namespace assets::scaffold_texts {
         cbt_tools::env_manager::prepare_env(env);
 
         std::cout << "args[0]: " << args[0] << std::endl;
-        std::cout << "env[\"HOME\"]: " << env["HOME"] << std::endl;
+        std::cout << "env[\"HOME\"]: " << env["HOME"] << std::endl << std::endl;
 
         const std::string sample_env_key { "a_float_entry" };
         auto env_value = cbt_tools::env_manager::get_env(sample_env_key);
@@ -360,7 +373,19 @@ namespace assets::scaffold_texts {
             std::cout << "Env. value of '" << sample_env_key << "' is: " << value << std::endl;
         }
 
-        std::cout << "Sum of 2 and 3 is: " << sample::sum(2, 3) << std::endl;
+        std::cout << std::endl << "Sum of 2 and 3 is: " << sample::sum(2, 3) << std::endl << std::endl;
+
+        sample::SampleCompany company("MyCompany", "MyLocation", sample::Employee{
+            .id{ "#E1" },
+            .first_name{ "First" },
+            .last_name{ "Name" },
+            .sex{ sample::Sex::MALE }
+        });
+
+        company.hire(sample::Person{ .first_name{ "F1" }, .last_name{ "L1" }, .sex{ sample::Sex::MALE } });
+        company.hire(sample::Person{ .first_name{ "F2" }, .last_name{ "L2" }, .sex{ sample::Sex::FEMALE } });
+
+        std::cout << company;
 
         return EXIT_SUCCESS;
     }
@@ -369,31 +394,88 @@ namespace assets::scaffold_texts {
     const string SAMPLE_CPP = R"(
     #include "@FILE_NAME"
 
+    #include <iomanip>
     #include <iostream>
 
+    namespace {
+        using namespace @NAMESPACE;
+
+        // Define all private functionalities here. These are auxiliary items
+        // that will be available only in this file.
+
+        void some_helper() {
+            std::cout << "Helper called!";
+        }
+    }
+
     namespace @NAMESPACE {
+        void a_function() {
+            some_helper();
+        }
+
         int sum(const int a, const int b) {
             return a + b;
         }
 
         std::ostream& operator<<(std::ostream& out, const Person& person) {
-            out << person.first_name << std::endl;
+            out << "Person{"
+                << " first_name: " << std::quoted(person.first_name)
+                << ", last_name: " << std::quoted(person.last_name)
+                << ", sex: " << (person.sex == Sex::MALE ? 'M' : 'F')
+                << " }";
+            
             return out;
         }
 
         std::ostream& operator<<(std::ostream& out, const Employee& employee) {
-            out << employee.id << std::endl;
+            out << "Employee{"
+                << " id: " << std::quoted(employee.id)
+                << ", first_name: " << std::quoted(employee.first_name)
+                << ", last_name: " << std::quoted(employee.last_name)
+                << ", sex: " << (employee.sex == Sex::MALE ? 'M' : 'F')
+                << " }";
+            
             return out;
         }
 
-        SampleCompany::SampleCompany(std::string location): location(location){}
+        SampleCompany::SampleCompany(const std::string& name, const std::string& location, const Employee& founder):
+            name{ name },
+            location{ location },
+            founder{ founder } {}
+
+        std::string SampleCompany::get_name() const {
+            return this->name;
+        }
 
         std::string SampleCompany::get_location() const {
             return this->location;
         }
 
+        Employee SampleCompany::get_founder() const {
+            return this->founder;
+        }
+
+        int SampleCompany::strength() const {
+            return this->employees.size() + 1;
+        }
+
+        void SampleCompany::hire(const Person& person) {
+            this->employees.push_back(Employee{
+                .id{ "#E" + std::to_string(this->employees.size() + 1) },
+                .first_name{ person.first_name },
+                .last_name{ person.last_name  },
+                .sex{ person.sex }
+            });
+        }
+
         std::ostream& operator<<(std::ostream& out, const SampleCompany& company) {
-            out << company.get_location() << std::endl;
+            out << "Company{\n"
+                << " name: " << std::quoted(company.get_name()) << "\n"
+                << " location: " << std::quoted(company.get_location()) << "\n"
+                << " founder: " << company.get_founder() << "\n"
+                << " strength: " << company.strength() << "\n"
+                << "}" << std::endl;
+            
             return out;
         }
     }
@@ -428,7 +510,6 @@ namespace assets::scaffold_texts {
 
         // add your environment variables and functionalities here, if necessary
         int sample_env_int{ 0 };
-        @NAMESPACE::SampleCompany sample_company{ "Sample location" };
     };
 
     int main() {
@@ -436,16 +517,37 @@ namespace assets::scaffold_texts {
 
         std::cout << std::endl << std::setw(8) << "EXECUTE " << __FILE__ << std::endl << std::endl;
 
-        test_suite.add_test_case("Test that sum of 5 and 6 is 11", []() {
-            assert((@NAMESPACE::sum(5, 6) == 11));
+        test_suite.add_test_case("Sum of 5 and 6 is 11", []() {
+            assert((sample::sum(5, 6) == 11));
         });
         
-        test_suite.add_test_case("Test that sum of 5 and 6 is not 12", []() {
-            assert((@NAMESPACE::sum(5, 6) != 12));
+        test_suite.add_test_case("Sum of 5 and 6 is not 12", []() {
+            assert((sample::sum(5, 6) != 12));
         });
-        
-        test_suite.add_test_case("Test that sum of 3 and 7 is 10", []() {
-            assert((@NAMESPACE::sum(3, 7) == 10));
+
+        test_suite.add_test_case("Company foundation strength is 1", []() {
+            sample::SampleCompany company("MyCompany", "MyLocation", sample::Employee{
+                .id{ "#E1" },
+                .first_name{ "First" },
+                .last_name{ "Name" },
+                .sex{ sample::Sex::MALE }
+            });
+
+            assert((company.strength() == 1));
+        });
+
+        test_suite.add_test_case("Company's strength is 3 upon hiring of 2 candidates", []() {
+            sample::SampleCompany company("MyCompany", "MyLocation", sample::Employee{
+                .id{ "#E1" },
+                .first_name{ "First" },
+                .last_name{ "Name" },
+                .sex{ sample::Sex::MALE }
+            });
+
+            company.hire(sample::Person{ .first_name{ "F1" }, .last_name{ "L1" }, .sex{ sample::Sex::MALE } });
+            company.hire(sample::Person{ .first_name{ "F2" }, .last_name{ "L2" }, .sex{ sample::Sex::FEMALE } });
+
+            assert((company.strength() == 3));
         });
         
         test_suite.run();

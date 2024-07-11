@@ -4,14 +4,17 @@
 #include <filesystem>
 #include <set>
 #include <string>
+#include <utility>
 
 #include "workspace/project_config.hpp"
 
 namespace workspace::modification_identifier {
     namespace fs = std::filesystem;
 
+    using FileHash = decltype(fs::hash_value(std::declval<fs::path>()));
+
     struct SourceFile {
-        std::size_t hash;
+        FileHash hash;
         std::string file_name;
 
         std::size_t last_modified_timestamp;
@@ -20,19 +23,17 @@ namespace workspace::modification_identifier {
 
         mutable bool affected;
         mutable bool was_successful;
-    };
 
-    struct __SourceFileComparator {
-        bool operator()(const SourceFile& left, const SourceFile& right) const {
-            return left.hash < right.hash;
+        bool operator<(const SourceFile& another_file) const {
+            return this->hash < another_file.hash;
         }
     };
 
-    using SourceFiles = std::set<SourceFile, __SourceFileComparator>;
+    using SourceFiles = std::set<SourceFile>;
 
     std::size_t get_current_fileclock_timestamp();
     SourceFiles list_all_files_annotated(const workspace::project_config::Project& project);
-    void persist_annotations(SourceFiles& bucket);
+    void persist_annotations(const SourceFiles& bucket);
 }
 
 #endif

@@ -19,11 +19,9 @@ namespace workspace::project_config {
     struct Author {
         string name;
         string email_id;
-    };
-
-    struct __AuthorComparator {
-        bool operator()(const Author &left, const Author &right) const {
-            return left.name > right.name;
+        
+        bool operator<(const Author &another_author) const {
+            return this->name < another_author.name;
         }
     };
 
@@ -40,16 +38,16 @@ namespace workspace::project_config {
         string description;
         string version;
 
-        std::set<Author, __AuthorComparator> authors;
+        std::set<Author> authors;
         std::set<Platform> platforms;
         Config config;
     };
 
-    string platform_to_string(const Platform platform);
-    Platform string_to_platform(const string platform);
+    string platform_to_string(const Platform& platform);
+    Platform string_to_platform(const string& platform);
 
     Project convert_cfg_to_model();
-    string convert_model_to_cfg(const Project project, const bool add_disclaimer_text = true);
+    string convert_model_to_cfg(const Project& project, const bool add_disclaimer_text = true);
 }
 
 #endif

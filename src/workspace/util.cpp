@@ -57,7 +57,7 @@ namespace workspace::util {
         return std::make_tuple(false, "");
     }
 
-    std::tuple<bool, string> is_valid_project_name(const string project_name) {
+    std::tuple<bool, string> is_valid_project_name(const string& project_name) {
         const string lowercased_project_name = change_case(project_name, TextCase::LOWER_CASE);
 
         if (lowercased_project_name.find('/') != lowercased_project_name.npos || lowercased_project_name.find('\\') != lowercased_project_name.npos) {
@@ -73,7 +73,7 @@ namespace workspace::util {
         }
     }
     
-    std::tuple<bool, string> is_valid_file_name(const string file_name) {
+    std::tuple<bool, string> is_valid_file_name(const string& file_name) {
         const string lowercased_file_name = change_case(file_name, TextCase::LOWER_CASE);
 
         if (lowercased_file_name.starts_with("headers/") && lowercased_file_name.length() == string("headers/").length()) {
@@ -97,7 +97,7 @@ namespace workspace::util {
         }
     }
 
-    std::tuple<string, string, string> get_qualified_names(const string full_file_path) {
+    std::tuple<string, string, string> get_qualified_names(const string& full_file_path) {
         string stemmed_name{""};
 
         const int literal_length_of_headers = string("headers/").length();
@@ -120,7 +120,7 @@ namespace workspace::util {
         );
     }
 
-    string convert_stemmed_name_to_guard_name(const string stemmed_name) {
+    string convert_stemmed_name_to_guard_name(const string& stemmed_name) {
         return std::regex_replace(
             change_case(stemmed_name, TextCase::UPPER_CASE),
             std::regex("/", std::regex_constants::basic),
@@ -128,7 +128,7 @@ namespace workspace::util {
         );
     }
 
-    string convert_stemmed_name_to_namespace_name(const string stemmed_name) {
+    string convert_stemmed_name_to_namespace_name(const string& stemmed_name) {
         return std::regex_replace(
             change_case(stemmed_name, TextCase::LOWER_CASE),
             std::regex("/", std::regex_constants::basic),
@@ -136,7 +136,7 @@ namespace workspace::util {
         );
     }
 
-    std::tuple<string, string> get_key_value_pair_from_line(const string line, const string delimiter) {
+    std::tuple<string, string> get_key_value_pair_from_line(const string& line, const string& delimiter) {
         const int delimiter_position = line.find(delimiter);
 
         const string key = line.substr(0, delimiter_position);
@@ -145,7 +145,7 @@ namespace workspace::util {
         return std::make_tuple(key, value);
     }
 
-    string get_platform_formatted_filename(const string file_name) {
+    string get_platform_formatted_filename(const string& file_name) {
         return get_platform_formatted_filename(std::filesystem::path(file_name));
     }
 

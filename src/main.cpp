@@ -1,4 +1,5 @@
 #include <cstdlib>
+#include <exception>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -6,14 +7,7 @@
 #include "commands.hpp"
 #include "workspace/scaffold.hpp"
 
-using std::cerr;
-using std::cout;
-using std::endl;
-using std::exception;
-using std::string;
-using std::vector;
-
-void parse_commands_and_execute(vector <string> arguments) {
+void parse_commands_and_execute(std::vector<std::string>& arguments) {
     try {
         if (arguments.size() == 3) {
             if (arguments[1].compare("create-project") == 0) {
@@ -47,19 +41,19 @@ void parse_commands_and_execute(vector <string> arguments) {
         } else {
             commands::show_usage();
         }
-    } catch (const exception & e) {
-        cerr << "Exception: " << e.what() << endl << endl;
+    } catch (const std::exception& e) {
+        std::cerr << "Exception: " << e.what() << std::endl << std::endl;
         std::exit(EXIT_FAILURE);
     } catch (...) {
-        cerr << "Something went wrong!" << endl << endl;
+        std::cerr << "Something went wrong!" << std::endl << std::endl;
         std::exit(EXIT_FAILURE);
     }
 }
 
 int main(const int argc, char *argv[]) {
-    vector<string> args(argv, argv + argc);
+    std::vector<std::string> args(argv, argv + argc);
 
-    cout << endl;
+    std::cout << std::endl;
 
     if (args.size() == 1) {
         commands::show_usage();
@@ -67,7 +61,7 @@ int main(const int argc, char *argv[]) {
         parse_commands_and_execute(args);
     }
 
-    cout << endl;
+    std::cout << std::endl;
 
     return EXIT_SUCCESS;
 }

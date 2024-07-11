@@ -12,7 +12,9 @@
 
 #include "workspace/util.hpp"
 
-namespace workspace::env_manager {
+namespace {
+    using namespace workspace::env_manager;
+
     namespace fs = std::filesystem;
 
     using std::cerr;
@@ -26,15 +28,15 @@ namespace workspace::env_manager {
     std::map<string, string> env_template;
     std::map<string, ALLOWED_ENV_DATA_TYPES> env_values;
 
-    std::map<string, std::function<ALLOWED_ENV_DATA_TYPES(const string, const string)>> PARSERS{
-        { "bool", [](const string key, const string value) {
+    std::map<string, std::function<ALLOWED_ENV_DATA_TYPES(const string&, const string&)>> PARSERS{
+        { "bool", [](const string& key, const string& value) {
             if (value.compare("true") == 0 || value.compare("false") == 0) {
                 return value.compare("true") == 0 ? true : false;
             } else {
                 throw std::invalid_argument("Could not parse value for '" + key + "' to 'bool' type. Expected either 'true' or 'false'.");
             }
         }},
-        { "int", [](const string key, const string value) {
+        { "int", [](const string& key, const string& value) {
             try {
                 return std::stoi(value);
             } catch (const std::invalid_argument &e) {
@@ -43,7 +45,7 @@ namespace workspace::env_manager {
                 throw std::invalid_argument("Value for '" + key + "' falls out of range of 'int' type.");
             }
         }},
-        { "float", [](const string key, const string value) {
+        { "float", [](const string& key, const string& value) {
             try {
                 return std::stof(value);
             } catch (const std::invalid_argument &e) {
@@ -52,10 +54,10 @@ namespace workspace::env_manager {
                 throw std::invalid_argument("Value for '" + key + "' falls out of range of 'float' type.");
             }
         }},
-        { "string", []([[maybe_unused]] const string _, const string value) { return value; } },
+        { "string", []([[maybe_unused]] const string& _, const string& value) { return value; } },
     };
 
-    void __set(const string key, const string value) {
+    void set_kv(const string& key, const string& value) {
         if (key.compare("a_bool_entry") == 0) {
             env_values["a_bool_entry"] = PARSERS["bool"](key, value);
         } else if (key.compare("an_int_entry") == 0) {
@@ -67,15 +69,7 @@ namespace workspace::env_manager {
         }
     }
 
-    ALLOWED_ENV_DATA_TYPES get_env(const string key) {
-        if (env_values.contains(key)) {
-            return env_values[key];
-        } else {
-            throw std::invalid_argument("Trying to access invalid key '" + key + "'");
-        }
-    }
-    
-    void __read_template_file() {
+    void read_template_file() {
         const string template_file_name{ "environments/.env.template" };
 
         if (fs::exists(template_file_name)) {
@@ -98,7 +92,7 @@ namespace workspace::env_manager {
         }
     }
 
-    void __read_env_file(const string env) {
+    void read_env_file(const string& env) {
         const string env_file_name{ "environments/" + env + ".env" };
 
         ifstream env_file(env_file_name);
@@ -112,19 +106,29 @@ namespace workspace::env_manager {
             if (!env_template.contains(key)) {
                 throw std::domain_error("Key '" + key + "' absent in 'environments/.env.template'");
             } else {
-                __set(key, value);
+                set_kv(key, value);
             }
         }
     }
+}
 
-    void prepare_env(std::map<string, string> env) {
+namespace workspace::env_manager {
+    ALLOWED_ENV_DATA_TYPES get_env(const string& key) {
+        if (env_values.contains(key)) {
+            return env_values[key];
+        } else {
+            throw std::invalid_argument("Trying to access invalid key '" + key + "'");
+        }
+    }
+    
+    void prepare_env(std::map<string, string>& env) {
         try {
-            __read_template_file();
+            read_template_file();
 
             if (env["env"].length() != 0) {
-                __read_env_file(env["env"]);
+                read_env_file(env["env"]);
             } else {
-                __read_env_file("local");
+                read_env_file("local");
             }
         } catch (const std::exception &e) {
             cerr << endl << "Exception: " << e.what() << endl << endl;

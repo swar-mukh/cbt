@@ -15,7 +15,7 @@ namespace workspace::project_config {
     const string DELIMITER{ "=" };
     const string LINE_COMMENT{ ";" };
 
-    string platform_to_string(const Platform platform) {
+    string platform_to_string(const Platform& platform) {
         using enum workspace::project_config::Platform;
         
         switch(platform) {
@@ -28,7 +28,7 @@ namespace workspace::project_config {
         }
     }
 
-    Platform string_to_platform(const string platform) {
+    Platform string_to_platform(const string& platform) {
         using enum workspace::project_config::Platform;
 
         if (platform.compare("bsd") == 0) { return BSD; }
@@ -110,7 +110,7 @@ namespace workspace::project_config {
         }
     }
 
-    string convert_model_to_cfg(const Project project, const bool add_disclaimer_text) {
+    string convert_model_to_cfg(const Project& project, const bool add_disclaimer_text) {
         const string disclaimer_text{ std::string("; Since a rudimentary INI parser is used, ensure that the actual `key` and")
             + "\n; `value` pairs follow the same `key` and `value` format in this file which was"
             + "\n; provided while creation of the project. Also, ensure that each pair is"
