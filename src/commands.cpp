@@ -193,7 +193,7 @@ namespace commands {
         const string SEPARATOR{ fs::path::preferred_separator };
 
         for (auto dir_entry = fs::recursive_directory_iterator("build"); dir_entry != fs::recursive_directory_iterator(); ++dir_entry) {
-            const string normalised_path{ workspace::util::get_platform_formatted_filename(dir_entry -> path().string()) };
+            const string normalised_path{ workspace::util::get_platform_formatted_filename(dir_entry->path().string()) };
 
             if (!normalised_path.starts_with(BUILD_PATH)) {
                 dir_entry.disable_recursion_pending();
@@ -201,7 +201,7 @@ namespace commands {
             
             if (fs::is_directory(*dir_entry)) {
                 const int files_count = std::count_if(
-                    fs::directory_iterator(dir_entry -> path()),
+                    fs::directory_iterator(dir_entry->path()),
                     {}, 
                     [](auto& file){ return file.is_regular_file(); }
                 );

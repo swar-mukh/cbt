@@ -108,11 +108,11 @@ namespace {
         const string SEPARATOR{ fs::path::preferred_separator };
 
         for (auto dir_entry = fs::recursive_directory_iterator("src"); dir_entry != fs::recursive_directory_iterator(); ++dir_entry) {
-            const string normalised_path{ workspace::util::get_platform_formatted_filename(dir_entry -> path().string()) };
+            const string normalised_path{ workspace::util::get_platform_formatted_filename(dir_entry->path().string()) };
 
             if (fs::is_directory(*dir_entry)) {
                 const int files_count = std::count_if(
-                    fs::directory_iterator(dir_entry -> path()),
+                    fs::directory_iterator(dir_entry->path()),
                     {}, 
                     [](auto& file){ return file.is_regular_file(); }
                 );
@@ -175,7 +175,7 @@ namespace {
                 const std::sregex_iterator words = std::sregex_iterator(line.begin(), line.end(), pattern);
 
                 for (std::sregex_iterator match = words; match != std::sregex_iterator(); ++match) {
-                    string file = match -> str();
+                    string file = match->str();
 
                     if (current_file.empty()) {
                         current_file = file;
@@ -267,8 +267,8 @@ namespace {
                     bucket.insert(cpp_file);
                 } else {
                     if (auto existing_file = bucket.find(cpp_file); existing_file != bucket.end()) {
-                        if (!existing_file -> affected && hpp_file.affected) {
-                            existing_file -> affected = true;
+                        if (!existing_file->affected && hpp_file.affected) {
+                            existing_file->affected = true;
                         }
                     }
                 }
