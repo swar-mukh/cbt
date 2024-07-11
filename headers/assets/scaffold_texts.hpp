@@ -293,8 +293,7 @@ namespace assets::scaffold_texts {
 
         enum class Sex {
             MALE,
-            FEMALE,
-            NON_BINARY
+            FEMALE
         };
 
         struct Person {
@@ -316,18 +315,26 @@ namespace assets::scaffold_texts {
 
         class SampleCompany {
         public:
-            SampleCompany(const std::string& location);
-            bool fire(const std::string& employee_id, const std::string& reason);
+            explicit SampleCompany(const std::string& name, const std::string& location, const Employee& founder);
+
+            std::string get_name() const;
             std::string get_location() const;
-            Employee hire(const Person& person);
+            Employee get_founder() const;
+            int strength() const;
+
             bool is_candidate_eligible(const Person& person) const;
+            void hire(const Person& person);
+            bool fire(const std::string& employee_id, const std::string& reason);
+            
             std::vector<Employee> list_absentees() const;
+
             friend std::ostream& operator<<(std::ostream& out, const SampleCompany& company);
         
         private:
+            std::string name;
+            std::string location;
             Employee founder;
             std::vector<Employee> employees;
-            std::string location;
         };
     }
 
@@ -356,7 +363,7 @@ namespace assets::scaffold_texts {
         cbt_tools::env_manager::prepare_env(env);
 
         std::cout << "args[0]: " << args[0] << std::endl;
-        std::cout << "env[\"HOME\"]: " << env["HOME"] << std::endl;
+        std::cout << "env[\"HOME\"]: " << env["HOME"] << std::endl << std::endl;
 
         const std::string sample_env_key { "a_float_entry" };
         auto env_value = cbt_tools::env_manager::get_env(sample_env_key);
@@ -366,7 +373,19 @@ namespace assets::scaffold_texts {
             std::cout << "Env. value of '" << sample_env_key << "' is: " << value << std::endl;
         }
 
-        std::cout << "Sum of 2 and 3 is: " << sample::sum(2, 3) << std::endl;
+        std::cout << std::endl << "Sum of 2 and 3 is: " << sample::sum(2, 3) << std::endl << std::endl;
+
+        sample::SampleCompany company("MyCompany", "MyLocation", sample::Employee{
+            .id{ "#E1" },
+            .first_name{ "First" },
+            .last_name{ "Name" },
+            .sex{ sample::Sex::MALE }
+        });
+
+        company.hire(sample::Person{ .first_name{ "F1" }, .last_name{ "L1" }, .sex{ sample::Sex::MALE } });
+        company.hire(sample::Person{ .first_name{ "F2" }, .last_name{ "L2" }, .sex{ sample::Sex::FEMALE } });
+
+        std::cout << company;
 
         return EXIT_SUCCESS;
     }
@@ -375,6 +394,7 @@ namespace assets::scaffold_texts {
     const string SAMPLE_CPP = R"(
     #include "@FILE_NAME"
 
+    #include <iomanip>
     #include <iostream>
 
     namespace {
@@ -398,23 +418,64 @@ namespace assets::scaffold_texts {
         }
 
         std::ostream& operator<<(std::ostream& out, const Person& person) {
-            out << person.first_name << std::endl;
+            out << "Person{"
+                << " first_name: " << std::quoted(person.first_name)
+                << ", last_name: " << std::quoted(person.last_name)
+                << ", sex: " << (person.sex == Sex::MALE ? 'M' : 'F')
+                << " }";
+            
             return out;
         }
 
         std::ostream& operator<<(std::ostream& out, const Employee& employee) {
-            out << employee.id << std::endl;
+            out << "Employee{"
+                << " id: " << std::quoted(employee.id)
+                << ", first_name: " << std::quoted(employee.first_name)
+                << ", last_name: " << std::quoted(employee.last_name)
+                << ", sex: " << (employee.sex == Sex::MALE ? 'M' : 'F')
+                << " }";
+            
             return out;
         }
 
-        SampleCompany::SampleCompany(const std::string& location): location(location){}
+        SampleCompany::SampleCompany(const std::string& name, const std::string& location, const Employee& founder):
+            name{ name },
+            location{ location },
+            founder{ founder } {}
+
+        std::string SampleCompany::get_name() const {
+            return this->name;
+        }
 
         std::string SampleCompany::get_location() const {
             return this->location;
         }
 
+        Employee SampleCompany::get_founder() const {
+            return this->founder;
+        }
+
+        int SampleCompany::strength() const {
+            return this->employees.size() + 1;
+        }
+
+        void SampleCompany::hire(const Person& person) {
+            this->employees.push_back(Employee{
+                .id{ "#E" + std::to_string(this->employees.size() + 1) },
+                .first_name{ person.first_name },
+                .last_name{ person.last_name  },
+                .sex{ person.sex }
+            });
+        }
+
         std::ostream& operator<<(std::ostream& out, const SampleCompany& company) {
-            out << company.get_location() << std::endl;
+            out << "Company{\n"
+                << " name: " << std::quoted(company.get_name()) << "\n"
+                << " location: " << std::quoted(company.get_location()) << "\n"
+                << " founder: " << company.get_founder() << "\n"
+                << " strength: " << company.strength() << "\n"
+                << "}" << std::endl;
+            
             return out;
         }
     }
