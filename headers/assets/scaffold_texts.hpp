@@ -510,7 +510,6 @@ namespace assets::scaffold_texts {
 
         // add your environment variables and functionalities here, if necessary
         int sample_env_int{ 0 };
-        @NAMESPACE::SampleCompany sample_company{ "Sample location" };
     };
 
     int main() {
@@ -518,16 +517,37 @@ namespace assets::scaffold_texts {
 
         std::cout << std::endl << std::setw(8) << "EXECUTE " << __FILE__ << std::endl << std::endl;
 
-        test_suite.add_test_case("Test that sum of 5 and 6 is 11", []() {
-            assert((@NAMESPACE::sum(5, 6) == 11));
+        test_suite.add_test_case("Sum of 5 and 6 is 11", []() {
+            assert((sample::sum(5, 6) == 11));
         });
         
-        test_suite.add_test_case("Test that sum of 5 and 6 is not 12", []() {
-            assert((@NAMESPACE::sum(5, 6) != 12));
+        test_suite.add_test_case("Sum of 5 and 6 is not 12", []() {
+            assert((sample::sum(5, 6) != 12));
         });
-        
-        test_suite.add_test_case("Test that sum of 3 and 7 is 10", []() {
-            assert((@NAMESPACE::sum(3, 7) == 10));
+
+        test_suite.add_test_case("Company foundation strength is 1", []() {
+            sample::SampleCompany company("MyCompany", "MyLocation", sample::Employee{
+                .id{ "#E1" },
+                .first_name{ "First" },
+                .last_name{ "Name" },
+                .sex{ sample::Sex::MALE }
+            });
+
+            assert((company.strength() == 1));
+        });
+
+        test_suite.add_test_case("Company's strength is 3 upon hiring of 2 candidates", []() {
+            sample::SampleCompany company("MyCompany", "MyLocation", sample::Employee{
+                .id{ "#E1" },
+                .first_name{ "First" },
+                .last_name{ "Name" },
+                .sex{ sample::Sex::MALE }
+            });
+
+            company.hire(sample::Person{ .first_name{ "F1" }, .last_name{ "L1" }, .sex{ sample::Sex::MALE } });
+            company.hire(sample::Person{ .first_name{ "F2" }, .last_name{ "L2" }, .sex{ sample::Sex::FEMALE } });
+
+            assert((company.strength() == 3));
         });
         
         test_suite.run();
