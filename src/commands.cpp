@@ -237,38 +237,55 @@ namespace commands {
 
     void run_unit_tests() {
         workspace::scaffold::create_build_tree_as_necessary();
-         
-        const string gpp_include_paths{ "-Iheaders" };
-        const string unit_tests_directory{ "tests/unit_tests/" };
-        const int literal_length_of_unit_tests = unit_tests_directory.length();
-        const int literal_length_of_extension = string(".cpp").length();
 
         const Project project = convert_cfg_to_model();
 
+        const workspace::modification_identifier::RawDependencyTree tree = workspace::modification_identifier::get_source_files_with_dependants(project, "tests/unit_tests");
+        
         #if defined(_WIN32) || defined(_WIN64)
         const string EXTENSION{ ".exe" };
         #else
         const string EXTENSION{ "" };
         #endif
 
+        const string gpp_include_paths{ "-Iheaders" };
+        const string unit_tests_directory{ "tests/unit_tests/" };
+        const fs::path harness{ "headers/cbt_tools/test_harness.hpp" };
+
         cout << "[COMMAND] " << ("g++ -std=" + project.config.cpp_standard + " " + project.config.safety_flags + " " + project.config.test_flags + " " + gpp_include_paths + " " + unit_tests_directory + "<FILE> -o build/test_binaries/unit_tests/<FILE>" + EXTENSION) << endl << endl;
 
-        for (auto const& dir_entry: fs::recursive_directory_iterator(unit_tests_directory)) {
-            if (fs::is_directory(dir_entry)) {
-                const string directory = dir_entry.path().string();
+        for (auto const& [file, dependencies]: tree) {
+            string files_to_link{ file };
+            const fs::path scoped_directory_of_file = fs::relative(fs::path{ file }.parent_path(), "tests/unit_tests");
+            const fs::path build_directory_under_check{ "build/test_binaries/unit_tests" / scoped_directory_of_file };
 
-                const string directory_under_check = string("build/test_binaries/unit_tests/" + directory.substr(literal_length_of_unit_tests));
-
-                if (!fs::exists(directory_under_check)) {
-                    workspace::scaffold::create_directory(string("."), directory_under_check, false, false);
-                }
-            } else if (fs::is_regular_file(dir_entry)) {
-                const string cpp_file = dir_entry.path().string();
-                const string stemmed_cpp_file = cpp_file.substr(literal_length_of_unit_tests, cpp_file.length() - (literal_length_of_unit_tests + literal_length_of_extension));
-
-                const int result = system((string("g++") + " -std=" + project.config.cpp_standard + " " + project.config.safety_flags + " " + project.config.test_flags + " " + gpp_include_paths + " " + cpp_file + " -o build/test_binaries/unit_tests/" + stemmed_cpp_file + EXTENSION).c_str());
-                cout << "[COMPILE]" << std::left << std::setw(6) << (result == 0 ? "[OK]" : "[NOK]") << workspace::util::get_platform_formatted_filename(cpp_file) <<  endl;
+            if (!fs::exists(build_directory_under_check)) {
+                workspace::scaffold::create_directory(string("."), build_directory_under_check.string(), true, false);
             }
+
+            const fs::path corresponding_header_file = fs::path("headers" / scoped_directory_of_file / fs::path(file).stem().replace_extension(".hpp"));
+            
+            for (auto const& dependency: dependencies) {
+                if (!fs::equivalent(corresponding_header_file, dependency) && !fs::equivalent(dependency, harness)) {
+                    const fs::path scoped_directory_of_dependency = fs::relative(fs::path{ dependency }.parent_path(), "headers");
+                    const fs::path corresponding_implementation_file = fs::path("src" / scoped_directory_of_dependency / fs::path(dependency).stem().replace_extension(".cpp"));
+
+                    if (fs::exists(corresponding_implementation_file)) {
+                        const fs::path corresponding_binary = fs::path("build/binaries" / scoped_directory_of_dependency / fs::path(dependency).stem().replace_extension(".o"));
+
+                        if (!fs::exists(corresponding_binary)) {
+                            throw std::runtime_error("Corresponding binary for '" + workspace::util::get_platform_formatted_filename(dependency) + "' not found! Run `cbt compile-project` first.");
+                        } else {
+                            files_to_link += " " + corresponding_binary.string();
+                        }
+                    }
+                }
+            }
+
+            const fs::path test_binary = fs::path("build/test_binaries/unit_tests" / scoped_directory_of_file / fs::path(file).stem().replace_extension(EXTENSION));
+
+            const int result = system((string("g++") + " -std=" + project.config.cpp_standard + " " + project.config.safety_flags + " " + project.config.test_flags + " " + gpp_include_paths + " " + files_to_link + " -o " + test_binary.string()).c_str());
+            cout << "[COMPILE]" << std::left << std::setw(6) << (result == 0 ? "[OK]" : "[NOK]") << workspace::util::get_platform_formatted_filename(test_binary) <<  endl;
         }
 
         for (auto const& dir_entry: fs::recursive_directory_iterator("build/test_binaries/unit_tests/")) {
