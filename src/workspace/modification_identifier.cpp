@@ -309,9 +309,13 @@ namespace workspace::modification_identifier {
             const fs::path file_path{ file };
 
             const fs::path scoped_directory_of_file = fs::relative(fs::path{ file }.parent_path(), "tests/unit_tests");
+            const fs::path corresponding_source_file = fs::path("src" / scoped_directory_of_file / fs::path(file).filename());
             const fs::path corresponding_binary = fs::path("build/test_binaries/unit_tests" / scoped_directory_of_file / fs::path(file).stem().replace_extension(EXTENSION));
 
-            if (!fs::exists(corresponding_binary) || get_last_modified_timestamp(file_path) > get_last_modified_timestamp(corresponding_binary)) {
+            if (!fs::exists(corresponding_binary)
+                || (get_last_modified_timestamp(file_path) > get_last_modified_timestamp(corresponding_binary))
+                || (get_last_modified_timestamp(corresponding_source_file) > get_last_modified_timestamp(corresponding_binary))
+            ) {
                 tree[file] = dependencies;
                 continue;
             }
