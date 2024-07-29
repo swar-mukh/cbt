@@ -23,7 +23,6 @@ namespace {
     using std::string;
 
     using DB = std::map<FileHash, SourceFile>;
-    using RawDependencyTree = std::map<string, std::vector<string>>;
 
     const string MAKEFILE_PATH{ ".internals/tmp/makefile" };
     const string TIMESTAMPS_PATH{ ".internals/timestamps.txt" };
@@ -103,11 +102,11 @@ namespace {
         return files_with_timestamps;
     }
 
-    void generate_makefile(const workspace::project_config::Project& project) {
-        string files{ "src/*.cpp " };
+    void generate_makefile(const workspace::project_config::Project& project, const string& path) {
+        string files{ path + "/*.cpp " };
         const string SEPARATOR{ fs::path::preferred_separator };
 
-        for (auto dir_entry = fs::recursive_directory_iterator("src"); dir_entry != fs::recursive_directory_iterator(); ++dir_entry) {
+        for (auto dir_entry = fs::recursive_directory_iterator(path); dir_entry != fs::recursive_directory_iterator(); ++dir_entry) {
             const string normalised_path{ workspace::util::get_platform_formatted_filename(dir_entry->path().string()) };
 
             if (fs::is_directory(*dir_entry)) {
@@ -175,14 +174,16 @@ namespace {
                 const std::sregex_iterator words = std::sregex_iterator(line.begin(), line.end(), pattern);
 
                 for (std::sregex_iterator match = words; match != std::sregex_iterator(); ++match) {
-                    string file = match->str();
+                    const string file = match->str();
 
                     if (current_file.empty()) {
                         current_file = file;
 
                         cpp_pov[current_file] = {};
                     } else {
-                        cpp_pov[current_file].push_back(file);
+                        if (!file.ends_with(".cpp") && !file.starts_with("tests")) {
+                            cpp_pov[current_file].push_back(file);
+                        }
                     }
                 }
 
@@ -277,6 +278,16 @@ namespace {
 
         return bucket;
     }
+    
+    RawDependencyTree get_source_files_with_dependants(const workspace::project_config::Project& project, const string& path) {
+        generate_makefile(project, path);
+
+        RawDependencyTree cpp_pov = parse_makefile();
+
+        fs::remove(MAKEFILE_PATH);
+
+        return cpp_pov;
+    }
 }
 
 namespace workspace::modification_identifier {
@@ -284,17 +295,45 @@ namespace workspace::modification_identifier {
         return static_cast<std::size_t>(cr::duration_cast<cr::seconds>(cr::file_clock::now().time_since_epoch()).count());
     }
 
+    RawDependencyTree get_files_to_test(const workspace::project_config::Project& project) {
+        RawDependencyTree cpp_pov = get_source_files_with_dependants(project, "tests/unit_tests");
+        RawDependencyTree tree;
+
+        #if defined(_WIN32) || defined(_WIN64)
+        const string EXTENSION{ ".exe" };
+        #else
+        const string EXTENSION{ "" };
+        #endif
+        
+        for (auto const& [file, dependencies]: cpp_pov) {
+            const fs::path file_path{ file };
+
+            const fs::path scoped_directory_of_file = fs::relative(fs::path{ file }.parent_path(), "tests/unit_tests");
+            const fs::path corresponding_binary = fs::path("build/test_binaries/unit_tests" / scoped_directory_of_file / fs::path(file).stem().replace_extension(EXTENSION));
+
+            if (!fs::exists(corresponding_binary) || get_last_modified_timestamp(file_path) > get_last_modified_timestamp(corresponding_binary)) {
+                tree[file] = dependencies;
+                continue;
+            }
+
+            for (auto const& dependency: dependencies) {
+                if (get_last_modified_timestamp(fs::path(dependency)) > get_last_modified_timestamp(corresponding_binary)) {
+                    tree[file] = dependencies;
+                    break;
+                }
+            }
+        }
+
+        return tree;
+    }
+
     SourceFiles list_all_files_annotated(const workspace::project_config::Project& project) {
         DB timestamps_history = read_internal_timestamps_file();
 
-        generate_makefile(project);
-
-        RawDependencyTree cpp_pov = parse_makefile();
+        RawDependencyTree cpp_pov = get_source_files_with_dependants(project, "src");
         RawDependencyTree hpp_pov = convert_to_hpp_pov(cpp_pov);
 
         SourceFiles bucket = construct_annotated_list_of_source_files(hpp_pov, timestamps_history);
-
-        fs::remove(MAKEFILE_PATH);
 
         return bucket;
     }

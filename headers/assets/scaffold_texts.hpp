@@ -208,11 +208,17 @@ namespace assets::scaffold_texts {
 
     namespace cbt_tools::test_harness {
         // Note: Edit this parent class *only if* the harness provided is not upto your requirements
+        template<typename __CtxStruct>
         class TestSuite {
+            using TestCaseFn = std::function<void(const __CtxStruct&)>;
+
         public:
-            virtual void add_test_case(const std::string& title, std::function<void()> test_case) final {
+            explicit TestSuite(__CtxStruct& ctx): ctx{ ctx } {}
+
+            virtual void add_test_case(const std::string& title, const TestCaseFn& test_case) final {
                 test_cases.push_back(std::make_tuple(title, test_case));
             }
+
             virtual void run() final {
                 setup();
                 
@@ -222,7 +228,7 @@ namespace assets::scaffold_texts {
                     const auto [title, test_fn] = test_case;
                             
                     std::cout << std::right << std::setw(8) << "RUN " << title << std::endl;
-                    test_fn();
+                    test_fn(ctx);
 
                     after_each();
                 }
@@ -230,13 +236,16 @@ namespace assets::scaffold_texts {
                 teardown();
             }
 
+        protected:
+            __CtxStruct ctx;
+        
         private:
             virtual void setup() = 0;
             virtual void before_each() = 0;
             virtual void after_each() = 0;
             virtual void teardown() = 0;
 
-            std::vector<std::tuple<std::string, std::function<void()>>> test_cases;
+            std::vector<std::tuple<std::string, TestCaseFn>> test_cases;
         };
     }
 
@@ -491,43 +500,55 @@ namespace assets::scaffold_texts {
 
     #include "@RELATIVE_SRC_FILE_NAME"
 
-    class ScopedTestSuite: public cbt_tools::test_harness::TestSuite {
+    // If no context is required, replace the below struct with just `struct Context {};`
+    // and refactor such occurrences accordingly
+    struct Context {
+        int a;
+        std::string api_endpoint;
+    };
+
+    class ScopedTestSuite: public cbt_tools::test_harness::TestSuite<Context> {
+    public:
+        explicit ScopedTestSuite(Context& ctx): cbt_tools::test_harness::TestSuite<Context>(ctx) {}
+
     private:
         void setup() override {
             // Add necessary code here
         }
         void before_each() override {
             // Add necessary code here
-            sample_env_int = 1;
+            ctx.a = 1;
         }
         void after_each() override {
             // Add necessary code here
-            sample_env_int = 2;
+            ctx.a = 0;
         }
         void teardown() override {
             // Add necessary code here
         }
-
-        // add your environment variables and functionalities here, if necessary
-        int sample_env_int{ 0 };
     };
 
     int main() {
         using namespace @NAMESPACE;
 
-        ScopedTestSuite test_suite;
+        Context ctx{
+            .a{ 0 },
+            .api_endpoint{ "https://api.env.domain.tld" }
+        };
+
+        ScopedTestSuite test_suite{ ctx };
 
         std::cout << std::endl << std::setw(8) << "EXECUTE " << __FILE__ << std::endl << std::endl;
 
-        test_suite.add_test_case("Sum of 5 and 6 is 11", []() {
+        test_suite.add_test_case("Sum of 5 and 6 is 11", []([[maybe_unused]] const Context& ctx) {
             assert((sum(5, 6) == 11));
         });
         
-        test_suite.add_test_case("Sum of 5 and 6 is not 12", []() {
+        test_suite.add_test_case("Sum of 5 and 6 is not 12", []([[maybe_unused]] const Context& ctx) {
             assert((sum(5, 6) != 12));
         });
 
-        test_suite.add_test_case("Company foundation strength is 1", []() {
+        test_suite.add_test_case("Company foundation strength is 1", []([[maybe_unused]] const Context& ctx) {
             SampleCompany company("MyCompany", "MyLocation", Employee{
                 .id{ "#E1" },
                 .first_name{ "First" },
@@ -538,7 +559,7 @@ namespace assets::scaffold_texts {
             assert((company.strength() == 1));
         });
 
-        test_suite.add_test_case("Company's strength is 3 upon hiring of 2 candidates", []() {
+        test_suite.add_test_case("Company's strength is 3 upon hiring of 2 candidates", []([[maybe_unused]] const Context& ctx) {
             SampleCompany company("MyCompany", "MyLocation", Employee{
                 .id{ "#E1" },
                 .first_name{ "First" },

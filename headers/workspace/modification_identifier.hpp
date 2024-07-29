@@ -2,9 +2,11 @@
 #define WORKSPACE_MODIFICATION_IDENTIFIER
 
 #include <filesystem>
+#include <map>
 #include <set>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "workspace/project_config.hpp"
 
@@ -30,9 +32,11 @@ namespace workspace::modification_identifier {
     };
 
     using SourceFiles = std::set<SourceFile>;
+    using RawDependencyTree = std::map<std::string, std::vector<std::string>>;
 
     std::size_t get_current_fileclock_timestamp();
     SourceFiles list_all_files_annotated(const workspace::project_config::Project& project);
+    RawDependencyTree get_files_to_test(const workspace::project_config::Project& project);
     void persist_annotations(const SourceFiles& bucket);
 }
 
