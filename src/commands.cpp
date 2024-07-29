@@ -4,6 +4,7 @@
 #include <filesystem>
 #include <iostream>
 #include <string>
+#include <vector>
 
 #include "workspace/modification_identifier.hpp"
 #include "workspace/project_config.hpp"
@@ -240,7 +241,14 @@ namespace commands {
 
         const Project project = convert_cfg_to_model();
 
-        const workspace::modification_identifier::RawDependencyTree tree = workspace::modification_identifier::get_source_files_with_dependants(project, "tests/unit_tests");
+        const workspace::modification_identifier::RawDependencyTree tree = workspace::modification_identifier::get_files_to_test(project);
+
+        if (tree.size() == 0) {
+            cout << "[INFO] Nothing to compile or test. All files are up-to-date!" << endl;
+            return;
+        }
+
+        cout << "[INFO] Number of file(s) to compile: " << tree.size() << endl << endl;
         
         #if defined(_WIN32) || defined(_WIN64)
         const string EXTENSION{ ".exe" };
@@ -251,6 +259,8 @@ namespace commands {
         const string gpp_include_paths{ "-Iheaders" };
         const string unit_tests_directory{ "tests/unit_tests/" };
         const fs::path harness{ "headers/cbt_tools/test_harness.hpp" };
+
+        std::vector<fs::path> binaries_to_execute{};
 
         cout << "[COMMAND] " << ("g++ -std=" + project.config.cpp_standard + " " + project.config.safety_flags + " " + project.config.test_flags + " " + gpp_include_paths + " " + unit_tests_directory + "<FILE> -o build/test_binaries/unit_tests/<FILE>" + EXTENSION) << endl << endl;
 
@@ -283,15 +293,17 @@ namespace commands {
             }
 
             const fs::path test_binary = fs::path("build/test_binaries/unit_tests" / scoped_directory_of_file / fs::path(file).stem().replace_extension(EXTENSION));
-
+            
             const int result = system((string("g++") + " -std=" + project.config.cpp_standard + " " + project.config.safety_flags + " " + project.config.test_flags + " " + gpp_include_paths + " " + files_to_link + " -o " + test_binary.string()).c_str());
-            cout << "[COMPILE]" << std::left << std::setw(6) << (result == 0 ? "[OK]" : "[NOK]") << workspace::util::get_platform_formatted_filename(test_binary) <<  endl;
-        }
+            cout << "[COMPILE]" << std::left << std::setw(6) << (result == 0 ? "[OK]" : "[NOK]") << workspace::util::get_platform_formatted_filename(test_binary) << endl;
 
-        for (auto const& dir_entry: fs::recursive_directory_iterator("build/test_binaries/unit_tests/")) {
-            if (fs::is_regular_file(dir_entry)) {
-                [[maybe_unused]] const int result = system(workspace::util::get_platform_formatted_filename(dir_entry.path()).c_str());
+            if (result == 0) {
+                binaries_to_execute.push_back(test_binary);
             }
+        }
+        
+        for (auto const& test_binary: binaries_to_execute) {
+            [[maybe_unused]] const int result = system(workspace::util::get_platform_formatted_filename(test_binary).c_str());
         }
     }
 
