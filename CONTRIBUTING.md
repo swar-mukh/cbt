@@ -9,7 +9,7 @@ As an author and maintainer of `cbt`, I hope to see this project have a big and 
 Before we move ahead, I humbly ask the community to understand and respect the following:
 
 1. `cbt` is on a mission to simplify application/library development in `C++` using only commands. It **should not** deviate from the original [Philosophy](README.md#philosophy). References from other project(s) are welcome, and may be incorporated, provided they don't dilute the very fundamentals or true identity of `cbt`.
-2. Unlike other projects, `cbt` in its own rights, will head towards feature-completeness, i.e. a stage when *there is nothing to add, but nothing to take away*. If it is observed at a future point in time, that `cbt` can do all that was originally envisioned: except for bug fixes, development should cease. **A dormant project does not necessarily mean it is of no value, or that it cannot stand the test of time.** If that's the case, an `Announcement` (under `Discussions`) will be made. Fret not.
+2. Unlike other projects, `cbt` in its own rights, will head towards feature-completeness, i.e. a stage when *there is nothing to add, but nothing to take away*. If it is observed at a future point in time, that `cbt` can do all that was originally envisioned: except for bug fixes, development should cease. **A dormant project does not necessarily mean it is of no value, or that it cannot stand the test of time.** If that's the case, an [Announcement](https://github.com/swar-mukh/cbt/discussions/categories/announcements) will be made. Fret not!
 3. It is only human to have varying perspectives; differences in opinion(s) can arise. While I do respect opinion(s) of others, continuing on the above points, it may so happen that such changes may not be incorporated, or that it may require substantial tweaks before acceptance.
 4. `cbt` is not released in regular intervals but rather at a steady cadence. Release happens when there's an urgent bug-fix made or when substantial improvements/features have been added, or a mix of the two. Most of the time is spent on careful planning and prevention of scope-creep. In mentioning this, I must also point out that I work on `cbt` in the very limited time I get after my professional and personal commitments. I often check the repository, but there *may* be periods of slight delay. I hope the community will understand.
 
@@ -24,20 +24,20 @@ Before we move ahead, I humbly ask the community to understand and respect the f
 
 Here are few ways you can contribute:
 
-1. The best places to begin are either the `Issues` section (both `open` and `closed` issues) or the `Discussions` section. Please check if your query/concern is addressed or referenced in those two sections. If not, move on to the next pointers below.
-2. If something is unclear (e.g. context, purpose of a piece of code, etc.), or cannot be found in the codebase, please raise a question (`Q&A` found under `Discussions` tab). I'll be happy to address such queries to the best of my knowledge.
+1. The best places to begin are either the [Issues](https://github.com/swar-mukh/cbt/issues) section (both `open` and [closed](https://github.com/swar-mukh/cbt/issues?q=is%3Aissue+is%3Aclosed) issues) or the [Discussions](https://github.com/swar-mukh/cbt/discussions) section. Please check if your query/concern is addressed or referenced in those two sections. If not, move on to the next pointers below.
+2. If something is unclear (e.g. context, purpose of a piece of code, etc.), or cannot be found in the codebase, please raise a [question](https://github.com/swar-mukh/cbt/discussions/categories/q-a) (found under [Discussions](https://github.com/swar-mukh/cbt/discussions) section). I'll be happy to address such queries to the best of my knowledge.
 3. Similar to point 2 above, make use of the appropriate discussion type (under `Discussions` section) that GitHub provides, to drive engagement with the community.
-4. Before submitting a pull-request (or merge request), ensure all the aforementioned points, as well as the following sub-points are met:
-   - If there is a similar PR/MR/issue being addressed or has been addressed
-   - If there is a feature/fix being currently worked on in any branch, or is part of an existing PR/MR
-5. If none of the above is/are satisfactory, and if you think that there's a substantial impact of your contribution through which the community can benefit, raise a PR. Ensure you have followed the [style-guide](#style-guide) below.
+4. Before submitting a pull-request (PR), ensure you have checked the following:
+   - Whether there is a similar [PR](https://github.com/swar-mukh/cbt/pulls) being addressed or has been addressed
+   - Whether there is a feature/fix being currently worked on in any [branch](https://github.com/swar-mukh/cbt/branches), or is part of an existing PR
+5. If none of the above is/are satisfactory, and if you think that there's a substantial impact of your contribution through which the community can benefit, [fork](https://github.com/swar-mukh/cbt/fork) this repository (if not already done), add your contributions and raise a PR. Ensure you have followed the [style-guide](#style-guide) below.
 6. If you find that my own contributions contradict the style-guide, don't hesitate to point it out.
 
 ### Style guide
 
 ***Note:** This section applicable only for code contributions. (To be continuously updated)*
 
-1. Use idiomatic C++ as much as possible. `C++17` is the base standard.
+1. Use idiomatic C++ as much as possible. `C++2a` is the base standard.
 2. Use `.hpp` and `.cpp` extensions for header and implementation files, respectively. Usage of any other extension(s) will **not** be entertained.
 3. A header file *may not* have a corresponding implementation file; but an implementation file **must** have a corresponding header file.
 4. No private attributes/functionalities/implementations should be present in header files. All such private entities **must** be in un-named `namespace`s in the corresponding implementation file.
