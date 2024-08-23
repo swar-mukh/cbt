@@ -84,13 +84,31 @@ namespace {
             const auto [stemmed_name, _, namespace_name] = workspace::util::get_qualified_names(file_name);
 
             const string with_import = std::regex_replace(text, IMPORT_R, stemmed_name + ".cpp");
+            
+            #if defined(_WIN32) || defined(_WIN64)
+            const string relative_path{ 
+                std::regex_replace(
+                    fs::relative(
+                        "./src/" + stemmed_name + ".cpp",
+                        "./" + fs::path(file_name).parent_path().string()
+                    ).string(),
+                    std::regex("\\\\"),
+                    string("/")
+                )
+            };
+            #else
+            const string relative_path{ fs::relative(
+                    "./src/" + stemmed_name + ".cpp",
+                    "./" + fs::path(file_name).parent_path().string()
+                ).string()
+            };
+            #endif
+            
             const string with_relative_import = std::regex_replace(
                 with_import, 
                 RELATIVE_SRC_R, 
-                fs::relative(
-                    "./src/" + stemmed_name + ".cpp",
-                    "./" + fs::path(file_name).parent_path().string()
-                ).string());
+                relative_path
+            );
             const string final_text = std::regex_replace(with_relative_import, NAMESPACE_R, namespace_name);
             
             return final_text;
