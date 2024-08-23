@@ -213,7 +213,7 @@ namespace assets::scaffold_texts {
             using TestCaseFn = std::function<void(const __CtxStruct&)>;
 
         public:
-            explicit TestSuite(__CtxStruct& ctx): ctx{ ctx } {}
+            explicit TestSuite(const __CtxStruct& ctx): ctx{ ctx } {}
 
             virtual void add_test_case(const std::string& title, const TestCaseFn& test_case) final {
                 test_cases.push_back(std::make_tuple(title, test_case));
@@ -505,11 +505,12 @@ namespace assets::scaffold_texts {
     struct Context {
         int a;
         std::string api_endpoint;
+        
     };
 
     class ScopedTestSuite: public cbt_tools::test_harness::TestSuite<Context> {
     public:
-        explicit ScopedTestSuite(Context& ctx): cbt_tools::test_harness::TestSuite<Context>(ctx) {}
+        explicit ScopedTestSuite(const Context& ctx): cbt_tools::test_harness::TestSuite<Context>(ctx) {}
 
     private:
         void setup() override {
@@ -528,18 +529,20 @@ namespace assets::scaffold_texts {
         }
     };
 
-    int main() {
-        using namespace @NAMESPACE;
+    Context define_context() {
+        // Define your context here
 
-        Context ctx{
+        return Context{
             .a{ 0 },
             .api_endpoint{ "https://api.env.domain.tld" }
         };
+    }
 
-        ScopedTestSuite test_suite{ ctx };
+    void define_test_cases(ScopedTestSuite& test_suite) {
+        // Add all your test cases in this function
 
-        std::cout << std::endl << std::setw(8) << "EXECUTE " << __FILE__ << std::endl << std::endl;
-
+        using namespace @NAMESPACE;
+        
         test_suite.add_test_case("Sum of 5 and 6 is 11", []([[maybe_unused]] const Context& ctx) {
             assert((sum(5, 6) == 11));
         });
@@ -572,7 +575,15 @@ namespace assets::scaffold_texts {
 
             assert((company.strength() == 3));
         });
-        
+    }
+
+    int main() {
+        ScopedTestSuite test_suite{ define_context() };
+
+        std::cout << std::endl << std::setw(8) << "EXECUTE " << __FILE__ << std::endl << std::endl;
+
+        define_test_cases(test_suite);
+
         test_suite.run();
 
         return EXIT_SUCCESS;
