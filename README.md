@@ -19,6 +19,10 @@ One reason why proliferation of JavaScript has been so prominent is due to `npm`
 
 `cbt` is similar in spirit to `npm` and `package.json`, except it is more about making software development with C++ more approachable to beginners and seasoned developers alike; and equally not raising C++ to such higher abstraction language(s) like Java, C#, etc.
 
+## Media
+
+1. [Lightning Talk](https://www.youtube.com/watch?v=JWoAhr2TkSY) at CppIndiaCon-2024 ([cbt-2024.07.30](https://github.com/swar-mukh/cbt/releases/tag/cbt-2024.07.30) being demoed).
+
 ## Features
 
 `cbt` is a very simple build tool made from first principles:
@@ -79,7 +83,7 @@ For other platforms, or for building from source, read on.
 3. There is a hard dependency on `C++2a` standard. Ensure your `GNU` toolchain is at least `9.4.0`.
 4. `GNU` toolchain used for development is `11.4.0`.
 5. If on Windows, MinGW can be downloaded from [WinLibs](https://winlibs.com/).
-6. On a Mac, `g++` is actually a tiny wrapper over `clang`. This shouldn't be a problem as such, but if you want to develop exclusively through `g++`, then download the binary (though Homebrew or MacPorts, etc.) and alias `g++` to the appropriate downloaded binary, i.e. `alias g++=g++-<version>`.
+6. On a Mac, `g++` is actually a tiny wrapper over `clang`. This shouldn't be a problem as such, but if you want to develop exclusively through `g++`, then download the binary (through Homebrew or MacPorts, etc.) and alias `g++` to the appropriate downloaded binary, i.e. `alias g++=g++-<version>`.
 
 ### Steps
 
