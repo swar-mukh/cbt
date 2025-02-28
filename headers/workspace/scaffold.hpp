@@ -17,8 +17,10 @@ namespace workspace::scaffold {
 
     void create_file(const string& project_name, const string& file_name, const bool verbose = true);
     bool create_directory(const string& project_name, const string& sub_directory = "", const bool multi_directory = false, const bool verbose = true);
+    
     void create_build_tree_as_necessary();
     void create_internals_tree_as_necessary();
+    void create_dependencies_tree_as_necessary();
 
     void purge_old_binaries(const string& path, const workspace::modification_identifier::SourceFiles& annotated_files);
 

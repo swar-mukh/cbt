@@ -92,6 +92,8 @@ namespace workspace::project_config {
                     project.config.build_flags = value;
                 } else if (key.compare("config{test_flags}") == 0) {
                     project.config.test_flags = value;
+                } else if (key.compare("dependencies[]") == 0) {
+                    project.dependencies.insert(value);
                 } else {
                     throw std::runtime_error("Invalid configuration at line " + std::to_string(line_number) + " for key '" + key + "'");
                 }
@@ -100,6 +102,7 @@ namespace workspace::project_config {
             if (project.authors.size() == 0) {
                 throw std::runtime_error("At least one author is required in 'project.cfg'");
             }
+
             if (project.platforms.size() == 0) {
                 throw std::runtime_error("At least one platform is required in 'project.cfg'");
             }
@@ -142,6 +145,12 @@ namespace workspace::project_config {
             + "\nconfig{compile_time_flags}=" + project.config.compile_time_flags
             + "\nconfig{build_flags}=" + project.config.build_flags
             + "\nconfig{test_flags}=" + project.config.test_flags };
+        
+        string dependencies_text{ "; add your `dependencies` in the format mentioned below" };
+
+        for (const string &dependency: project.dependencies) {
+            dependencies_text += std::string("\n; dependencies[]=") + dependency;
+        }
 
         return (add_disclaimer_text ? (disclaimer_text + "\n\n") : "") 
             + base_text
@@ -151,6 +160,8 @@ namespace workspace::project_config {
             + platforms_text
             + "\n\n"
             + config_text
+            + "\n\n"
+            + dependencies_text
             + "\n";
     }
 }

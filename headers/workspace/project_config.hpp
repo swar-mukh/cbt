@@ -41,6 +41,8 @@ namespace workspace::project_config {
         std::set<Author> authors;
         std::set<Platform> platforms;
         Config config;
+
+        std::set<string> dependencies;
     };
 
     string platform_to_string(const Platform& platform);

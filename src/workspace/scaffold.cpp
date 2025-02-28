@@ -143,6 +143,11 @@ namespace {
                     .compile_time_flags{ "-Os -s" },
                     .build_flags{ "-O3 -s" },
                     .test_flags{ "-g -Og -s" }
+                },
+                .dependencies{
+                    "author1/lib1",
+                    "author1/lib2",
+                    "author2/lib1",
                 }
             };
 
@@ -217,6 +222,12 @@ namespace workspace::scaffold {
         }
         if (!fs::exists(".internals/timestamps.txt")) {
             workspace::scaffold::create_file("", ".internals/timestamps.txt", false);
+        }
+    }
+
+    void create_dependencies_tree_as_necessary() {
+        if (!fs::exists("dependencies/")) {
+            workspace::scaffold::create_directory("", "dependencies", false, false);
         }
     }
 
