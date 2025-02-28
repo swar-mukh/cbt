@@ -48,6 +48,8 @@ namespace workspace::project_config {
         std::set<Author> authors;
         std::set<Platform> platforms;
         Config config;
+
+        std::set<string> dependencies;
     };
 
     Project init(const string& name, const ProjectType& project_type);

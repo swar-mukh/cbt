@@ -9,6 +9,8 @@ namespace commands {
     
     void create_file(const std::string& file_name);
 
+    void resolve_dependencies();
+
     void compile_project();
     void clear_build();
 

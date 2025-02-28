@@ -233,6 +233,12 @@ namespace workspace::scaffold {
         }
     }
 
+    void create_dependencies_tree_as_necessary() {
+        if (!fs::exists("dependencies/")) {
+            workspace::scaffold::create_directory("", "dependencies", false, false);
+        }
+    }
+
     void purge_old_binaries(const string& path, const workspace::modification_identifier::SourceFiles& annotated_files) {
         if (path.compare("build/binaries/") != 0 && path.compare("build/test_binaries/unit_tests/") != 0) {
             throw std::domain_error("Unknown path '" + path + "' provided for purging. Only 'build/binaries/' and 'build/test_binaries/unit_tests/' allowed.");

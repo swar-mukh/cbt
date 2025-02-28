@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "gnu_toolchain.hpp"
+#include "workspace/dependencies_manager.hpp"
 #include "workspace/modification_identifier.hpp"
 #include "workspace/project_config.hpp"
 #include "workspace/scaffold.hpp"
@@ -119,6 +120,14 @@ namespace commands {
             workspace::scaffold::create_file(project, string("src/") + file_name + ".cpp", true, true);
             workspace::scaffold::create_file(project, string("tests/unit_tests/") + file_name + ".cpp", true, true);
         }
+    }
+
+    void resolve_dependencies() {
+        const Project project = convert_cfg_to_model();
+
+        workspace::scaffold::create_dependencies_tree_as_necessary();
+
+        workspace::dependencies_manager::resolve_dependencies(project.dependencies);
     }
 
     void compile_project() {
@@ -378,6 +387,8 @@ namespace commands {
             << endl
             << "create-file <file_name>         - Generate respective C++ files under 'headers/', 'src/' and 'tests/' directories" << endl
             << "create-file <path/to/file_name> - Same as above, but will create necessary sub-directories if required" << endl
+            << endl
+            << "resolve-dependencies            - Sync dependencies through 'project.cfg'" << endl
             << endl
             << "compile-project                 - Compile all files and generate respective binaries under 'build/binaries/'" << endl
             << "build-project                   - (For applications only) Perform linking and generate final executable under 'build/'" << endl
