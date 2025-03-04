@@ -50,7 +50,8 @@ function clean() {
     echo "============"
     echo
     rm -rf build
-    echo "[DELETE] sample project (if present)" && rm -rf my-project
+    echo "[DELETE] sample application (if present)" && rm -rf my-application
+    echo "[DELETE] sample library (if present)" && rm -rf my-library
     echo
     init
 }

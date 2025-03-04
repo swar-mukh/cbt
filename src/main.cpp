@@ -10,8 +10,10 @@
 void parse_commands_and_execute(std::vector<std::string>& arguments) {
     try {
         if (arguments.size() == 3) {
-            if (arguments[1].compare("create-project") == 0) {
-                commands::create_project(arguments[2]);
+            if (arguments[1].compare("create-application") == 0) {
+                commands::create_application(arguments[2]);
+            } else if (arguments[1].compare("create-library") == 0) {
+                commands::create_library(arguments[2]);
             } else if (arguments[1].compare("create-file") == 0) {
                 workspace::scaffold::exit_if_command_not_invoked_from_within_workspace();
                 commands::create_file(arguments[2]);

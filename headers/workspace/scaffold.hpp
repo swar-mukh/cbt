@@ -5,6 +5,7 @@
 #include <string>
 
 #include "workspace/modification_identifier.hpp"
+#include "workspace/project_config.hpp"
 
 namespace workspace::scaffold {
     using std::string;
@@ -15,7 +16,7 @@ namespace workspace::scaffold {
     const std::regex NAMESPACE_R{ "@NAMESPACE" };
     const std::regex RELATIVE_SRC_R{ "@RELATIVE_SRC_FILE_NAME" };
 
-    void create_file(const string& project_name, const string& file_name, const bool verbose = true);
+    void create_file(const string& project_name, const string& file_name, const workspace::project_config::ProjectType& project_type = workspace::project_config::ProjectType::APPLICATION, const bool verbose = true);
     bool create_directory(const string& project_name, const string& sub_directory = "", const bool multi_directory = false, const bool verbose = true);
     void create_build_tree_as_necessary();
     void create_internals_tree_as_necessary();

@@ -11,16 +11,14 @@
 #include "workspace/scaffold.hpp"
 #include "workspace/util.hpp"
 
-namespace commands {
-    namespace fs = std::filesystem;
-
+namespace {
     using std::cout;
     using std::endl;
-    using std::string;
-    using namespace workspace::project_config;
-    
-    void create_project(const string& project_name) {
-        if (fs::exists(project_name)) {
+
+    using namespace workspace::scaffold;
+
+    void create_project(const std::string& project_name, const workspace::project_config::ProjectType& project_type) {
+        if (std::filesystem::exists(project_name)) {
             cout << "Directory '" << project_name << "' already exists!" << endl;
             return;
         }
@@ -32,47 +30,72 @@ namespace commands {
             return;
         }
 
-        if (workspace::scaffold::create_directory(project_name)) {
-            workspace::scaffold::create_file(project_name, ".gitignore");
-            workspace::scaffold::create_directory(project_name, ".internals");
-            workspace::scaffold::create_directory(project_name, ".internals/tmp");
-            workspace::scaffold::create_file(project_name, ".internals/timestamps.txt");
-            workspace::scaffold::create_directory(project_name, "build");
-            workspace::scaffold::create_directory(project_name, "build/binaries");
-            workspace::scaffold::create_directory(project_name, "build/test_binaries");
-            workspace::scaffold::create_directory(project_name, "build/test_binaries/unit_tests");
-            workspace::scaffold::create_directory(project_name, "docs");
-            workspace::scaffold::create_file(project_name, "docs/LICENSE.txt");
-            workspace::scaffold::create_file(project_name, "docs/Roadmap.md");
-            workspace::scaffold::create_directory(project_name, "environments");
-            workspace::scaffold::create_file(project_name, "environments/.env.template");
-            workspace::scaffold::create_file(project_name, "environments/local.env");
-            workspace::scaffold::create_file(project_name, "environments/production.env");
-            workspace::scaffold::create_file(project_name, "environments/test.env");
-            workspace::scaffold::create_directory(project_name, "headers");
-            workspace::scaffold::create_directory(project_name, "headers/cbt_tools");
-            workspace::scaffold::create_file(project_name, "headers/cbt_tools/env_manager.hpp");
-            workspace::scaffold::create_file(project_name, "headers/cbt_tools/test_harness.hpp");
-            workspace::scaffold::create_file(project_name, "headers/cbt_tools/utils.hpp");
-            workspace::scaffold::create_file(project_name, "headers/sample.hpp");
-            workspace::scaffold::create_directory(project_name, "src");
-            workspace::scaffold::create_directory(project_name, "src/cbt_tools");
-            workspace::scaffold::create_file(project_name, "src/cbt_tools/env_manager.cpp");
-            workspace::scaffold::create_file(project_name, "src/cbt_tools/utils.cpp");
-            workspace::scaffold::create_file(project_name, "src/main.cpp");
-            workspace::scaffold::create_file(project_name, "src/sample.cpp");
-            workspace::scaffold::create_directory(project_name, "tests");
-            workspace::scaffold::create_directory(project_name, "tests/unit_tests");
-            workspace::scaffold::create_file(project_name, "tests/unit_tests/sample.cpp");
-            workspace::scaffold::create_file(project_name, "README.md");
-            workspace::scaffold::create_file(project_name, "project.cfg");
+        if (create_directory(project_name)) {
+            create_file(project_name, ".gitignore");
+            create_directory(project_name, ".internals");
+            create_directory(project_name, ".internals/tmp");
+            create_file(project_name, ".internals/timestamps.txt");
+            create_directory(project_name, "build");
+            create_directory(project_name, "build/binaries");
+            create_directory(project_name, "build/test_binaries");
+            create_directory(project_name, "build/test_binaries/unit_tests");
+            create_directory(project_name, "dependencies");
+            create_file(project_name, "dependencies/.gitkeep");
+            create_directory(project_name, "docs");
+            create_file(project_name, "docs/LICENSE.txt");
+            create_file(project_name, "docs/Roadmap.md");
+            create_directory(project_name, "environments");
+            create_file(project_name, "environments/.env.template");
+            create_file(project_name, "environments/local.env");
+            create_file(project_name, "environments/production.env");
+            create_file(project_name, "environments/test.env");
+            create_directory(project_name, "headers");
+            create_directory(project_name, "headers/cbt_tools");
+            create_file(project_name, "headers/cbt_tools/env_manager.hpp");
+            create_file(project_name, "headers/cbt_tools/test_harness.hpp");
+            create_file(project_name, "headers/cbt_tools/utils.hpp");
+            create_file(project_name, "headers/sample.hpp", project_type);
+            create_directory(project_name, "src");
+            create_directory(project_name, "src/cbt_tools");
+            create_file(project_name, "src/cbt_tools/env_manager.cpp");
+            create_file(project_name, "src/cbt_tools/utils.cpp");
+
+            if (project_type == workspace::project_config::ProjectType::APPLICATION) {
+                create_file(project_name, "src/main.cpp");
+            }
+            
+            create_file(project_name, "src/sample.cpp", project_type);
+            create_directory(project_name, "tests");
+            create_directory(project_name, "tests/unit_tests");
+            create_file(project_name, "tests/unit_tests/sample.cpp", project_type);
+            create_file(project_name, "README.md");
+            
+            create_file(project_name, "project.cfg", project_type);
 
             cout << endl << "Project '" << project_name << "' created" << endl;
         } else {
             cout << "Could not create project '" << project_name << "'!" << endl;
         }
     }
+}
 
+namespace commands {
+    namespace fs = std::filesystem;
+
+    using std::cout;
+    using std::endl;
+    using std::string;
+
+    using namespace workspace::project_config;
+    
+    void create_application(const string& project_name) {
+        create_project(project_name, ProjectType::APPLICATION);
+    }
+
+    void create_library(const string& project_name) {
+        create_project(project_name, ProjectType::LIBRARY);
+    }
+    
     void create_file(const string& file_name) {
         const auto [is_valid, reason_if_any] = workspace::util::is_valid_file_name(file_name);
 
@@ -347,7 +370,8 @@ namespace commands {
             << endl
             << "Options:" << endl
             << endl
-            << "create-project <project-name>   - Scaffold a new project" << endl
+            << "create-application <name>       - Scaffold a new application" << endl
+            << "create-library <name>           - Scaffold a new library" << endl
             << endl
             << "create-file <file_name>         - Generate respective C++ files under 'headers/', 'src/' and 'tests/' directories" << endl
             << "create-file <path/to/file_name> - Same as above, but will create necessary sub-directories if required" << endl

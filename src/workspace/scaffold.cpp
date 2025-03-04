@@ -47,7 +47,7 @@ namespace {
         return final_string;
     }
 
-    string get_predefined_text_content(const string& file_name, const string& project_name) {
+    string get_predefined_text_content(const string& file_name, const string& project_name, const workspace::project_config::ProjectType& project_type) {
         if (file_name.compare(".gitignore") == 0) {
             return remove_raw_literal_indentations(GITIGNORE);
         } else if (file_name.compare("docs/LICENSE.txt") == 0) {
@@ -132,6 +132,7 @@ namespace {
                 .name{ project_name },
                 .description{ "Add some description here" },
                 .version{ workspace::util::get_ISO_date() },
+                .project_type{ project_type },
                 .authors{
                     { .name{ "Sample LName" }, .email_id{ "sample_lname@domain.tld" } },
                     { .name{ "Another MName LName" }, .email_id{ "another_mname_lname@domain.tld" } }
@@ -154,7 +155,7 @@ namespace {
 }
 
 namespace workspace::scaffold {
-    void create_file(const string& project_name, const string& file_name, const bool verbose) {
+    void create_file(const string& project_name, const string& file_name, const workspace::project_config::ProjectType& project_type, const bool verbose) {
         const string full_path = (project_name.length() != 0 ? (project_name + "/") : project_name) + file_name;
 
         if (fs::exists(full_path)) {
@@ -167,7 +168,7 @@ namespace workspace::scaffold {
             }
 
             ofstream file_to_write(full_path);
-            file_to_write << get_predefined_text_content(file_name, project_name);
+            file_to_write << get_predefined_text_content(file_name, project_name, project_type);
             file_to_write.close();
 
             if (verbose) {
@@ -208,7 +209,7 @@ namespace workspace::scaffold {
         }
     }
 
-    void create_internals_tree_as_necessary() {
+    void create_internals_tree_as_necessary() { // TODO: pass project_type
         if (!fs::exists(".internals/")) {
             workspace::scaffold::create_directory("", ".internals", false, false);
         }
@@ -216,7 +217,7 @@ namespace workspace::scaffold {
             workspace::scaffold::create_directory("", ".internals/tmp", false, false);
         }
         if (!fs::exists(".internals/timestamps.txt")) {
-            workspace::scaffold::create_file("", ".internals/timestamps.txt", false);
+            workspace::scaffold::create_file("", ".internals/timestamps.txt", workspace::project_config::ProjectType::APPLICATION, false);
         }
     }
 

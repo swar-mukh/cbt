@@ -70,7 +70,8 @@ exit /b 0
     echo "============"
     echo.
     rmdir /s /q build
-    echo "[DELETE] sample project (if present)" && rmdir /s /q my-project
+    echo "[DELETE] sample application (if present)" && rmdir /s /q my-application
+    echo "[DELETE] sample library (if present)" && rmdir /s /q my-library
     echo.
     call :init
     exit /b 0
