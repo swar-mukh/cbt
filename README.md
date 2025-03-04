@@ -55,7 +55,8 @@ Note:
 
 Options:
 
-create-project <project-name>   - Scaffold a new project
+create-application <name>       - Scaffold a new application
+create-library <name>           - Scaffold a new library
 
 create-file <file_name>         - Generate respective C++ files under 'headers/', 'src/' and 'tests/' directories
 create-file <path/to/file_name> - Same as above, but will create necessary sub-directories if required
