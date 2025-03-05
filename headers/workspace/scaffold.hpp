@@ -15,6 +15,8 @@ namespace workspace::scaffold {
     const std::regex GUARD_R{ "@GUARD" };
     const std::regex NAMESPACE_R{ "@NAMESPACE" };
     const std::regex RELATIVE_SRC_R{ "@RELATIVE_SRC_FILE_NAME" };
+    const std::regex START_SCOPE_R{ "@START_SCOPE" };
+    const std::regex END_SCOPE_R{ "@END_SCOPE" };
 
     void create_file(const string& project_name, const string& file_name, const workspace::project_config::ProjectType& project_type = workspace::project_config::ProjectType::APPLICATION, const bool verbose = true);
     bool create_directory(const string& project_name, const string& sub_directory = "", const bool multi_directory = false, const bool verbose = true);

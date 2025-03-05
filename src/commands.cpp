@@ -104,14 +104,15 @@ namespace commands {
             return;
         }
 
+        const Project project = convert_cfg_to_model(); 
         const bool create_only_header_file{ file_name.starts_with("headers/") };
 
         if (create_only_header_file) {
-            workspace::scaffold::create_file("", file_name + ".hpp");
+            workspace::scaffold::create_file("", file_name + ".hpp", project.project_type);
         } else {
-            workspace::scaffold::create_file("", string("headers/") + file_name + ".hpp");
-            workspace::scaffold::create_file("", string("src/") + file_name + ".cpp");
-            workspace::scaffold::create_file("", string("tests/unit_tests/") + file_name + ".cpp");
+            workspace::scaffold::create_file("", string("headers/") + file_name + ".hpp", project.project_type);
+            workspace::scaffold::create_file("", string("src/") + file_name + ".cpp", project.project_type);
+            workspace::scaffold::create_file("", string("tests/unit_tests/") + file_name + ".cpp", project.project_type);
         }
     }
 

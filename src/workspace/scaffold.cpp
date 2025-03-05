@@ -74,7 +74,15 @@ namespace {
             
             const string with_guard = std::regex_replace(text, GUARD_R, guard_name);
             const string with_import = std::regex_replace(with_guard, IMPORT_R, stemmed_name + ".hpp");
-            const string final_text = std::regex_replace(with_import, NAMESPACE_R, namespace_name);
+            
+            const string with_scoped_namespace_start = project_type == workspace::project_config::ProjectType::APPLICATION
+                ? std::regex_replace(with_guard, START_SCOPE_R, "")
+                : std::regex_replace(with_guard, START_SCOPE_R, string("\n") + "namespace author1::lib1 {" + "\n");
+            const string with_scoped_namespace_end = project_type == workspace::project_config::ProjectType::APPLICATION
+                ? std::regex_replace(with_scoped_namespace_start, END_SCOPE_R, "")
+                : std::regex_replace(with_scoped_namespace_start, END_SCOPE_R, "\n}\n");
+            
+            const string final_text = std::regex_replace(with_scoped_namespace_end, NAMESPACE_R, namespace_name);
             
             return final_text;
         } else if (file_name.compare("src/main.cpp") == 0) {
@@ -109,7 +117,12 @@ namespace {
                 RELATIVE_SRC_R, 
                 relative_path
             );
-            const string final_text = std::regex_replace(with_relative_import, NAMESPACE_R, namespace_name);
+
+            const string scoped_namespace_name = project_type == workspace::project_config::ProjectType::APPLICATION
+                ? namespace_name
+                : string("author1::lib1::") + namespace_name;
+                
+            const string final_text = std::regex_replace(with_relative_import, NAMESPACE_R, scoped_namespace_name);
             
             return final_text;
         } else if (file_name.ends_with(".cpp")) {
@@ -117,7 +130,15 @@ namespace {
             const auto [stemmed_name, _, namespace_name] = workspace::util::get_qualified_names(file_name);
             
             const string with_import = std::regex_replace(text, IMPORT_R, stemmed_name + ".hpp");
-            const string final_text = std::regex_replace(with_import, NAMESPACE_R, namespace_name);
+
+            const string with_scoped_namespace_start = project_type == workspace::project_config::ProjectType::APPLICATION
+                ? std::regex_replace(with_import, START_SCOPE_R, "")
+                : std::regex_replace(with_import, START_SCOPE_R, string("\n") + "namespace author1::lib1 {" + "\n");
+            const string with_scoped_namespace_end = project_type == workspace::project_config::ProjectType::APPLICATION
+                ? std::regex_replace(with_scoped_namespace_start, END_SCOPE_R, "")
+                : std::regex_replace(with_scoped_namespace_start, END_SCOPE_R, "\n\n}");
+            
+            const string final_text = std::regex_replace(with_scoped_namespace_end, NAMESPACE_R, namespace_name);
             
             return final_text;
         } else if (file_name.compare("README.md") == 0) {
