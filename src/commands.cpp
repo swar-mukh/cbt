@@ -202,6 +202,13 @@ namespace commands {
     }
 
     void build_project() {
+        const Project project = convert_cfg_to_model();
+
+        if (project.project_type == ProjectType::LIBRARY) {
+            cout << "This option is only available for applications." << endl;
+            return;
+        }
+
         if (!fs::exists("build/")) {
             cout << "Directory 'build/' does not exist! Run 'cbt compile-project' first." << endl;
             return;
@@ -242,8 +249,6 @@ namespace commands {
             cout << "No binaries present! Run 'cbt compile-project' first." << endl;
             return;
         }
-
-        const Project project = convert_cfg_to_model();
 
         #if defined(_WIN32) || defined(_WIN64)
         const string BINARY_NAME{ project.name + ".exe" };
@@ -378,7 +383,7 @@ namespace commands {
             << "create-file <path/to/file_name> - Same as above, but will create necessary sub-directories if required" << endl
             << endl
             << "compile-project                 - Compile all files and generate respective binaries under 'build/binaries/'" << endl
-            << "build-project                   - Perform linking and generate final executable under 'build/'" << endl
+            << "build-project                   - (For applications only) Perform linking and generate final executable under 'build/'" << endl
             << "run-unit-tests                  - Run all test cases under 'tests/unit_tests/' directory" << endl
             << endl
             << "clear-build                     - Delete all object files under 'build/' directory"  << endl
