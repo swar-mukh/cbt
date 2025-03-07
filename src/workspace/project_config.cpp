@@ -2,8 +2,10 @@
 
 #include <filesystem>
 #include <fstream>
+#include <stdexcept>
 #include <string>
 
+#include "workspace/scaffold.hpp"
 #include "workspace/util.hpp"
 
 namespace workspace::project_config {
@@ -14,6 +16,27 @@ namespace workspace::project_config {
     const string AUTHOR_DELIMITER{ ":" };
     const string DELIMITER{ "=" };
     const string LINE_COMMENT{ ";" };
+
+    Project init(const string& project_name, const ProjectType& project_type) {
+        return Project{
+            .name{ project_name },
+            .description{ "Add some description here" },
+            .version{ workspace::util::get_ISO_date() },
+            .project_type{ project_type },
+            .authors{
+                { .name{ "Sample LName" }, .email_id{ "sample_lname@domain.tld" } },
+                { .name{ "Another MName LName" }, .email_id{ "another_mname_lname@domain.tld" } }
+            },
+            .platforms{ Platform::BSD, Platform::LINUX, Platform::MACOS, Platform::UNIX, Platform::WINDOWS },
+            .config{
+                .cpp_standard{ "c++2a" },
+                .safety_flags{ "-Wall -Wextra -pedantic" },
+                .compile_time_flags{ "-Os -s" },
+                .build_flags{ "-O3 -s" },
+                .test_flags{ "-g -Og -s" }
+            }
+        };
+    }
 
     string platform_to_string(const Platform& platform) {
         using enum workspace::project_config::Platform;
@@ -37,6 +60,26 @@ namespace workspace::project_config {
         else if (platform.compare("unix") == 0) { return UNIX; }
         else if (platform.compare("windows") == 0) { return WINDOWS; }
         else return _UNSUPPORTED;
+    }
+
+    string project_type_to_string(const ProjectType& project_type) {
+        using enum workspace::project_config::ProjectType;
+        
+        switch(project_type) {
+            case APPLICATION: return "application";
+            case LIBRARY: return "library";
+            default: return "<unsupported>";
+        }
+    }
+
+    ProjectType string_to_project_type(const string& project_type) {
+        using enum workspace::project_config::ProjectType;
+
+        if (project_type.compare("application") == 0) { return APPLICATION; }
+        else if (project_type.compare("library") == 0) { return LIBRARY; }
+        else {
+            throw std::domain_error("Invalid project type");
+        };
     }
 
     Project convert_cfg_to_model() {
@@ -77,6 +120,8 @@ namespace workspace::project_config {
                     project.description = value;
                 } else if (key.compare("version") == 0) {
                     project.version = value;
+                } else if (key.compare("type") == 0) {
+                    project.project_type = string_to_project_type(value);
                 } else if (key.compare("authors[]") == 0) {
                     const auto [name, email_id] = workspace::util::get_key_value_pair_from_line(value, AUTHOR_DELIMITER);
                     project.authors.insert(Author{ .name{ name }, .email_id{ email_id } });
@@ -145,6 +190,8 @@ namespace workspace::project_config {
 
         return (add_disclaimer_text ? (disclaimer_text + "\n\n") : "") 
             + base_text
+            + "\n\n"
+            + "type=" + project_type_to_string(project.project_type)
             + "\n\n"
             + authors_text
             + "\n\n"

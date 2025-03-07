@@ -55,13 +55,14 @@ Note:
 
 Options:
 
-create-project <project-name>   - Scaffold a new project
+create-application <name>       - Scaffold a new application
+create-library <name>           - Scaffold a new library
 
 create-file <file_name>         - Generate respective C++ files under 'headers/', 'src/' and 'tests/' directories
 create-file <path/to/file_name> - Same as above, but will create necessary sub-directories if required
 
 compile-project                 - Compile all files and generate respective binaries under 'build/binaries/'
-build-project                   - Perform linking and generate final executable under 'build/'
+build-project                   - (For applications only) Perform linking and generate final executable under 'build/'
 run-unit-tests                  - Run all test cases under 'tests/unit_tests/' directory
 
 clear-build                     - Delete all object files under 'build/' directory
