@@ -15,9 +15,10 @@ namespace {
     using std::cout;
     using std::endl;
 
+    using namespace workspace::project_config;
     using namespace workspace::scaffold;
 
-    void create_project(const std::string& project_name, const workspace::project_config::ProjectType& project_type) {
+    void create_project(const std::string& project_name, const ProjectType& project_type) {
         if (std::filesystem::exists(project_name)) {
             cout << "Directory '" << project_name << "' already exists!" << endl;
             return;
@@ -29,6 +30,8 @@ namespace {
             cout << reason_if_any << endl;
             return;
         }
+
+        const Project project = init(project_name, project_type);
 
         if (create_directory(project_name)) {
             create_file(project_name, ".gitignore");
@@ -60,7 +63,7 @@ namespace {
             create_file(project_name, "src/cbt_tools/env_manager.cpp");
             create_file(project_name, "src/cbt_tools/utils.cpp");
 
-            if (project_type == workspace::project_config::ProjectType::APPLICATION) {
+            if (project_type == ProjectType::APPLICATION) {
                 create_file(project_name, "src/main.cpp");
             }
             

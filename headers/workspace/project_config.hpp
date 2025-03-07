@@ -50,6 +50,8 @@ namespace workspace::project_config {
         Config config;
     };
 
+    Project init(const string& name, const ProjectType& project_type);
+
     string platform_to_string(const Platform& platform);
     Platform string_to_platform(const string& platform);
 

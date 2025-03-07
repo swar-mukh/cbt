@@ -148,27 +148,8 @@ namespace {
             return with_project_name;
         } else if (file_name.compare("project.cfg") == 0) {
             using namespace workspace::project_config;
-
-            const Project project {
-                .name{ project_name },
-                .description{ "Add some description here" },
-                .version{ workspace::util::get_ISO_date() },
-                .project_type{ project_type },
-                .authors{
-                    { .name{ "Sample LName" }, .email_id{ "sample_lname@domain.tld" } },
-                    { .name{ "Another MName LName" }, .email_id{ "another_mname_lname@domain.tld" } }
-                },
-                .platforms{ Platform::BSD, Platform::LINUX, Platform::MACOS, Platform::UNIX, Platform::WINDOWS },
-                .config{
-                    .cpp_standard{ "c++2a" },
-                    .safety_flags{ "-Wall -Wextra -pedantic" },
-                    .compile_time_flags{ "-Os -s" },
-                    .build_flags{ "-O3 -s" },
-                    .test_flags{ "-g -Og -s" }
-                }
-            };
-
-            return convert_model_to_cfg(project);
+            
+            return convert_model_to_cfg(init(project_name, project_type));
         } else {
             return "";
         }
