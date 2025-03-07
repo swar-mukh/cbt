@@ -78,7 +78,7 @@ namespace {
             
             const string with_scoped_namespace_start = project.project_type == workspace::project_config::ProjectType::APPLICATION
                 ? std::regex_replace(with_guard, START_SCOPE_R, "")
-                : std::regex_replace(with_guard, START_SCOPE_R, string("\n") + "namespace author1::lib1 {" + "\n");
+                : std::regex_replace(with_guard, START_SCOPE_R, string("\n") + "namespace " + project.name + " {" + "\n");
             const string with_scoped_namespace_end = project.project_type == workspace::project_config::ProjectType::APPLICATION
                 ? std::regex_replace(with_scoped_namespace_start, END_SCOPE_R, "")
                 : std::regex_replace(with_scoped_namespace_start, END_SCOPE_R, "\n}\n");
@@ -121,7 +121,7 @@ namespace {
 
             const string scoped_namespace_name = project.project_type == workspace::project_config::ProjectType::APPLICATION
                 ? namespace_name
-                : string("author1::lib1::") + namespace_name;
+                : string(project.name + "::") + namespace_name;
                 
             const string final_text = std::regex_replace(with_relative_import, NAMESPACE_R, scoped_namespace_name);
             
@@ -134,7 +134,7 @@ namespace {
 
             const string with_scoped_namespace_start = project.project_type == workspace::project_config::ProjectType::APPLICATION
                 ? std::regex_replace(with_import, START_SCOPE_R, "")
-                : std::regex_replace(with_import, START_SCOPE_R, string("\n") + "namespace author1::lib1 {" + "\n");
+                : std::regex_replace(with_import, START_SCOPE_R, string("\n") + "namespace " + project.name + " {" + "\n");
             const string with_scoped_namespace_end = project.project_type == workspace::project_config::ProjectType::APPLICATION
                 ? std::regex_replace(with_scoped_namespace_start, END_SCOPE_R, "")
                 : std::regex_replace(with_scoped_namespace_start, END_SCOPE_R, "\n\n}");
