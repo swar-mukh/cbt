@@ -1,6 +1,7 @@
 #ifndef WORKSPACE_SCAFFOLD
 #define WORKSPACE_SCAFFOLD
 
+#include <optional>
 #include <regex>
 #include <string>
 
@@ -18,7 +19,7 @@ namespace workspace::scaffold {
     const std::regex START_SCOPE_R{ "@START_SCOPE" };
     const std::regex END_SCOPE_R{ "@END_SCOPE" };
 
-    void create_file(const string& project_name, const string& file_name, const workspace::project_config::ProjectType& project_type = workspace::project_config::ProjectType::APPLICATION, const bool verbose = true);
+    void create_file(const std::optional<workspace::project_config::Project> project, const string& file_name, const bool verbose = true, const bool skip_root = false);
     bool create_directory(const string& project_name, const string& sub_directory = "", const bool multi_directory = false, const bool verbose = true);
     void create_build_tree_as_necessary();
     void create_internals_tree_as_necessary();

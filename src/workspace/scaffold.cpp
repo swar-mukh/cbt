@@ -5,6 +5,7 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <optional>
 #include <regex>
 #include <sstream>
 #include <string>
@@ -47,7 +48,7 @@ namespace {
         return final_string;
     }
 
-    string get_predefined_text_content(const string& file_name, const string& project_name, const workspace::project_config::ProjectType& project_type) {
+    string get_predefined_text_content(const workspace::project_config::Project& project, const string& file_name) {
         if (file_name.compare(".gitignore") == 0) {
             return remove_raw_literal_indentations(GITIGNORE);
         } else if (file_name.compare("docs/LICENSE.txt") == 0) {
@@ -75,10 +76,10 @@ namespace {
             const string with_guard = std::regex_replace(text, GUARD_R, guard_name);
             const string with_import = std::regex_replace(with_guard, IMPORT_R, stemmed_name + ".hpp");
             
-            const string with_scoped_namespace_start = project_type == workspace::project_config::ProjectType::APPLICATION
+            const string with_scoped_namespace_start = project.project_type == workspace::project_config::ProjectType::APPLICATION
                 ? std::regex_replace(with_guard, START_SCOPE_R, "")
                 : std::regex_replace(with_guard, START_SCOPE_R, string("\n") + "namespace author1::lib1 {" + "\n");
-            const string with_scoped_namespace_end = project_type == workspace::project_config::ProjectType::APPLICATION
+            const string with_scoped_namespace_end = project.project_type == workspace::project_config::ProjectType::APPLICATION
                 ? std::regex_replace(with_scoped_namespace_start, END_SCOPE_R, "")
                 : std::regex_replace(with_scoped_namespace_start, END_SCOPE_R, "\n}\n");
             
@@ -118,7 +119,7 @@ namespace {
                 relative_path
             );
 
-            const string scoped_namespace_name = project_type == workspace::project_config::ProjectType::APPLICATION
+            const string scoped_namespace_name = project.project_type == workspace::project_config::ProjectType::APPLICATION
                 ? namespace_name
                 : string("author1::lib1::") + namespace_name;
                 
@@ -131,10 +132,10 @@ namespace {
             
             const string with_import = std::regex_replace(text, IMPORT_R, stemmed_name + ".hpp");
 
-            const string with_scoped_namespace_start = project_type == workspace::project_config::ProjectType::APPLICATION
+            const string with_scoped_namespace_start = project.project_type == workspace::project_config::ProjectType::APPLICATION
                 ? std::regex_replace(with_import, START_SCOPE_R, "")
                 : std::regex_replace(with_import, START_SCOPE_R, string("\n") + "namespace author1::lib1 {" + "\n");
-            const string with_scoped_namespace_end = project_type == workspace::project_config::ProjectType::APPLICATION
+            const string with_scoped_namespace_end = project.project_type == workspace::project_config::ProjectType::APPLICATION
                 ? std::regex_replace(with_scoped_namespace_start, END_SCOPE_R, "")
                 : std::regex_replace(with_scoped_namespace_start, END_SCOPE_R, "\n\n}");
             
@@ -143,13 +144,11 @@ namespace {
             return final_text;
         } else if (file_name.compare("README.md") == 0) {
             const string text{ remove_raw_literal_indentations(README_MD) };
-            const string with_project_name = std::regex_replace(text, PROJECT_NAME_R, project_name);
+            const string with_project_name = std::regex_replace(text, PROJECT_NAME_R, project.name);
 
             return with_project_name;
         } else if (file_name.compare("project.cfg") == 0) {
-            using namespace workspace::project_config;
-            
-            return convert_model_to_cfg(init(project_name, project_type));
+            return workspace::project_config::convert_model_to_cfg(project);
         } else {
             return "";
         }
@@ -157,8 +156,8 @@ namespace {
 }
 
 namespace workspace::scaffold {
-    void create_file(const string& project_name, const string& file_name, const workspace::project_config::ProjectType& project_type, const bool verbose) {
-        const string full_path = (project_name.length() != 0 ? (project_name + "/") : project_name) + file_name;
+    void create_file(const std::optional<workspace::project_config::Project> project, const string& file_name, const bool verbose, const bool skip_root) {
+        const string full_path = (!skip_root ? (project.value().name + "/") : "") + file_name;
 
         if (fs::exists(full_path)) {
             if (verbose) {
@@ -170,7 +169,7 @@ namespace workspace::scaffold {
             }
 
             ofstream file_to_write(full_path);
-            file_to_write << get_predefined_text_content(file_name, project_name, project_type);
+            file_to_write << get_predefined_text_content(project.value(), file_name);
             file_to_write.close();
 
             if (verbose) {
@@ -219,7 +218,7 @@ namespace workspace::scaffold {
             workspace::scaffold::create_directory("", ".internals/tmp", false, false);
         }
         if (!fs::exists(".internals/timestamps.txt")) {
-            workspace::scaffold::create_file("", ".internals/timestamps.txt", workspace::project_config::ProjectType::APPLICATION, false);
+            workspace::scaffold::create_file(std::nullopt, ".internals/timestamps.txt", false, true);
         }
     }
 
