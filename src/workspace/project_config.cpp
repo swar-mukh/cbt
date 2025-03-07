@@ -17,6 +17,27 @@ namespace workspace::project_config {
     const string DELIMITER{ "=" };
     const string LINE_COMMENT{ ";" };
 
+    Project init(const string& project_name, const ProjectType& project_type) {
+        return Project{
+            .name{ project_name },
+            .description{ "Add some description here" },
+            .version{ workspace::util::get_ISO_date() },
+            .project_type{ project_type },
+            .authors{
+                { .name{ "Sample LName" }, .email_id{ "sample_lname@domain.tld" } },
+                { .name{ "Another MName LName" }, .email_id{ "another_mname_lname@domain.tld" } }
+            },
+            .platforms{ Platform::BSD, Platform::LINUX, Platform::MACOS, Platform::UNIX, Platform::WINDOWS },
+            .config{
+                .cpp_standard{ "c++2a" },
+                .safety_flags{ "-Wall -Wextra -pedantic" },
+                .compile_time_flags{ "-Os -s" },
+                .build_flags{ "-O3 -s" },
+                .test_flags{ "-g -Og -s" }
+            }
+        };
+    }
+
     string platform_to_string(const Platform& platform) {
         using enum workspace::project_config::Platform;
         

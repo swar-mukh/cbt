@@ -294,7 +294,7 @@ namespace assets::scaffold_texts {
 
     #include <iostream>
     #include <vector>
-
+    @START_SCOPE
     namespace @NAMESPACE {
         void a_function();
 
@@ -346,7 +346,7 @@ namespace assets::scaffold_texts {
             std::vector<Employee> employees;
         };
     }
-
+    @END_SCOPE
     #endif
     )";
 
@@ -405,7 +405,7 @@ namespace assets::scaffold_texts {
 
     #include <iomanip>
     #include <iostream>
-
+    @START_SCOPE
     namespace {
         using namespace @NAMESPACE;
 
@@ -487,7 +487,7 @@ namespace assets::scaffold_texts {
             
             return out;
         }
-    }
+    }@END_SCOPE
     )";
 
     const string SAMPLE_TEST_CPP = R"(
@@ -505,7 +505,6 @@ namespace assets::scaffold_texts {
     struct Context {
         int a;
         std::string api_endpoint;
-        
     };
 
     class ScopedTestSuite: public cbt_tools::test_harness::TestSuite<Context> {

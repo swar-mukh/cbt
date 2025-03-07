@@ -40,8 +40,8 @@ namespace workspace::util {
                 return std::make_tuple(true, string(is_it_for_project ? "Project" : "File") + " name cannot contain space or blank characters");
             } else if (is_it_for_project) {
                 // disallow '/'; if necessary, traverse into the path and invoke
-                if (std::ispunct(uch) && !std::isalnum(uch) && uch != '_' && uch != '-') {
-                    return std::make_tuple(true, "Project name cannot contain punctuation symbols except '_' and '-'");
+                if (std::ispunct(uch) && !std::isalnum(uch) && uch != '_') {
+                    return std::make_tuple(true, "Project name cannot contain punctuation symbols except '_'");
                 } 
             } else {
                 if (std::ispunct(uch) && !std::isalnum(uch) && uch != '_' && uch != '/') {

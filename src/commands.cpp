@@ -16,9 +16,10 @@ namespace {
     using std::cout;
     using std::endl;
 
+    using namespace workspace::project_config;
     using namespace workspace::scaffold;
 
-    void create_project(const std::string& project_name, const workspace::project_config::ProjectType& project_type) {
+    void create_project(const std::string& project_name, const ProjectType& project_type) {
         if (std::filesystem::exists(project_name)) {
             cout << "Directory '" << project_name << "' already exists!" << endl;
             return;
@@ -31,47 +32,49 @@ namespace {
             return;
         }
 
+        const Project project = init(project_name, project_type);
+
         if (create_directory(project_name)) {
-            create_file(project_name, ".gitignore");
+            create_file(project, ".gitignore");
             create_directory(project_name, ".internals");
             create_directory(project_name, ".internals/tmp");
-            create_file(project_name, ".internals/timestamps.txt");
+            create_file(project, ".internals/timestamps.txt");
             create_directory(project_name, "build");
             create_directory(project_name, "build/binaries");
             create_directory(project_name, "build/test_binaries");
             create_directory(project_name, "build/test_binaries/unit_tests");
             create_directory(project_name, "dependencies");
-            create_file(project_name, "dependencies/.gitkeep");
+            create_file(project, "dependencies/.gitkeep");
             create_directory(project_name, "docs");
-            create_file(project_name, "docs/LICENSE.txt");
-            create_file(project_name, "docs/Roadmap.md");
+            create_file(project, "docs/LICENSE.txt");
+            create_file(project, "docs/Roadmap.md");
             create_directory(project_name, "environments");
-            create_file(project_name, "environments/.env.template");
-            create_file(project_name, "environments/local.env");
-            create_file(project_name, "environments/production.env");
-            create_file(project_name, "environments/test.env");
+            create_file(project, "environments/.env.template");
+            create_file(project, "environments/local.env");
+            create_file(project, "environments/production.env");
+            create_file(project, "environments/test.env");
             create_directory(project_name, "headers");
             create_directory(project_name, "headers/cbt_tools");
-            create_file(project_name, "headers/cbt_tools/env_manager.hpp");
-            create_file(project_name, "headers/cbt_tools/test_harness.hpp");
-            create_file(project_name, "headers/cbt_tools/utils.hpp");
-            create_file(project_name, "headers/sample.hpp", project_type);
+            create_file(project, "headers/cbt_tools/env_manager.hpp");
+            create_file(project, "headers/cbt_tools/test_harness.hpp");
+            create_file(project, "headers/cbt_tools/utils.hpp");
+            create_file(project, "headers/sample.hpp");
             create_directory(project_name, "src");
             create_directory(project_name, "src/cbt_tools");
-            create_file(project_name, "src/cbt_tools/env_manager.cpp");
-            create_file(project_name, "src/cbt_tools/utils.cpp");
+            create_file(project, "src/cbt_tools/env_manager.cpp");
+            create_file(project, "src/cbt_tools/utils.cpp");
 
-            if (project_type == workspace::project_config::ProjectType::APPLICATION) {
-                create_file(project_name, "src/main.cpp");
+            if (project_type == ProjectType::APPLICATION) {
+                create_file(project, "src/main.cpp");
             }
             
-            create_file(project_name, "src/sample.cpp", project_type);
+            create_file(project, "src/sample.cpp");
             create_directory(project_name, "tests");
             create_directory(project_name, "tests/unit_tests");
-            create_file(project_name, "tests/unit_tests/sample.cpp", project_type);
-            create_file(project_name, "README.md");
+            create_file(project, "tests/unit_tests/sample.cpp");
+            create_file(project, "README.md");
             
-            create_file(project_name, "project.cfg", project_type);
+            create_file(project, "project.cfg");
 
             cout << endl << "Project '" << project_name << "' created" << endl;
         } else {
@@ -105,14 +108,15 @@ namespace commands {
             return;
         }
 
+        const Project project = convert_cfg_to_model(); 
         const bool create_only_header_file{ file_name.starts_with("headers/") };
 
         if (create_only_header_file) {
-            workspace::scaffold::create_file("", file_name + ".hpp");
+            workspace::scaffold::create_file(project, file_name + ".hpp", true, true);
         } else {
-            workspace::scaffold::create_file("", string("headers/") + file_name + ".hpp");
-            workspace::scaffold::create_file("", string("src/") + file_name + ".cpp");
-            workspace::scaffold::create_file("", string("tests/unit_tests/") + file_name + ".cpp");
+            workspace::scaffold::create_file(project, string("headers/") + file_name + ".hpp", true, true);
+            workspace::scaffold::create_file(project, string("src/") + file_name + ".cpp", true, true);
+            workspace::scaffold::create_file(project, string("tests/unit_tests/") + file_name + ".cpp", true, true);
         }
     }
 
@@ -210,6 +214,13 @@ namespace commands {
     }
 
     void build_project() {
+        const Project project = convert_cfg_to_model();
+
+        if (project.project_type == ProjectType::LIBRARY) {
+            cout << "This option is only available for applications." << endl;
+            return;
+        }
+
         if (!fs::exists("build/")) {
             cout << "Directory 'build/' does not exist! Run 'cbt compile-project' first." << endl;
             return;
@@ -250,8 +261,6 @@ namespace commands {
             cout << "No binaries present! Run 'cbt compile-project' first." << endl;
             return;
         }
-
-        const Project project = convert_cfg_to_model();
 
         #if defined(_WIN32) || defined(_WIN64)
         const string BINARY_NAME{ project.name + ".exe" };
@@ -388,7 +397,7 @@ namespace commands {
             << "resolve-dependencies            - Sync dependencies through 'project.cfg'" << endl
             << endl
             << "compile-project                 - Compile all files and generate respective binaries under 'build/binaries/'" << endl
-            << "build-project                   - Perform linking and generate final executable under 'build/'" << endl
+            << "build-project                   - (For applications only) Perform linking and generate final executable under 'build/'" << endl
             << "run-unit-tests                  - Run all test cases under 'tests/unit_tests/' directory" << endl
             << endl
             << "clear-build                     - Delete all object files under 'build/' directory"  << endl
