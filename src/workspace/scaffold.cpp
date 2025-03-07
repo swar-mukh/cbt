@@ -210,7 +210,7 @@ namespace workspace::scaffold {
         }
     }
 
-    void create_internals_tree_as_necessary() { // TODO: pass project_type
+    void create_internals_tree_as_necessary() {
         if (!fs::exists(".internals/")) {
             workspace::scaffold::create_directory("", ".internals", false, false);
         }
