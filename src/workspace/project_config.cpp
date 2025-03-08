@@ -34,6 +34,11 @@ namespace workspace::project_config {
                 .compile_time_flags{ "-Os -s" },
                 .build_flags{ "-O3 -s" },
                 .test_flags{ "-g -Og -s" }
+            },
+            .dependencies{
+                "author1/lib1",
+                "author1/lib2",
+                "author2/lib1"
             }
         };
     }
