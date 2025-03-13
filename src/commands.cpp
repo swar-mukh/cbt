@@ -57,6 +57,7 @@ namespace {
             create_file(project, "headers/cbt_tools/env_manager.hpp");
             create_file(project, "headers/cbt_tools/test_harness.hpp");
             create_file(project, "headers/cbt_tools/utils.hpp");
+            create_file(project, "headers/forward_declarations.hpp");
             create_file(project, "headers/sample.hpp");
             create_directory(project_name, "src");
             create_directory(project_name, "src/cbt_tools");

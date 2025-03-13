@@ -65,6 +65,17 @@ namespace {
             return remove_raw_literal_indentations(CBT_TOOLS_TEST_HARNESS_HPP);
         } else if (file_name.compare("headers/cbt_tools/utils.hpp") == 0) {
             return remove_raw_literal_indentations(CBT_TOOLS_UTILS_HPP);
+        } else if (file_name.compare("headers/forward_declarations.hpp") == 0) {
+            const string text{ remove_raw_literal_indentations(FORWARD_DECLARATIONS_HPP) };
+
+            const string with_scoped_namespace_start = project.project_type == workspace::project_config::ProjectType::APPLICATION
+                ? std::regex_replace(text, START_SCOPE_R, "")
+                : std::regex_replace(text, START_SCOPE_R, string("\n") + "namespace " + project.name + " {" + "\n");
+            const string with_scoped_namespace_end = project.project_type == workspace::project_config::ProjectType::APPLICATION
+                ? std::regex_replace(with_scoped_namespace_start, END_SCOPE_R, "")
+                : std::regex_replace(with_scoped_namespace_start, END_SCOPE_R, "\n}\n");
+
+            return with_scoped_namespace_end;
         } else if (file_name.compare("src/cbt_tools/env_manager.cpp") == 0) {
             return remove_raw_literal_indentations(CBT_TOOLS_ENV_MANAGER_CPP);
         } else if (file_name.compare("src/cbt_tools/utils.cpp") == 0) {

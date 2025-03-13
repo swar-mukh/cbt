@@ -287,6 +287,47 @@ namespace assets::scaffold_texts {
         }
     }
     )";
+
+    const string FORWARD_DECLARATIONS_HPP = R"(
+    #ifndef FORWARD_DECLARATIONS
+    #define FORWARD_DECLARATIONS
+
+    /**
+     * WARNING: Use this file sparingly!
+     * 
+     * Avoid forward declarations as much as possible.
+     * 
+     * Use them only when your codebase has such complex/cyclic interdependencies
+     * that forward declarations are the only way out.
+     */
+
+    #include <string>
+    @START_SCOPE
+    // Avoid linear nesting unless unavoidable
+    namespace a::b::c {
+        struct SomeStruct;
+    }
+
+    namespace d {
+        class SomeClass;
+        a::b::c::SomeStruct some_other_function(const int id, const std::string& name);
+    }
+
+    // Prefer nested style
+    namespace a {
+        class SomeOtherClass;
+
+        void do_something(d::SomeClass some_class);
+
+        namespace b {
+            enum class SomeEnum;
+        }
+
+        void some_function(a::b::SomeEnum an_enum);
+    }
+    @END_SCOPE
+    #endif
+    )";
     
     const string SAMPLE_HPP = R"(
     #ifndef @GUARD
