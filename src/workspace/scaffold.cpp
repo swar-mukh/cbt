@@ -48,6 +48,18 @@ namespace {
         return final_string;
     }
 
+    string wrap_in_scoped_namespace_if_applicable(const workspace::project_config::Project& project, const string& text, const bool is_header_file = true) {
+        const string with_scoped_namespace_start = project.project_type == workspace::project_config::ProjectType::APPLICATION
+            ? std::regex_replace(text, START_SCOPE_R, "")
+            : std::regex_replace(text, START_SCOPE_R, string("\n") + "namespace " + workspace::util::convert_stemmed_name_to_namespace_name(project.name) + " {" + "\n");
+        
+        const string with_scoped_namespace_end = project.project_type == workspace::project_config::ProjectType::APPLICATION
+            ? std::regex_replace(with_scoped_namespace_start, END_SCOPE_R, "")
+            : std::regex_replace(with_scoped_namespace_start, END_SCOPE_R, is_header_file ? "\n}\n" : "\n\n}");
+        
+        return with_scoped_namespace_end;
+    }
+
     string get_predefined_text_content(const workspace::project_config::Project& project, const string& file_name) {
         if (file_name.compare(".gitignore") == 0) {
             return remove_raw_literal_indentations(GITIGNORE);
@@ -68,14 +80,7 @@ namespace {
         } else if (file_name.compare("headers/forward_declarations.hpp") == 0) {
             const string text{ remove_raw_literal_indentations(FORWARD_DECLARATIONS_HPP) };
 
-            const string with_scoped_namespace_start = project.project_type == workspace::project_config::ProjectType::APPLICATION
-                ? std::regex_replace(text, START_SCOPE_R, "")
-                : std::regex_replace(text, START_SCOPE_R, string("\n") + "namespace " + project.name + " {" + "\n");
-            const string with_scoped_namespace_end = project.project_type == workspace::project_config::ProjectType::APPLICATION
-                ? std::regex_replace(with_scoped_namespace_start, END_SCOPE_R, "")
-                : std::regex_replace(with_scoped_namespace_start, END_SCOPE_R, "\n}\n");
-
-            return with_scoped_namespace_end;
+            return wrap_in_scoped_namespace_if_applicable(project, text);
         } else if (file_name.compare("src/cbt_tools/env_manager.cpp") == 0) {
             return remove_raw_literal_indentations(CBT_TOOLS_ENV_MANAGER_CPP);
         } else if (file_name.compare("src/cbt_tools/utils.cpp") == 0) {
@@ -85,16 +90,9 @@ namespace {
             const auto [stemmed_name, guard_name, namespace_name] = workspace::util::get_qualified_names(file_name);
             
             const string with_guard = std::regex_replace(text, GUARD_R, guard_name);
-            const string with_import = std::regex_replace(with_guard, IMPORT_R, stemmed_name + ".hpp");
+            const string with_scoped_namespace = wrap_in_scoped_namespace_if_applicable(project, with_guard);
             
-            const string with_scoped_namespace_start = project.project_type == workspace::project_config::ProjectType::APPLICATION
-                ? std::regex_replace(with_guard, START_SCOPE_R, "")
-                : std::regex_replace(with_guard, START_SCOPE_R, string("\n") + "namespace " + project.name + " {" + "\n");
-            const string with_scoped_namespace_end = project.project_type == workspace::project_config::ProjectType::APPLICATION
-                ? std::regex_replace(with_scoped_namespace_start, END_SCOPE_R, "")
-                : std::regex_replace(with_scoped_namespace_start, END_SCOPE_R, "\n}\n");
-            
-            const string final_text = std::regex_replace(with_scoped_namespace_end, NAMESPACE_R, namespace_name);
+            const string final_text = std::regex_replace(with_scoped_namespace, NAMESPACE_R, namespace_name);
             
             return final_text;
         } else if (file_name.compare("src/main.cpp") == 0) {
@@ -132,7 +130,7 @@ namespace {
 
             const string scoped_namespace_name = project.project_type == workspace::project_config::ProjectType::APPLICATION
                 ? namespace_name
-                : string(project.name + "::") + namespace_name;
+                : workspace::util::convert_stemmed_name_to_namespace_name(project.name) + "::" + namespace_name;
                 
             const string final_text = std::regex_replace(with_relative_import, NAMESPACE_R, scoped_namespace_name);
             
@@ -142,15 +140,9 @@ namespace {
             const auto [stemmed_name, _, namespace_name] = workspace::util::get_qualified_names(file_name);
             
             const string with_import = std::regex_replace(text, IMPORT_R, stemmed_name + ".hpp");
-
-            const string with_scoped_namespace_start = project.project_type == workspace::project_config::ProjectType::APPLICATION
-                ? std::regex_replace(with_import, START_SCOPE_R, "")
-                : std::regex_replace(with_import, START_SCOPE_R, string("\n") + "namespace " + project.name + " {" + "\n");
-            const string with_scoped_namespace_end = project.project_type == workspace::project_config::ProjectType::APPLICATION
-                ? std::regex_replace(with_scoped_namespace_start, END_SCOPE_R, "")
-                : std::regex_replace(with_scoped_namespace_start, END_SCOPE_R, "\n\n}");
+            const string with_scoped_namespace = wrap_in_scoped_namespace_if_applicable(project, with_import, false);
             
-            const string final_text = std::regex_replace(with_scoped_namespace_end, NAMESPACE_R, namespace_name);
+            const string final_text = std::regex_replace(with_scoped_namespace, NAMESPACE_R, namespace_name);
             
             return final_text;
         } else if (file_name.compare("README.md") == 0) {
