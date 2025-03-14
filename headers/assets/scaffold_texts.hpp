@@ -289,8 +289,8 @@ namespace assets::scaffold_texts {
     )";
 
     const string FORWARD_DECLARATIONS_HPP = R"(
-    #ifndef FORWARD_DECLARATIONS
-    #define FORWARD_DECLARATIONS
+    #ifndef @GUARDFORWARD_DECLARATIONS
+    #define @GUARDFORWARD_DECLARATIONS
 
     /**
      * WARNING: Use this file sparingly!

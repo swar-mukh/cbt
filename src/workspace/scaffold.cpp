@@ -48,6 +48,12 @@ namespace {
         return final_string;
     }
 
+    string use_scoped_guard_if_applicable(const workspace::project_config::Project& project, const string& text, const string& guard_name) {
+        return project.project_type == workspace::project_config::ProjectType::APPLICATION
+            ? std::regex_replace(text, GUARD_R, guard_name)
+            : std::regex_replace(text, GUARD_R, workspace::util::convert_stemmed_name_to_guard_name(project.name) + "_" + guard_name);
+    }
+
     string wrap_in_scoped_namespace_if_applicable(const workspace::project_config::Project& project, const string& text, const bool is_header_file = true) {
         const string with_scoped_namespace_start = project.project_type == workspace::project_config::ProjectType::APPLICATION
             ? std::regex_replace(text, START_SCOPE_R, "")
@@ -79,8 +85,10 @@ namespace {
             return remove_raw_literal_indentations(CBT_TOOLS_UTILS_HPP);
         } else if (file_name.compare("headers/forward_declarations.hpp") == 0) {
             const string text{ remove_raw_literal_indentations(FORWARD_DECLARATIONS_HPP) };
+            
+            const string with_guard = use_scoped_guard_if_applicable(project, text, "");
 
-            return wrap_in_scoped_namespace_if_applicable(project, text);
+            return wrap_in_scoped_namespace_if_applicable(project, with_guard);
         } else if (file_name.compare("src/cbt_tools/env_manager.cpp") == 0) {
             return remove_raw_literal_indentations(CBT_TOOLS_ENV_MANAGER_CPP);
         } else if (file_name.compare("src/cbt_tools/utils.cpp") == 0) {
@@ -89,7 +97,7 @@ namespace {
             const string text{ remove_raw_literal_indentations(SAMPLE_HPP) };
             const auto [stemmed_name, guard_name, namespace_name] = workspace::util::get_qualified_names(file_name);
             
-            const string with_guard = std::regex_replace(text, GUARD_R, guard_name);
+            const string with_guard = use_scoped_guard_if_applicable(project, text, guard_name);
             const string with_scoped_namespace = wrap_in_scoped_namespace_if_applicable(project, with_guard);
             
             const string final_text = std::regex_replace(with_scoped_namespace, NAMESPACE_R, namespace_name);
