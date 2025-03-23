@@ -9,15 +9,16 @@ namespace gnu_toolchain {
     using std::string;
 
     const string COMPILER{ "g++" };
+    const string INCLUDE_PATHS{ "-Iheaders" };
 
-    string get_compilation_command(const workspace::project_config::Project& project, const string& gpp_include_paths);
-    int compile_file(const workspace::project_config::Project& project, const string& gpp_include_paths, const string& input_file, const string& output_file);
+    string get_compilation_command(const workspace::project_config::Project& project);
+    int compile_file(const workspace::project_config::Project& project, const string& input_file, const string& output_file);
 
     int perform_linking(const workspace::project_config::Project& project, const string& binaries, const string& executable_file, const bool echo = true);
 
-    string get_test_execution_command(const workspace::project_config::Project& project, const string& gpp_include_paths, const string& extension);
-    int create_test_executable(const workspace::project_config::Project& project, const string& gpp_include_paths, const string& files_to_link, const string& test_executable_file);
-    int execute_test_binary(const string& test_executable_file);
+    string get_test_execution_command(const workspace::project_config::Project& project, const string& extension);
+    int create_test_binary(const workspace::project_config::Project& project, const string& files_to_link, const string& test_binary);
+    int execute_test_binary(const string& test_binary);
 }
 
 #endif

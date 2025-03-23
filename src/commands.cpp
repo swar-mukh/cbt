@@ -125,7 +125,6 @@ namespace commands {
         workspace::scaffold::create_build_tree_as_necessary();
         workspace::scaffold::create_internals_tree_as_necessary();
 
-        const string gpp_include_paths{"-Iheaders"};
         const int literal_length_of_headers = string("headers/").length();
         const int literal_length_of_src = string("src/").length();
         const int literal_length_of_extension = string(".cpp").length();
@@ -159,7 +158,7 @@ namespace commands {
             }
         }
 
-        cout << "[COMMAND] " << gnu_toolchain::get_compilation_command(project, gpp_include_paths) << endl << endl;
+        cout << "[COMMAND] " << gnu_toolchain::get_compilation_command(project) << endl << endl;
 
         int files_succesfully_compiled_count{ 0 };
 
@@ -172,7 +171,7 @@ namespace commands {
                 } else {
                     file.compilation_start_timestamp = workspace::modification_identifier::get_current_fileclock_timestamp();
 
-                    const int result = gnu_toolchain::compile_file(project, gpp_include_paths, file.file_name, stemmed_cpp_file);
+                    const int result = gnu_toolchain::compile_file(project, file.file_name, stemmed_cpp_file);
 
                     file.compilation_end_timestamp = workspace::modification_identifier::get_current_fileclock_timestamp();
                     file.was_successful = (result == 0);
@@ -286,12 +285,11 @@ namespace commands {
         const string EXTENSION{ "" };
         #endif
 
-        const string gpp_include_paths{ "-Iheaders" };
         const fs::path harness{ "headers/cbt_tools/test_harness.hpp" };
 
         std::vector<fs::path> binaries_to_execute{};
 
-        cout << "[COMMAND] " << gnu_toolchain::get_test_execution_command(project, gpp_include_paths, EXTENSION) << endl << endl;
+        cout << "[COMMAND] " << gnu_toolchain::get_test_execution_command(project, EXTENSION) << endl << endl;
 
         for (auto const& [file, dependencies]: tree) {
             string files_to_link{ file };
@@ -323,7 +321,7 @@ namespace commands {
 
             const fs::path test_binary = fs::path("build/test_binaries/unit_tests" / scoped_directory_of_file / fs::path(file).stem().replace_extension(EXTENSION));
             
-            const int result = gnu_toolchain::create_test_executable(project, gpp_include_paths, files_to_link, test_binary.string());
+            const int result = gnu_toolchain::create_test_binary(project, files_to_link, test_binary.string());
             cout << "[COMPILE]" << std::left << std::setw(6) << (result == 0 ? "[OK]" : "[NOK]") << workspace::util::get_platform_formatted_filename(test_binary) << endl;
 
             if (result == 0) {
