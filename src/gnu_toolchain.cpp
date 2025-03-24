@@ -41,6 +41,10 @@ namespace {
                 items[0],
                 fold_plain);
     }
+
+    int execute(std::string cmd) {
+        return system(cmd.c_str());
+    }
 }
 
 namespace gnu_toolchain {
@@ -51,7 +55,7 @@ namespace gnu_toolchain {
     }
 
     int compile_file(const workspace::project_config::Project& project, const string& input_file, const string& output_file) {
-        return system((COMPILER + " -std=" + project.config.cpp_standard + " " + project.config.safety_flags + " " + project.config.compile_time_flags + " " + INCLUDE_PATHS + " -c " + input_file + " -o build/binaries/" + output_file + ".o").c_str());
+        return execute(COMPILER + " -std=" + project.config.cpp_standard + " " + project.config.safety_flags + " " + project.config.compile_time_flags + " " + INCLUDE_PATHS + " -c " + input_file + " -o build/binaries/" + output_file + ".o");
     }
 
     int perform_linking(const workspace::project_config::Project& project, const std::vector<string>& directories_containing_binaries, const string& executable_file, const bool echo) {
@@ -61,7 +65,7 @@ namespace gnu_toolchain {
             std::cout << "[COMMAND] " << command << std::endl << std::endl;
         }
 
-        return system(command.c_str());
+        return execute(command);
     }
 
     string get_test_execution_command(const workspace::project_config::Project& project, const string& extension) {
@@ -69,10 +73,10 @@ namespace gnu_toolchain {
     }
 
     int create_test_binary(const workspace::project_config::Project& project, const std::vector<string>& files_to_link, const string& test_binary) {
-        return system((COMPILER + " -std=" + project.config.cpp_standard + " " + project.config.safety_flags + " " + project.config.test_flags + " " + INCLUDE_PATHS + " " + join(files_to_link, FoldType::PLAIN) + " -o " + test_binary).c_str());
+        return execute(COMPILER + " -std=" + project.config.cpp_standard + " " + project.config.safety_flags + " " + project.config.test_flags + " " + INCLUDE_PATHS + " " + join(files_to_link, FoldType::PLAIN) + " -o " + test_binary);
     }
 
     int execute_test_binary(const string& test_binary) {
-        return system(test_binary.c_str());
+        return execute(test_binary);
     }
 }
