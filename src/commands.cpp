@@ -223,8 +223,8 @@ namespace commands {
             return;
         }
 
-        string binaries{ "" };
-        int binary_files_count{ 0 };
+        std::vector<string> directories_containing_binaries;
+
         const string BUILD_PATH{ workspace::util::get_platform_formatted_filename(fs::path("build/binaries")) };
         const string SEPARATOR{ fs::path::preferred_separator };
 
@@ -243,13 +243,12 @@ namespace commands {
                 );
 
                 if (files_count != 0) {
-                    binaries += normalised_path + SEPARATOR + "*.o ";
-                    binary_files_count += files_count;
+                    directories_containing_binaries.push_back(normalised_path);
                 }
             }
         }
 
-        if (binary_files_count == 0) {
+        if (directories_containing_binaries.size() == 0) {
             cout << "No binaries present! Run 'cbt compile-project' first." << endl;
             return;
         }
@@ -260,7 +259,7 @@ namespace commands {
         const string BINARY_NAME{ project.name };
         #endif
 
-        const int result = gnu_toolchain::perform_linking(project, binaries, string("build") + SEPARATOR + BINARY_NAME);
+        const int result = gnu_toolchain::perform_linking(project, directories_containing_binaries, string("build") + SEPARATOR + BINARY_NAME);
 
         cout << "[BUILD]" << std::left << std::setw(6) << (result == 0 ? "[OK]" : "[NOK]") << workspace::util::get_platform_formatted_filename("build/" + BINARY_NAME) << endl;
     }
@@ -292,7 +291,7 @@ namespace commands {
         cout << "[COMMAND] " << gnu_toolchain::get_test_execution_command(project, EXTENSION) << endl << endl;
 
         for (auto const& [file, dependencies]: tree) {
-            string files_to_link{ file };
+            std::vector<string> files_to_link{ file };
             const fs::path scoped_directory_of_file = fs::relative(fs::path{ file }.parent_path(), "tests/unit_tests");
             const fs::path build_directory_under_check{ "build/test_binaries/unit_tests" / scoped_directory_of_file };
 
@@ -313,7 +312,7 @@ namespace commands {
                         if (!fs::exists(corresponding_binary)) {
                             throw std::runtime_error("Corresponding binary for '" + workspace::util::get_platform_formatted_filename(dependency) + "' not found! Run `cbt compile-project` first.");
                         } else {
-                            files_to_link += " " + corresponding_binary.string();
+                            files_to_link.push_back(corresponding_binary.string());
                         }
                     }
                 }
