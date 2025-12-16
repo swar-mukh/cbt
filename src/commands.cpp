@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 
+#include "gnu_toolchain.hpp"
 #include "workspace/modification_identifier.hpp"
 #include "workspace/project_config.hpp"
 #include "workspace/scaffold.hpp"
@@ -124,7 +125,6 @@ namespace commands {
         workspace::scaffold::create_build_tree_as_necessary();
         workspace::scaffold::create_internals_tree_as_necessary();
 
-        const string gpp_include_paths{"-Iheaders"};
         const int literal_length_of_headers = string("headers/").length();
         const int literal_length_of_src = string("src/").length();
         const int literal_length_of_extension = string(".cpp").length();
@@ -158,7 +158,7 @@ namespace commands {
             }
         }
 
-        cout << "[COMMAND] " << ("g++ -std=" + project.config.cpp_standard + " " + project.config.safety_flags + " " + project.config.compile_time_flags + " " + gpp_include_paths + " -c src/<FILE> -o build/binaries/<FILE>.o") << endl << endl;
+        cout << "[COMMAND] " << gnu_toolchain::get_compilation_command(project) << endl << endl;
 
         int files_succesfully_compiled_count{ 0 };
 
@@ -171,7 +171,7 @@ namespace commands {
                 } else {
                     file.compilation_start_timestamp = workspace::modification_identifier::get_current_fileclock_timestamp();
 
-                    const int result = system((string("g++") + " -std=" + project.config.cpp_standard + " " + project.config.safety_flags + " " + project.config.compile_time_flags + " " + gpp_include_paths + " -c " + file.file_name + " -o build/binaries/" + stemmed_cpp_file + ".o").c_str());
+                    const int result = gnu_toolchain::compile_file(project, file.file_name, stemmed_cpp_file);
 
                     file.compilation_end_timestamp = workspace::modification_identifier::get_current_fileclock_timestamp();
                     file.was_successful = (result == 0);
@@ -223,8 +223,8 @@ namespace commands {
             return;
         }
 
-        string binaries{ "" };
-        int binary_files_count{ 0 };
+        std::vector<string> directories_containing_binaries;
+
         const string BUILD_PATH{ workspace::util::get_platform_formatted_filename(fs::path("build/binaries")) };
         const string SEPARATOR{ fs::path::preferred_separator };
 
@@ -243,13 +243,12 @@ namespace commands {
                 );
 
                 if (files_count != 0) {
-                    binaries += normalised_path + SEPARATOR + "*.o ";
-                    binary_files_count += files_count;
+                    directories_containing_binaries.push_back(normalised_path);
                 }
             }
         }
 
-        if (binary_files_count == 0) {
+        if (directories_containing_binaries.size() == 0) {
             cout << "No binaries present! Run 'cbt compile-project' first." << endl;
             return;
         }
@@ -260,11 +259,7 @@ namespace commands {
         const string BINARY_NAME{ project.name };
         #endif
 
-        const string command{ "g++ -std=" + project.config.cpp_standard + " " + project.config.safety_flags + " " + project.config.build_flags + " " + binaries + "-o build" + SEPARATOR + BINARY_NAME };
-
-        cout << "[COMMAND] " << command << endl << endl;
-
-        const int result = system(command.c_str());
+        const int result = gnu_toolchain::perform_linking(project, directories_containing_binaries, string("build") + SEPARATOR + BINARY_NAME);
 
         cout << "[BUILD]" << std::left << std::setw(6) << (result == 0 ? "[OK]" : "[NOK]") << workspace::util::get_platform_formatted_filename("build/" + BINARY_NAME) << endl;
     }
@@ -289,16 +284,14 @@ namespace commands {
         const string EXTENSION{ "" };
         #endif
 
-        const string gpp_include_paths{ "-Iheaders" };
-        const string unit_tests_directory{ "tests/unit_tests/" };
         const fs::path harness{ "headers/cbt_tools/test_harness.hpp" };
 
         std::vector<fs::path> binaries_to_execute{};
 
-        cout << "[COMMAND] " << ("g++ -std=" + project.config.cpp_standard + " " + project.config.safety_flags + " " + project.config.test_flags + " " + gpp_include_paths + " " + unit_tests_directory + "<FILE> -o build/test_binaries/unit_tests/<FILE>" + EXTENSION) << endl << endl;
+        cout << "[COMMAND] " << gnu_toolchain::get_test_execution_command(project, EXTENSION) << endl << endl;
 
         for (auto const& [file, dependencies]: tree) {
-            string files_to_link{ file };
+            std::vector<string> files_to_link{ file };
             const fs::path scoped_directory_of_file = fs::relative(fs::path{ file }.parent_path(), "tests/unit_tests");
             const fs::path build_directory_under_check{ "build/test_binaries/unit_tests" / scoped_directory_of_file };
 
@@ -319,7 +312,7 @@ namespace commands {
                         if (!fs::exists(corresponding_binary)) {
                             throw std::runtime_error("Corresponding binary for '" + workspace::util::get_platform_formatted_filename(dependency) + "' not found! Run `cbt compile-project` first.");
                         } else {
-                            files_to_link += " " + corresponding_binary.string();
+                            files_to_link.push_back(corresponding_binary.string());
                         }
                     }
                 }
@@ -327,7 +320,7 @@ namespace commands {
 
             const fs::path test_binary = fs::path("build/test_binaries/unit_tests" / scoped_directory_of_file / fs::path(file).stem().replace_extension(EXTENSION));
             
-            const int result = system((string("g++") + " -std=" + project.config.cpp_standard + " " + project.config.safety_flags + " " + project.config.test_flags + " " + gpp_include_paths + " " + files_to_link + " -o " + test_binary.string()).c_str());
+            const int result = gnu_toolchain::create_test_binary(project, files_to_link, test_binary.string());
             cout << "[COMPILE]" << std::left << std::setw(6) << (result == 0 ? "[OK]" : "[NOK]") << workspace::util::get_platform_formatted_filename(test_binary) << endl;
 
             if (result == 0) {
@@ -336,7 +329,7 @@ namespace commands {
         }
         
         for (auto const& test_binary: binaries_to_execute) {
-            [[maybe_unused]] const int result = system(workspace::util::get_platform_formatted_filename(test_binary).c_str());
+            [[maybe_unused]] const int result = gnu_toolchain::execute_test_binary(workspace::util::get_platform_formatted_filename(test_binary));
         }
     }
 
