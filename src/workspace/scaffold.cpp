@@ -213,6 +213,9 @@ namespace workspace::scaffold {
         if (!fs::exists("build/binaries")) {
             workspace::scaffold::create_directory("", "build/binaries", false, false);
         }
+        if (!fs::exists("build/dependencies/")) {
+            workspace::scaffold::create_directory("", "build/dependencies", false, false);
+        }
         if (!fs::exists("build/test_binaries")) {
             workspace::scaffold::create_directory("", "build/test_binaries", false, false);
         }
@@ -234,6 +237,9 @@ namespace workspace::scaffold {
     }
 
     void create_dependencies_tree_as_necessary() {
+        if (!fs::exists("build/dependencies/")) {
+            workspace::scaffold::create_directory("", "build/dependencies", false, false);
+        }
         if (!fs::exists("dependencies/")) {
             workspace::scaffold::create_directory("", "dependencies", false, false);
         }

@@ -42,6 +42,7 @@ namespace {
             create_file(project, ".internals/timestamps.txt");
             create_directory(project_name, "build");
             create_directory(project_name, "build/binaries");
+            create_directory(project_name, "build/dependencies");
             create_directory(project_name, "build/test_binaries");
             create_directory(project_name, "build/test_binaries/unit_tests");
             create_directory(project_name, "dependencies");
