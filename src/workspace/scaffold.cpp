@@ -285,6 +285,18 @@ namespace workspace::scaffold {
         }
     }
 
+    void remove_dependency(const string& dependency) {
+        if (fs::exists("build/dependencies/" + dependency)) {
+            fs::remove_all("build/dependencies/" + dependency);
+        }
+
+        if (fs::exists("dependencies/" + dependency)) {
+            fs::remove_all("dependencies/" + dependency);
+        }
+
+        cout << "DELETE " << dependency << "\n";
+    }
+
     void exit_if_command_not_invoked_from_within_workspace() {
         if ((!fs::exists("project.cfg") || !fs::is_regular_file("project.cfg"))
             || (!fs::exists("headers/") || !fs::is_directory("headers"))

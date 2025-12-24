@@ -28,6 +28,8 @@ namespace workspace::scaffold {
 
     void purge_old_binaries(const string& path, const workspace::modification_identifier::SourceFiles& annotated_files);
 
+    void remove_dependency(const string& dependency);
+
     void exit_if_command_not_invoked_from_within_workspace();
 }
 

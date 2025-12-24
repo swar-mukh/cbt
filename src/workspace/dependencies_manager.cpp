@@ -5,6 +5,8 @@
 #include <set>
 #include <string>
 
+#include "workspace/scaffold.hpp"
+
 namespace {
     using namespace workspace::dependencies_manager;
 
@@ -38,10 +40,10 @@ namespace {
         }
     }
 
-    void remove_unnecessary_dependencies(std::map<std::string, int>& dependency_frequency, std::set<std::string>& filesystem) {
-        for (const auto& dependency: filesystem) {
+    void remove_unnecessary_dependencies(std::map<std::string, int>& dependency_frequency, std::set<std::string>& locally_stored_dependencies) {
+        for (const auto& dependency: locally_stored_dependencies) {
             if (dependency_frequency[dependency] == 0) {
-                std::cout << dependency << " = " << dependency_frequency[dependency] << " (removed)\n";
+                workspace::scaffold::remove_dependency(dependency);
             }
         }
     }
