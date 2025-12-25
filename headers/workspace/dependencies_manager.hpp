@@ -5,7 +5,7 @@
 #include <string>
 
 namespace workspace::dependencies_manager {
-    void resolve_dependencies(std::set<std::string> dependencies);
+    void resolve_dependencies(const std::set<std::string>& dependencies);
 }
 
 #endif

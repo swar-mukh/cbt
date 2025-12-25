@@ -52,6 +52,24 @@ namespace workspace::project_config {
         std::set<string> dependencies;
     };
 
+    struct ProjectComparator {
+        using is_transparent = void;
+
+        bool operator()(const Project& lhs, const Project& rhs) const {
+            return lhs.name < rhs.name;
+        }
+
+        bool operator()(const Project& lhs, const std::string& rhs) const {
+            return lhs.name < rhs;
+        }
+
+        bool operator()(const std::string& lhs, const Project& rhs) const {
+            return lhs < rhs.name;
+        }
+    };
+
+    using Projects = std::set<Project, ProjectComparator>;
+
     Project init(const string& name, const ProjectType& project_type);
 
     string platform_to_string(const Platform& platform);

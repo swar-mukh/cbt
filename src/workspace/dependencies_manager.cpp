@@ -1,81 +1,107 @@
 #include "workspace/dependencies_manager.hpp"
 
+#include <filesystem>
 #include <iostream>
 #include <map>
 #include <set>
 #include <string>
 
+#include "workspace/project_config.hpp"
 #include "workspace/scaffold.hpp"
 
 namespace {
     using namespace workspace::dependencies_manager;
 
+    namespace fs = std::filesystem;
+    
+    using namespace workspace::project_config;
+
     using Registry = std::map<std::string, std::set<std::string>>;
 
-    bool is_available_locally(std::set<std::string>& filesystem, const std::string& dependency) {
-            return filesystem.contains(dependency);
+    const Registry registry = {
+        { "lib1", {  "lib4", "lib5" } },
+        { "lib2", {  "lib5" } },
+        { "lib3", { "lib6", "lib7" } },
+        { "lib4", {  } },
+        { "lib5", {  } },
+        { "lib6", {  } },
+        { "lib7", { "lib6" } },
+        { "lib8", { "lib9" } },
+        { "lib9", { "lib8" } },
+        { "lib10", { "lib8" } }
+    };
+
+    Project get_project_information(const std::string& dependency) {
+        std::filesystem::path current_path = std::filesystem::current_path();
+
+        std::filesystem::current_path(current_path / "dependencies" / dependency);
+
+        Project project = convert_cfg_to_model();
+
+        std::filesystem::current_path(current_path);
+
+        return project;
     }
 
-    // TODO: replace temporary simulation
-    std::set<std::string> fetch(std::string dependency, Registry& registry, std::set<std::string>& filesystem) {
-        if (is_available_locally(filesystem, dependency)) {
-            std::cout << "Local fetch called: " << dependency << std::endl;
-            return registry[dependency];
+    Projects list_all_dependencies_available_locally() {
+        Projects dependencies;
+
+        for (const auto& entry: fs::directory_iterator(fs::path("dependencies"))) {
+            if (fs::is_directory(entry)) {
+                dependencies.insert(get_project_information(entry.path().filename().string()));
+            }
+        }
+
+        return dependencies;
+    }
+
+    std::set<std::string> get_transitive_dependencies(const std::string& dependency, const Projects& locally_stored_dependencies) {
+        if (const auto project = locally_stored_dependencies.find(dependency); project != locally_stored_dependencies.end()) {
+            return project->dependencies;
         } else {
-            std::cout << "Remote fetch called: " << dependency << std::endl;
-            return registry[dependency];
+            // TODO: replace temporary simulation
+            return registry.at(dependency);
         }
     }
 
-    void linearise(std::set<std::string>& dependencies, Registry& registry, std::map<std::string, int>& dependency_frequency, std::set<std::string>& filesystem) {
+    void linearise(const std::set<std::string>& dependencies, std::map<std::string, int>& dependency_frequency, const Projects& locally_stored_dependencies) {
         for (const auto& dependency: dependencies) {
-            bool is_visited = dependency_frequency.find(dependency) != dependency_frequency.end();
+            bool is_visited = dependency_frequency.contains(dependency);
 
             dependency_frequency[dependency]++;
 
             if (!is_visited) {
-                std::set<std::string> transitive_dependencies = fetch(dependency, registry, filesystem);
-                linearise(transitive_dependencies, registry, dependency_frequency, filesystem);
+                std::set<std::string> transitive_dependencies = get_transitive_dependencies(dependency, locally_stored_dependencies);
+                linearise(transitive_dependencies, dependency_frequency, locally_stored_dependencies);
             }
         }
     }
 
-    void remove_unnecessary_dependencies(std::map<std::string, int>& dependency_frequency, std::set<std::string>& locally_stored_dependencies) {
+    void remove_unnecessary_dependencies(const std::map<std::string, int>& dependency_frequency, const Projects& locally_stored_dependencies) {
         for (const auto& dependency: locally_stored_dependencies) {
-            if (dependency_frequency[dependency] == 0) {
-                workspace::scaffold::remove_dependency(dependency);
+            if (!dependency_frequency.contains(dependency.name)) {
+                workspace::scaffold::remove_dependency(dependency.name);
             }
         }
     }
 
-    void resolve_dependencies_internally(std::set<std::string>& primary_dependencies, Registry& registry, std::set<std::string>& filesystem) {
-        std::map<std::string, int> dependency_frequency;
-        linearise(primary_dependencies, registry, dependency_frequency, filesystem);
-
-        for (const auto& [dependency, frequency] : dependency_frequency) {
-            std::cout << dependency << " = " << frequency << "\n";
+    void compile_uncompiled_dependencies(const std::map<std::string, int>& dependency_frequency, const Projects& locally_stored_dependencies) {
+        for (const auto& [dependency, _]: dependency_frequency) {
+            if (!locally_stored_dependencies.contains(dependency)) {
+                // TODO: compile them
+            }
         }
-
-        remove_unnecessary_dependencies(dependency_frequency, filesystem);
     }
 }
 
 namespace workspace::dependencies_manager {
-    void resolve_dependencies(std::set<std::string> dependencies) {
-        Registry registry = {
-            { "lib1", {  "lib4", "lib5" } },
-            { "lib2", {  "lib5" } },
-            { "lib3", { "lib6", "lib7" } },
-            { "lib4", {  } },
-            { "lib5", {  } },
-            { "lib6", {  } },
-            { "lib7", { "lib6" } },
-            { "lib8", { "lib9" } },
-            { "lib9", { "lib8" } },
-            { "lib10", { "lib8" } }
-        };
-        std::set<std::string> filesystem = { "lib3", "lib10", "lib1" };
+    void resolve_dependencies(const std::set<std::string>& dependencies) {
+        Projects locally_stored_dependencies = list_all_dependencies_available_locally();
+        std::map<std::string, int> dependency_frequency;
 
-        resolve_dependencies_internally(dependencies, registry, filesystem);
+        linearise(dependencies, dependency_frequency, locally_stored_dependencies);
+
+        remove_unnecessary_dependencies(dependency_frequency, locally_stored_dependencies);
+        compile_uncompiled_dependencies(dependency_frequency, locally_stored_dependencies);
     }
 }
