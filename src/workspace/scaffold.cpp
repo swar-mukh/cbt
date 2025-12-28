@@ -180,7 +180,7 @@ namespace workspace::scaffold {
             }
 
             ofstream file_to_write(full_path);
-            file_to_write << get_predefined_text_content(project.value(), file_name);
+            file_to_write << (project.has_value() ? get_predefined_text_content(project.value(), file_name) : "");
             file_to_write.close();
 
             if (verbose) {
