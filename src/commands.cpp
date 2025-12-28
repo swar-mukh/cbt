@@ -46,7 +46,6 @@ namespace {
             create_directory(project_name, "build/test_binaries");
             create_directory(project_name, "build/test_binaries/unit_tests");
             create_directory(project_name, "dependencies");
-            create_file(project, "dependencies/.gitkeep");
             create_directory(project_name, "docs");
             create_file(project, "docs/LICENSE.txt");
             create_file(project, "docs/Roadmap.md");

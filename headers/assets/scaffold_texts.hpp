@@ -9,6 +9,7 @@ namespace assets::scaffold_texts {
     const string GITIGNORE = R"(
     .internals
     build
+    dependencies
     environments/*.env
     )";
 
