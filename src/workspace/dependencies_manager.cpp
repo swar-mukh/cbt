@@ -88,6 +88,7 @@ namespace {
 
     void compile_uncompiled_dependencies(const std::map<std::string, int>& dependency_frequency) {
         fs::path project_root{ fs::current_path() };
+        int compiled_dependencies_count{ 0 };
 
         for (const auto& [dependency, _]: dependency_frequency) {
             if (!fs::exists(project_root / "build/dependencies" / dependency)) {
