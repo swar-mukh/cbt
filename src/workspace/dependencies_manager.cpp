@@ -97,7 +97,11 @@ namespace {
                 
                 fs::current_path(dependency_root);
 
+                std::cout << "[DEPENDENCY] " << dependency << "\n\n";
+
                 commands::compile_project();
+
+                std::cout << "\n";
 
                 fs::current_path(project_root);
 
