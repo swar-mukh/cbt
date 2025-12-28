@@ -8,6 +8,7 @@
 
 #include "workspace/project_config.hpp"
 #include "workspace/scaffold.hpp"
+#include "commands.hpp"
 
 namespace {
     using namespace workspace::dependencies_manager;
@@ -32,13 +33,13 @@ namespace {
     };
 
     Project get_project_information(const std::string& dependency) {
-        std::filesystem::path current_path = std::filesystem::current_path();
+        fs::path current_path{ fs::current_path() };
 
-        std::filesystem::current_path(current_path / "dependencies" / dependency);
+        fs::current_path(current_path / "dependencies" / dependency);
 
         Project project = convert_cfg_to_model();
 
-        std::filesystem::current_path(current_path);
+        fs::current_path(current_path);
 
         return project;
     }
@@ -85,10 +86,24 @@ namespace {
         }
     }
 
-    void compile_uncompiled_dependencies(const std::map<std::string, int>& dependency_frequency, const Projects& locally_stored_dependencies) {
+    void compile_uncompiled_dependencies(const std::map<std::string, int>& dependency_frequency) {
+        fs::path project_root{ fs::current_path() };
+
         for (const auto& [dependency, _]: dependency_frequency) {
-            if (!locally_stored_dependencies.contains(dependency)) {
-                // TODO: compile them
+            if (!fs::exists(project_root / "build/dependencies" / dependency)) {
+                fs::path dependency_root{ project_root / "dependencies" / dependency };
+                fs::path dependency_build_root{ dependency_root / "build/binaries" };
+                fs::path lifted_build_root{ project_root / "build/dependencies" / dependency };
+                
+                fs::current_path(dependency_root);
+
+                commands::compile_project();
+
+                fs::current_path(project_root);
+
+                fs::rename(dependency_build_root, lifted_build_root);
+
+                workspace::scaffold::make_dependency_pristine(dependency);
             }
         }
     }
@@ -102,6 +117,6 @@ namespace workspace::dependencies_manager {
         linearise(dependencies, dependency_frequency, locally_stored_dependencies);
 
         remove_unnecessary_dependencies(dependency_frequency, locally_stored_dependencies);
-        compile_uncompiled_dependencies(dependency_frequency, locally_stored_dependencies);
+        compile_uncompiled_dependencies(dependency_frequency);
     }
 }
