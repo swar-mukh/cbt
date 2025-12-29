@@ -130,7 +130,7 @@ namespace commands {
         workspace::dependencies_manager::resolve_dependencies(project.dependencies);
     }
 
-    void compile_project() {
+    void compile_project(const bool compile_as_dependency) {
         workspace::scaffold::create_build_tree_as_necessary();
         workspace::scaffold::create_internals_tree_as_necessary();
 
@@ -140,7 +140,7 @@ namespace commands {
 
         const Project project = convert_cfg_to_model();
 
-        workspace::modification_identifier::SourceFiles annotated_files = workspace::modification_identifier::list_all_files_annotated(project);
+        workspace::modification_identifier::SourceFiles annotated_files = workspace::modification_identifier::list_all_files_annotated(project, compile_as_dependency);
         int number_of_cpp_files_to_compile{ 0 };
 
         for (auto const& file: annotated_files) {
@@ -167,7 +167,7 @@ namespace commands {
             }
         }
 
-        cout << "[COMMAND] " << gnu_toolchain::get_compilation_command(project) << endl << endl;
+        cout << "[COMMAND] " << gnu_toolchain::get_compilation_command(project, compile_as_dependency) << endl << endl;
 
         int files_succesfully_compiled_count{ 0 };
 
@@ -180,7 +180,7 @@ namespace commands {
                 } else {
                     file.compilation_start_timestamp = workspace::modification_identifier::get_current_fileclock_timestamp();
 
-                    const int result = gnu_toolchain::compile_file(project, file.file_name, stemmed_cpp_file);
+                    const int result = gnu_toolchain::compile_file(project, file.file_name, stemmed_cpp_file, compile_as_dependency);
 
                     file.compilation_end_timestamp = workspace::modification_identifier::get_current_fileclock_timestamp();
                     file.was_successful = (result == 0);

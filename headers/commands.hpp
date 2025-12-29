@@ -11,7 +11,7 @@ namespace commands {
 
     void resolve_dependencies();
 
-    void compile_project();
+    void compile_project(const bool compile_as_dependency = false);
     void clear_build();
 
     void build_project();

@@ -11,12 +11,15 @@ namespace gnu_toolchain {
     using std::string;
 
     const string COMPILER{ "g++" };
-    const string INCLUDE_PATHS{ "-Iheaders" };
+    const string INCLUDE_PATHS{ "-Iheaders -Idependencies" };
+    const string INCLUDE_PATHS_FOR_DEPENDENCIES{ "-Iheaders -I../../dependencies" };
 
     const std::string SEPARATOR{ std::filesystem::path::preferred_separator };
 
-    string get_compilation_command(const workspace::project_config::Project& project);
-    int compile_file(const workspace::project_config::Project& project, const string& input_file, const string& output_file);
+    int generate_makefile(const workspace::project_config::Project& project, const string& files, const bool compile_as_dependency = false);
+
+    string get_compilation_command(const workspace::project_config::Project& project, const bool compile_as_dependency = false);
+    int compile_file(const workspace::project_config::Project& project, const string& input_file, const string& output_file, const bool compile_as_dependency = false);
 
     int perform_linking(const workspace::project_config::Project& project, const std::vector<string>& directories_containing_binaries, const string& executable_file, const bool echo = true);
 

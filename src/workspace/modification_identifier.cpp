@@ -13,6 +13,7 @@
 
 #include "workspace/project_config.hpp"
 #include "workspace/util.hpp"
+#include "gnu_toolchain.hpp"
 
 namespace {
     using namespace workspace::modification_identifier;
@@ -102,7 +103,7 @@ namespace {
         return files_with_timestamps;
     }
 
-    void generate_makefile(const workspace::project_config::Project& project, const string& path) {
+    void generate_makefile(const workspace::project_config::Project& project, const string& path, const bool compile_as_dependency = false) {
         string files{ path + "/*.cpp " };
         const string SEPARATOR{ fs::path::preferred_separator };
 
@@ -126,7 +127,7 @@ namespace {
             fs::remove(MAKEFILE_PATH);
         }
 
-        const int result = system((string("g++") + " -std=" + project.config.cpp_standard + " -Iheaders/ -MM " + files + " >> .internals/tmp/makefile").c_str());
+        const int result = gnu_toolchain::generate_makefile(project, files, compile_as_dependency);
 
         if (result != 0) {
             throw std::runtime_error("Could not compile project!");
@@ -279,8 +280,8 @@ namespace {
         return bucket;
     }
     
-    RawDependencyTree get_source_files_with_dependants(const workspace::project_config::Project& project, const string& path) {
-        generate_makefile(project, path);
+    RawDependencyTree get_source_files_with_dependants(const workspace::project_config::Project& project, const string& path, const bool compile_as_dependency = false) {
+        generate_makefile(project, path, compile_as_dependency);
 
         RawDependencyTree cpp_pov = parse_makefile();
 
@@ -331,10 +332,10 @@ namespace workspace::modification_identifier {
         return tree;
     }
 
-    SourceFiles list_all_files_annotated(const workspace::project_config::Project& project) {
+    SourceFiles list_all_files_annotated(const workspace::project_config::Project& project, const bool compile_as_dependency) {
         DB timestamps_history = read_internal_timestamps_file();
 
-        RawDependencyTree cpp_pov = get_source_files_with_dependants(project, "src");
+        RawDependencyTree cpp_pov = get_source_files_with_dependants(project, "src", compile_as_dependency);
         RawDependencyTree hpp_pov = convert_to_hpp_pov(cpp_pov);
 
         SourceFiles bucket = construct_annotated_list_of_source_files(hpp_pov, timestamps_history);

@@ -100,7 +100,7 @@ namespace {
 
                 std::cout << "[DEPENDENCY] " << dependency << "\n\n";
 
-                commands::compile_project();
+                commands::compile_project(true);
 
                 std::cout << "\n";
 
