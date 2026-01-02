@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <filesystem>
 #include <iostream>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -14,6 +15,8 @@
 #include "workspace/util.hpp"
 
 namespace {
+    namespace fs = std::filesystem;
+    
     using std::cout;
     using std::endl;
 
@@ -81,6 +84,30 @@ namespace {
             cout << endl << "Project '" << project_name << "' created" << endl;
         } else {
             cout << "Could not create project '" << project_name << "'!" << endl;
+        }
+    }
+
+    void list_directories_containing_binaries(std::set<string>& directories_containing_binaries, const string& build_path) {
+        const string BUILD_PATH{ workspace::util::get_platform_formatted_filename(fs::path(build_path)) };
+
+        for (auto dir_entry = fs::recursive_directory_iterator("build"); dir_entry != fs::recursive_directory_iterator(); ++dir_entry) {
+            const string normalised_path{ workspace::util::get_platform_formatted_filename(dir_entry->path().string()) };
+
+            if (!normalised_path.starts_with(BUILD_PATH)) {
+                dir_entry.disable_recursion_pending();
+            }
+            
+            if (fs::is_directory(*dir_entry)) {
+                const int files_count = std::count_if(
+                    fs::directory_iterator(dir_entry->path()),
+                    {}, 
+                    [](auto& file){ return file.is_regular_file(); }
+                );
+
+                if (files_count != 0) {
+                    directories_containing_binaries.insert(normalised_path);
+                }
+            }
         }
     }
 }
@@ -232,35 +259,18 @@ namespace commands {
             return;
         }
 
-        std::vector<string> directories_containing_binaries;
-
-        const string BUILD_PATH{ workspace::util::get_platform_formatted_filename(fs::path("build/binaries")) };
+        std::set<string> non_empty_directories;
         const string SEPARATOR{ fs::path::preferred_separator };
 
-        for (auto dir_entry = fs::recursive_directory_iterator("build"); dir_entry != fs::recursive_directory_iterator(); ++dir_entry) {
-            const string normalised_path{ workspace::util::get_platform_formatted_filename(dir_entry->path().string()) };
-
-            if (!normalised_path.starts_with(BUILD_PATH)) {
-                dir_entry.disable_recursion_pending();
-            }
-            
-            if (fs::is_directory(*dir_entry)) {
-                const int files_count = std::count_if(
-                    fs::directory_iterator(dir_entry->path()),
-                    {}, 
-                    [](auto& file){ return file.is_regular_file(); }
-                );
-
-                if (files_count != 0) {
-                    directories_containing_binaries.push_back(normalised_path);
-                }
-            }
-        }
-
-        if (directories_containing_binaries.size() == 0) {
+        list_directories_containing_binaries(non_empty_directories, "build/binaries");
+        list_directories_containing_binaries(non_empty_directories, "build/dependencies");
+        
+        if (non_empty_directories.size() == 0) {
             cout << "No binaries present! Run 'cbt compile-project' first." << endl;
             return;
         }
+
+        std::vector<string> directories_containing_binaries(non_empty_directories.begin(), non_empty_directories.end());
 
         #if defined(_WIN32) || defined(_WIN64)
         const string BINARY_NAME{ project.name + ".exe" };
