@@ -109,7 +109,15 @@ namespace {
                 fs::rename(dependency_build_root, lifted_build_root);
 
                 workspace::scaffold::make_dependency_pristine(dependency);
+
+                compiled_dependencies_count++;
             }
+        }
+
+        if (compiled_dependencies_count == 0) {
+            std::cout << "[INFO] All dependencies are up-to-date!";
+        } else {
+            std::cout << "[INFO] Compiled " << compiled_dependencies_count << " new dependencies.";
         }
     }
 }
