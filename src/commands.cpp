@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <filesystem>
 #include <iostream>
+#include <regex>
 #include <set>
 #include <string>
 #include <vector>
@@ -311,25 +312,33 @@ namespace commands {
 
         for (auto const& [file, dependencies]: tree) {
             std::vector<string> files_to_link{ file };
-            const fs::path scoped_directory_of_file = fs::relative(fs::path{ file }.parent_path(), "tests/unit_tests");
+            const fs::path scoped_directory_of_file{ fs::relative(fs::path{ file }.parent_path(), "tests/unit_tests") };
             const fs::path build_directory_under_check{ "build/test_binaries/unit_tests" / scoped_directory_of_file };
 
             if (!fs::exists(build_directory_under_check)) {
                 workspace::scaffold::create_directory(string("."), build_directory_under_check.string(), true, false);
             }
 
-            const fs::path corresponding_header_file = fs::path("headers" / scoped_directory_of_file / fs::path(file).stem().replace_extension(".hpp"));
+            const fs::path corresponding_header_file{ fs::path("headers" / scoped_directory_of_file / fs::path(file).stem().replace_extension(".hpp")) };
             
             for (auto const& dependency: dependencies) {
                 if (!fs::equivalent(corresponding_header_file, dependency) && !fs::equivalent(dependency, harness)) {
-                    const fs::path scoped_directory_of_dependency = fs::relative(fs::path{ dependency }.parent_path(), "headers");
-                    const fs::path corresponding_implementation_file = fs::path("src" / scoped_directory_of_dependency / fs::path(dependency).stem().replace_extension(".cpp"));
+                    const bool is_own_dependency{ dependency.starts_with("headers") };
+                    const std::string replacement{ std::regex_replace(dependency, std::regex("headers"), "src") };
+
+                    const fs::path scoped_directory_of_dependency{ fs::relative(is_own_dependency
+                            ? fs::path{ dependency }.parent_path()
+                            : fs::path{ dependency }.parent_path().parent_path(),
+                        "headers") };
+                    const fs::path corresponding_implementation_file{ is_own_dependency
+                        ? fs::path("src" / scoped_directory_of_dependency / fs::path(dependency).stem().replace_extension(".cpp"))
+                        : fs::path("src" / fs::path(replacement).stem().replace_extension(".cpp")) };
 
                     if (fs::exists(corresponding_implementation_file)) {
-                        const fs::path corresponding_binary = fs::path("build/binaries" / scoped_directory_of_dependency / fs::path(dependency).stem().replace_extension(".o"));
+                        const fs::path corresponding_binary{ fs::path("build/binaries" / scoped_directory_of_dependency / fs::path(dependency).stem().replace_extension(".o")) };
 
                         if (!fs::exists(corresponding_binary)) {
-                            throw std::runtime_error("Corresponding binary for '" + workspace::util::get_platform_formatted_filename(dependency) + "' not found! Run `cbt compile-project` first.");
+                            throw std::runtime_error("Corresponding binary for '" + workspace::util::get_platform_formatted_filename(dependency) + "' not found! Run `cbt resolve-dependencies` first.");
                         } else {
                             files_to_link.push_back(corresponding_binary.string());
                         }
@@ -337,9 +346,9 @@ namespace commands {
                 }
             }
 
-            const fs::path test_binary = fs::path("build/test_binaries/unit_tests" / scoped_directory_of_file / fs::path(file).stem().replace_extension(EXTENSION));
-            
+            const fs::path test_binary{ fs::path("build/test_binaries/unit_tests" / scoped_directory_of_file / fs::path(file).stem().replace_extension(EXTENSION)) };
             const int result = gnu_toolchain::create_test_binary(project, files_to_link, test_binary.string());
+            
             cout << "[COMPILE]" << std::left << std::setw(6) << (result == 0 ? "[OK]" : "[NOK]") << workspace::util::get_platform_formatted_filename(test_binary) << endl;
 
             if (result == 0) {
