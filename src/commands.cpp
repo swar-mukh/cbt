@@ -260,6 +260,13 @@ namespace commands {
             return;
         }
 
+        for (const auto& dependency: project.dependencies) {
+            if (!fs::exists("build/dependencies/" + dependency)) {
+                cout << "Directory 'build/dependencies/" << dependency << "' does not exist! Run 'cbt resolve-dependencies' first." << endl;
+                return;
+            }
+        }
+
         std::set<string> non_empty_directories;
         const string SEPARATOR{ fs::path::preferred_separator };
 
