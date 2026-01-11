@@ -3,6 +3,7 @@
 #include <chrono>
 #include <filesystem>
 #include <fstream>
+#include <iostream>
 #include <map>
 #include <regex>
 #include <set>
@@ -285,7 +286,30 @@ namespace {
 
         RawDependencyTree cpp_pov = parse_makefile();
 
+        std::set<string> unresolved_dependencies;
+
+        for (const auto& [file, dependencies]: cpp_pov) {
+            for (const string& dependency: dependencies) {
+                if (dependency.starts_with("dependencies/")) {
+                    const size_t start_index { dependency.find_first_of("/") };
+                    const size_t stop_index { dependency.find_first_of("/", start_index + 1) };
+
+                    const string parsed_dependency{ dependency.substr(start_index + 1, stop_index - start_index - 1) };
+
+                    if (!project.dependencies.contains(parsed_dependency)) {
+                        std::cout << "[ERROR] No such dependency '" << parsed_dependency << "' (while including '" << dependency << "' in file '" << file << "')\n";
+                        unresolved_dependencies.insert(parsed_dependency);
+                    }
+                }
+            }
+        }
+
         fs::remove(MAKEFILE_PATH);
+
+        if (unresolved_dependencies.size() != 0) {
+            std::cout << "\n";
+            throw std::runtime_error("Unresolved dependencies found! Either add them to 'project.cfg' or remove them from inclusion in respective files."); 
+        }
 
         return cpp_pov;
     }
