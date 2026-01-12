@@ -11,8 +11,8 @@ namespace gnu_toolchain {
     using std::string;
 
     const string COMPILER{ "g++" };
-    const string INCLUDE_PATHS{ "-Iheaders -Idependencies" };
-    const string INCLUDE_PATHS_FOR_DEPENDENCIES{ "-Iheaders -I../../dependencies" };
+    const string INCLUDE_PATHS{ "-iquoteheaders -Idependencies" };
+    const string INCLUDE_PATHS_FOR_DEPENDENCIES{ "-iquoteheaders -I../../dependencies" };
 
     const std::string SEPARATOR{ std::filesystem::path::preferred_separator };
 
