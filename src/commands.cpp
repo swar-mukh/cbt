@@ -153,6 +153,8 @@ namespace commands {
     void resolve_dependencies() {
         const Project project = convert_cfg_to_model();
 
+        workspace::scaffold::create_build_tree_as_necessary();
+        workspace::scaffold::create_internals_tree_as_necessary();
         workspace::scaffold::create_dependencies_tree_as_necessary();
 
         workspace::dependencies_manager::resolve_dependencies(project.dependencies);
