@@ -111,6 +111,17 @@ namespace {
             }
         }
     }
+
+    bool are_dependencies_unresolved(const std::set<std::string>& dependencies) {
+        for (const auto& dependency: dependencies) {
+            if (!fs::exists("build/dependencies/" + dependency)) {
+                cout << "Dependency '" << dependency << "' not resolved! Run 'cbt resolve-dependencies' first." << endl;
+                return true;
+            }
+        }
+
+        return false;
+    }
 }
 
 namespace commands {
@@ -161,11 +172,15 @@ namespace commands {
     void compile_project(const bool compile_as_dependency) {
         workspace::scaffold::create_working_tree_as_necessary();
 
+        const Project project = convert_cfg_to_model();
+
+        if (are_dependencies_unresolved(project.dependencies)) {
+            return;
+        
+        }
         const int literal_length_of_headers = string("headers/").length();
         const int literal_length_of_src = string("src/").length();
         const int literal_length_of_extension = string(".cpp").length();
-
-        const Project project = convert_cfg_to_model();
 
         workspace::modification_identifier::SourceFiles annotated_files = workspace::modification_identifier::list_all_files_annotated(project, compile_as_dependency);
         int number_of_cpp_files_to_compile{ 0 };
@@ -257,11 +272,8 @@ namespace commands {
             return;
         }
 
-        for (const auto& dependency: project.dependencies) {
-            if (!fs::exists("build/dependencies/" + dependency)) {
-                cout << "Directory 'build/dependencies/" << dependency << "' does not exist! Run 'cbt resolve-dependencies' first." << endl;
-                return;
-            }
+        if (are_dependencies_unresolved(project.dependencies)) {
+            return;
         }
 
         std::set<string> non_empty_directories;
@@ -292,6 +304,10 @@ namespace commands {
         workspace::scaffold::create_working_tree_as_necessary();
 
         const Project project = convert_cfg_to_model();
+
+        if (are_dependencies_unresolved(project.dependencies)) {
+            return;
+        }
 
         const workspace::modification_identifier::RawDependencyTree tree = workspace::modification_identifier::get_files_to_test(project);
 
