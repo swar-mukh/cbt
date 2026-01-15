@@ -153,16 +153,13 @@ namespace commands {
     void resolve_dependencies() {
         const Project project = convert_cfg_to_model();
 
-        workspace::scaffold::create_build_tree_as_necessary();
-        workspace::scaffold::create_internals_tree_as_necessary();
-        workspace::scaffold::create_dependencies_tree_as_necessary();
+        workspace::scaffold::create_working_tree_as_necessary();
 
         workspace::dependencies_manager::resolve_dependencies(project.dependencies);
     }
 
     void compile_project(const bool compile_as_dependency) {
-        workspace::scaffold::create_build_tree_as_necessary();
-        workspace::scaffold::create_internals_tree_as_necessary();
+        workspace::scaffold::create_working_tree_as_necessary();
 
         const int literal_length_of_headers = string("headers/").length();
         const int literal_length_of_src = string("src/").length();
@@ -235,13 +232,11 @@ namespace commands {
             cout << std::right << std::setw(8) << "RECREATE " << "build/" << endl;
         }
 
-        workspace::scaffold::create_build_tree_as_necessary();
-
         if (fs::remove_all(fs::current_path() / ".internals")) {
             cout << std::right << std::setw(8) << "RECREATE " << ".internals/" << endl;
         }
 
-        workspace::scaffold::create_internals_tree_as_necessary();
+        workspace::scaffold::create_working_tree_as_necessary();
     }
 
     void build_project() {
@@ -294,7 +289,7 @@ namespace commands {
     }
 
     void run_unit_tests() {
-        workspace::scaffold::create_build_tree_as_necessary();
+        workspace::scaffold::create_working_tree_as_necessary();
 
         const Project project = convert_cfg_to_model();
 

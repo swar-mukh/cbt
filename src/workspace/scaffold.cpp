@@ -206,7 +206,17 @@ namespace workspace::scaffold {
         }
     }
 
-    void create_build_tree_as_necessary() {
+    void create_working_tree_as_necessary() {
+        if (!fs::exists(".internals/")) {
+            workspace::scaffold::create_directory("", ".internals", false, false);
+        }
+        if (!fs::exists(".internals/tmp")) {
+            workspace::scaffold::create_directory("", ".internals/tmp", false, false);
+        }
+        if (!fs::exists(".internals/timestamps.txt")) {
+            workspace::scaffold::create_file(std::nullopt, ".internals/timestamps.txt", false, true);
+        }
+
         if (!fs::exists("build/")) {
             workspace::scaffold::create_directory("", "build", false, false);
         }
@@ -222,24 +232,7 @@ namespace workspace::scaffold {
         if (!fs::exists("build/test_binaries/unit_tests")) {
             workspace::scaffold::create_directory("", "build/test_binaries/unit_tests", false, false);
         }
-    }
 
-    void create_internals_tree_as_necessary() {
-        if (!fs::exists(".internals/")) {
-            workspace::scaffold::create_directory("", ".internals", false, false);
-        }
-        if (!fs::exists(".internals/tmp")) {
-            workspace::scaffold::create_directory("", ".internals/tmp", false, false);
-        }
-        if (!fs::exists(".internals/timestamps.txt")) {
-            workspace::scaffold::create_file(std::nullopt, ".internals/timestamps.txt", false, true);
-        }
-    }
-
-    void create_dependencies_tree_as_necessary() {
-        if (!fs::exists("build/dependencies/")) {
-            workspace::scaffold::create_directory("", "build/dependencies", false, false);
-        }
         if (!fs::exists("dependencies/")) {
             workspace::scaffold::create_directory("", "dependencies", false, false);
         }
