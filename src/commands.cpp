@@ -174,10 +174,10 @@ namespace commands {
 
         const Project project = convert_cfg_to_model();
 
-        if (are_dependencies_unresolved(project.dependencies)) {
+        if (!compile_as_dependency && are_dependencies_unresolved(project.dependencies)) {
             return;
-        
         }
+
         const int literal_length_of_headers = string("headers/").length();
         const int literal_length_of_src = string("src/").length();
         const int literal_length_of_extension = string(".cpp").length();
