@@ -1,5 +1,6 @@
 #include "workspace/dependencies_manager.hpp"
 
+#include <cstdlib>
 #include <filesystem>
 #include <iostream>
 #include <map>
@@ -8,6 +9,7 @@
 
 #include "workspace/project_config.hpp"
 #include "workspace/scaffold.hpp"
+#include "workspace/util.hpp"
 #include "commands.hpp"
 
 namespace {
@@ -86,6 +88,27 @@ namespace {
         }
     }
 
+    void create_header_symlinks(const std::map<std::string, int>& dependency_frequency) {
+        const fs::path project_root{ fs::current_path() };
+        const fs::path symlink_path{ project_root / ".internals/dh_symlinks" };
+
+        for (const auto& [dependency, _]: dependency_frequency) {
+            if (fs::exists(symlink_path / dependency)) {
+                fs::remove(symlink_path / dependency);
+            }
+            
+            #if defined(_WIN32) || defined(_WIN64)
+            std::wstring cmd = L"mklink /J \"" +
+                (symlink_path / dependency).make_preferred().wstring() + L"\\\" \"" +
+                (project_root / L"dependencies" / dependency / L"headers").make_preferred().wstring() + L"\"";
+                
+            system(std::string(cmd.begin(), cmd.end()).c_str());
+            #else
+            fs::create_directory_symlink(project_root / "dependencies" / dependency / "headers", symlink_path / dependency);
+            #endif
+        }
+    }
+
     void compile_uncompiled_dependencies(const std::map<std::string, int>& dependency_frequency) {
         fs::path project_root{ fs::current_path() };
         int compiled_dependencies_count{ 0 };
@@ -130,6 +153,7 @@ namespace workspace::dependencies_manager {
         linearise(dependencies, dependency_frequency, locally_stored_dependencies);
 
         remove_unnecessary_dependencies(dependency_frequency, locally_stored_dependencies);
+        create_header_symlinks(dependency_frequency);
         compile_uncompiled_dependencies(dependency_frequency);
     }
 }

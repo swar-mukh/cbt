@@ -42,6 +42,7 @@ namespace {
         if (create_directory(project_name)) {
             create_file(project, ".gitignore");
             create_directory(project_name, ".internals");
+            create_directory(project_name, ".internals/dh_symlinks");
             create_directory(project_name, ".internals/tmp");
             create_file(project, ".internals/timestamps.txt");
             create_directory(project_name, "build");
@@ -327,6 +328,8 @@ namespace commands {
         const fs::path harness{ "headers/cbt_tools/test_harness.hpp" };
 
         std::vector<fs::path> binaries_to_execute{};
+        const size_t literal_length_of_headers{ std::string("headers/").length() };
+        const size_t literal_length_of_dependencies{ std::string(".internals/dh_symlinks/").length() };
 
         cout << "[COMMAND] " << gnu_toolchain::get_test_execution_command(project, EXTENSION) << endl << endl;
 
@@ -344,18 +347,24 @@ namespace commands {
             for (auto const& dependency: dependencies) {
                 if (!fs::equivalent(corresponding_header_file, dependency) && !fs::equivalent(dependency, harness)) {
                     const bool is_own_dependency{ dependency.starts_with("headers") };
-                    const std::string replacement{ std::regex_replace(dependency, std::regex("headers"), "src") };
 
-                    const fs::path scoped_directory_of_dependency{ fs::relative(is_own_dependency
-                            ? fs::path{ dependency }.parent_path()
-                            : fs::path{ dependency }.parent_path().parent_path(),
-                        "headers") };
-                    const fs::path corresponding_implementation_file{ is_own_dependency
-                        ? fs::path("src" / scoped_directory_of_dependency / fs::path(dependency).stem().replace_extension(".cpp"))
-                        : fs::path("src" / fs::path(replacement).stem().replace_extension(".cpp")) };
+                    const fs::path corresponding_implementation_file{ (is_own_dependency
+                        ? fs::path("src/" + dependency.substr(literal_length_of_headers))
+                        : fs::path("dependencies/" + [&dependency, &literal_length_of_dependencies](){
+                                const std::string temp{ dependency.substr(literal_length_of_dependencies) };
+                                const size_t pos{ temp.find("/") + 1};
+                                
+                                return temp.substr(0, pos) + "src/" + temp.substr(pos);
+                            }())
+                        ).replace_extension("cpp")
+                    };
 
                     if (fs::exists(corresponding_implementation_file)) {
-                        const fs::path corresponding_binary{ fs::path("build/binaries" / scoped_directory_of_dependency / fs::path(dependency).stem().replace_extension(".o")) };
+                        const fs::path corresponding_binary{ (is_own_dependency
+                            ? fs::path("build/binaries/" + dependency.substr(literal_length_of_headers))
+                            : fs::path("build/dependencies/" + dependency.substr(literal_length_of_dependencies))
+                            ).replace_extension("o")
+                        };
 
                         if (!fs::exists(corresponding_binary)) {
                             throw std::runtime_error("Corresponding binary for '" + workspace::util::get_platform_formatted_filename(dependency) + "' not found! Run `cbt resolve-dependencies` first.");

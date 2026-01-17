@@ -210,6 +210,9 @@ namespace workspace::scaffold {
         if (!fs::exists(".internals/")) {
             workspace::scaffold::create_directory("", ".internals", false, false);
         }
+        if (!fs::exists(".internals/dh_symlinks")) {
+            workspace::scaffold::create_directory("", ".internals/dh_symlinks", false, false);
+        }
         if (!fs::exists(".internals/tmp")) {
             workspace::scaffold::create_directory("", ".internals/tmp", false, false);
         }
@@ -279,6 +282,10 @@ namespace workspace::scaffold {
     }
 
     void remove_dependency(const string& dependency) {
+        if (fs::exists(".internals/dh_symlinks/" + dependency)) {
+            fs::remove(".internals/dh_symlinks/" + dependency);
+        }
+        
         if (fs::exists("build/dependencies/" + dependency)) {
             fs::remove_all("build/dependencies/" + dependency);
         }
