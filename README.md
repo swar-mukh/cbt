@@ -27,13 +27,14 @@ One reason why proliferation of JavaScript has been so prominent is due to `npm`
 
 `cbt` is a very simple build tool made from first principles:
 
-- Entirely command driven, e.g. `cbt create-project my-app`, `cbt create-file some_module/some_util`
+- Entirely command driven, e.g. `cbt create-application my_app`, `cbt create-library my_lib`, `cbt create-file some_module/some_util`
 - Simple commands to compile, test and build the project
 - Native support for **timestamp-aware compilation and testing** without any extra involvement/effort from developer's end
 - Simple, intuitive and maintainable project configuration through `project.cfg`
 - Unlike an `npm` project, ensure that all projects created with `cbt` strictly have the same directory structure
 - Automatically create proper scaffold upon invocation of `cbt create-file <file_name>` (descriptions given below), and thereby reduce cognitive load
 - First-class (and **type-safe**) support for `env` file(s)
+- **Decentralised** dependency management via `cbt resolve-dependencies`
 - Unobtrusive and transparent `cbt_tools` offered to bring quality-of-life improvements as well as enable flexible customisation(s) as per project requirements
 
 ## Usage
@@ -77,6 +78,8 @@ help                            - Shows this help message
 
 Ready-made binaries for Ubuntu and Windows are available through [Releases](https://github.com/swar-mukh/cbt/releases).
 
+Also ensure that `GNU` toolchain (minimum `9.4.0` required), `curl` and `tar` are available on your system.
+
 For other platforms, or for building from source, read on.
 
 ### Notes
@@ -87,6 +90,7 @@ For other platforms, or for building from source, read on.
 4. `GNU` toolchain used for development is `11.4.0`.
 5. If on Windows, MinGW can be downloaded from [WinLibs](https://winlibs.com/).
 6. On a Mac, `g++` is actually a tiny wrapper over `clang`. This shouldn't be a problem as such, but if you want to develop exclusively through `g++`, then download the binary (through Homebrew or MacPorts, etc.) and alias `g++` to the appropriate downloaded binary, i.e. `alias g++=g++-<version>`.
+7. Ensure `curl` and `tar` are available.
 
 ### Steps
 
@@ -125,7 +129,7 @@ In any of the above case(s), the format for the file-name containing the checksu
 | 5 | Decouple `g++` and all build configurations from source code | `✅ Complete` | _<ul><li>Requires completion of `project.cfg` parser first.</li><li>Need to add other strict and sane compiler flags.</li></ul>_ |
 | 6 | Add support for various other C++ compilers | `💤 TBD` | _Requires a slight forward thinking mindset w.r.t. point 8 below_ |
 | 7 | Support scaffold for shared objects (`.so` and `.dll`) | `💤 TBD` ||
-| 8 | Add support for dependency management | `💤 TBD` | _<ul><li>How to handle dependencies developed with another compiler implementation than current project?</li><li>Scaffold should support generating library code along with executable code during project creation.</li><li>Add support for **Software Bill of Materials**</li></ul>_ |
+| 8 | Add support for dependency management | `✅ Complete` | _<ul><li>How to handle dependencies developed with another compiler implementation than current project? (**Update: Postponed for now**)</li><li>Scaffold should support generating library code along with executable code during project creation.</li><li>Add support for **Software Bill of Materials** (**Update: Postponed for now**)</li></ul>_ |
 | 9 | Add support for documentation during scaffold and as a command (maybe via some 3rd party tools like `doxygen`) | `💤 TBD` ||
 | 10 | Bootstrap `cbt` with `cbt` | `✅ Complete` ||
 | 11 | Add native support for reading environment values from `env` file(s) | `✅ Complete` ||
