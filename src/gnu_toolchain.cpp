@@ -50,12 +50,16 @@ namespace {
 namespace gnu_toolchain {
     using std::string;
 
-    std::string get_compilation_command(const workspace::project_config::Project& project) {
-        return COMPILER + " -std=" + project.config.cpp_standard + " " + project.config.safety_flags + " " + project.config.compile_time_flags + " " + INCLUDE_PATHS + " -c src/<FILE> -o build/binaries/<FILE>.o";
+    int generate_makefile(const workspace::project_config::Project& project, const string& files, const bool compile_as_dependency) {
+        return execute(COMPILER + " -std=" + project.config.cpp_standard + " " + (compile_as_dependency ? INCLUDE_PATHS_FOR_DEPENDENCIES : INCLUDE_PATHS) + " -MM " + files + " >> .internals/tmp/makefile");
     }
 
-    int compile_file(const workspace::project_config::Project& project, const string& input_file, const string& output_file) {
-        return execute(COMPILER + " -std=" + project.config.cpp_standard + " " + project.config.safety_flags + " " + project.config.compile_time_flags + " " + INCLUDE_PATHS + " -c " + input_file + " -o build/binaries/" + output_file + ".o");
+    std::string get_compilation_command(const workspace::project_config::Project& project, const bool compile_as_dependency) {
+        return COMPILER + " -std=" + project.config.cpp_standard + " " + project.config.safety_flags + " " + project.config.compile_time_flags + " " + (compile_as_dependency ? INCLUDE_PATHS_FOR_DEPENDENCIES : INCLUDE_PATHS) + " -c src/<FILE> -o build/binaries/<FILE>.o";
+    }
+
+    int compile_file(const workspace::project_config::Project& project, const string& input_file, const string& output_file, const bool compile_as_dependency) {
+        return execute(COMPILER + " -std=" + project.config.cpp_standard + " " + project.config.safety_flags + " " + project.config.compile_time_flags + " " + (compile_as_dependency ? INCLUDE_PATHS_FOR_DEPENDENCIES : INCLUDE_PATHS) + " -c " + input_file + " -o build/binaries/" + output_file + ".o");
     }
 
     int perform_linking(const workspace::project_config::Project& project, const std::vector<string>& directories_containing_binaries, const string& executable_file, const bool echo) {

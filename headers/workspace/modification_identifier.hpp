@@ -35,7 +35,7 @@ namespace workspace::modification_identifier {
     using RawDependencyTree = std::map<std::string, std::vector<std::string>>;
 
     std::size_t get_current_fileclock_timestamp();
-    SourceFiles list_all_files_annotated(const workspace::project_config::Project& project);
+    SourceFiles list_all_files_annotated(const workspace::project_config::Project& project, const bool compile_as_dependency = false);
     RawDependencyTree get_files_to_test(const workspace::project_config::Project& project);
     void persist_annotations(const SourceFiles& bucket);
 }

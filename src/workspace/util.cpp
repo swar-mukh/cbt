@@ -166,4 +166,15 @@ namespace workspace::util {
 
         return yyyy + "-" + mm + "-" + dd;
     }
+
+    std::chrono::year_month_day parse_date(const std::string& iso_date) {
+        int yyyy, mm, dd;
+        char dash{ '-' };
+
+        std::istringstream iss(iso_date);
+
+        iss >> yyyy >> dash >> mm >> dash >> dd;
+
+        return std::chrono::year{ yyyy } / std::chrono::month{ static_cast<unsigned>(mm) } / std::chrono::day{ static_cast<unsigned>(dd) };
+    }
 }

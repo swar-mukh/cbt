@@ -34,6 +34,9 @@ namespace workspace::project_config {
                 .compile_time_flags{ "-Os -s" },
                 .build_flags{ "-O3 -s" },
                 .test_flags{ "-g -Og -s" }
+            },
+            .dependencies{
+                { .name{ "cbt_tools" }, .version{ "2024-08-31" }, .url{ "https://github.com/swar-mukh/cbt_tools" } }
             }
         };
     }
@@ -79,6 +82,21 @@ namespace workspace::project_config {
         else if (project_type.compare("library") == 0) { return LIBRARY; }
         else {
             throw std::domain_error("Invalid project type");
+        };
+    }
+
+    string dependency_to_string(const SurfaceDependency& dependency, const bool exclude_url) {
+        return dependency.name + "@" + dependency.version + (exclude_url ? "" : (":" + dependency.url));
+    }
+
+    SurfaceDependency parse_dependency(const string& value) {
+        const auto [name, rest] = workspace::util::get_key_value_pair_from_line(value, "@");
+        const auto [version, url] =  workspace::util::get_key_value_pair_from_line(rest, AUTHOR_DELIMITER);
+
+        return SurfaceDependency{
+            .name{ name },
+            .version{ version },
+            .url{ url }
         };
     }
 
@@ -137,6 +155,8 @@ namespace workspace::project_config {
                     project.config.build_flags = value;
                 } else if (key.compare("config{test_flags}") == 0) {
                     project.config.test_flags = value;
+                } else if (key.compare("dependencies[]") == 0) {
+                    project.dependencies.insert(parse_dependency(value));
                 } else {
                     throw std::runtime_error("Invalid configuration at line " + std::to_string(line_number) + " for key '" + key + "'");
                 }
@@ -145,6 +165,7 @@ namespace workspace::project_config {
             if (project.authors.size() == 0) {
                 throw std::runtime_error("At least one author is required in 'project.cfg'");
             }
+
             if (project.platforms.size() == 0) {
                 throw std::runtime_error("At least one platform is required in 'project.cfg'");
             }
@@ -187,6 +208,12 @@ namespace workspace::project_config {
             + "\nconfig{compile_time_flags}=" + project.config.compile_time_flags
             + "\nconfig{build_flags}=" + project.config.build_flags
             + "\nconfig{test_flags}=" + project.config.test_flags };
+        
+        string dependencies_text{ "; add your `dependencies` in the format mentioned below" };
+
+        for (const SurfaceDependency &dependency: project.dependencies) {
+            dependencies_text += std::string("\n; dependencies[]=") + dependency_to_string(dependency, false);
+        }
 
         return (add_disclaimer_text ? (disclaimer_text + "\n\n") : "") 
             + base_text
@@ -198,6 +225,8 @@ namespace workspace::project_config {
             + platforms_text
             + "\n\n"
             + config_text
+            + "\n\n"
+            + dependencies_text
             + "\n";
     }
 }

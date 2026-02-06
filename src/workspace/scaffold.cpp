@@ -48,6 +48,24 @@ namespace {
         return final_string;
     }
 
+    string use_scoped_guard_if_applicable(const workspace::project_config::Project& project, const string& text, const string& guard_name) {
+        return project.project_type == workspace::project_config::ProjectType::APPLICATION
+            ? std::regex_replace(text, GUARD_R, guard_name)
+            : std::regex_replace(text, GUARD_R, workspace::util::convert_stemmed_name_to_guard_name(project.name) + "_" + guard_name);
+    }
+
+    string wrap_in_scoped_namespace_if_applicable(const workspace::project_config::Project& project, const string& text, const bool is_header_file = true) {
+        const string with_scoped_namespace_start = project.project_type == workspace::project_config::ProjectType::APPLICATION
+            ? std::regex_replace(text, START_SCOPE_R, "")
+            : std::regex_replace(text, START_SCOPE_R, string("\n") + "namespace " + workspace::util::convert_stemmed_name_to_namespace_name(project.name) + " {" + "\n");
+        
+        const string with_scoped_namespace_end = project.project_type == workspace::project_config::ProjectType::APPLICATION
+            ? std::regex_replace(with_scoped_namespace_start, END_SCOPE_R, "")
+            : std::regex_replace(with_scoped_namespace_start, END_SCOPE_R, is_header_file ? "\n}\n" : "\n\n}");
+        
+        return with_scoped_namespace_end;
+    }
+
     string get_predefined_text_content(const workspace::project_config::Project& project, const string& file_name) {
         if (file_name.compare(".gitignore") == 0) {
             return remove_raw_literal_indentations(GITIGNORE);
@@ -67,15 +85,10 @@ namespace {
             return remove_raw_literal_indentations(CBT_TOOLS_UTILS_HPP);
         } else if (file_name.compare("headers/forward_declarations.hpp") == 0) {
             const string text{ remove_raw_literal_indentations(FORWARD_DECLARATIONS_HPP) };
+            
+            const string with_guard = use_scoped_guard_if_applicable(project, text, "");
 
-            const string with_scoped_namespace_start = project.project_type == workspace::project_config::ProjectType::APPLICATION
-                ? std::regex_replace(text, START_SCOPE_R, "")
-                : std::regex_replace(text, START_SCOPE_R, string("\n") + "namespace " + project.name + " {" + "\n");
-            const string with_scoped_namespace_end = project.project_type == workspace::project_config::ProjectType::APPLICATION
-                ? std::regex_replace(with_scoped_namespace_start, END_SCOPE_R, "")
-                : std::regex_replace(with_scoped_namespace_start, END_SCOPE_R, "\n}\n");
-
-            return with_scoped_namespace_end;
+            return wrap_in_scoped_namespace_if_applicable(project, with_guard);
         } else if (file_name.compare("src/cbt_tools/env_manager.cpp") == 0) {
             return remove_raw_literal_indentations(CBT_TOOLS_ENV_MANAGER_CPP);
         } else if (file_name.compare("src/cbt_tools/utils.cpp") == 0) {
@@ -84,17 +97,10 @@ namespace {
             const string text{ remove_raw_literal_indentations(SAMPLE_HPP) };
             const auto [stemmed_name, guard_name, namespace_name] = workspace::util::get_qualified_names(file_name);
             
-            const string with_guard = std::regex_replace(text, GUARD_R, guard_name);
-            const string with_import = std::regex_replace(with_guard, IMPORT_R, stemmed_name + ".hpp");
+            const string with_guard = use_scoped_guard_if_applicable(project, text, guard_name);
+            const string with_scoped_namespace = wrap_in_scoped_namespace_if_applicable(project, with_guard);
             
-            const string with_scoped_namespace_start = project.project_type == workspace::project_config::ProjectType::APPLICATION
-                ? std::regex_replace(with_guard, START_SCOPE_R, "")
-                : std::regex_replace(with_guard, START_SCOPE_R, string("\n") + "namespace " + project.name + " {" + "\n");
-            const string with_scoped_namespace_end = project.project_type == workspace::project_config::ProjectType::APPLICATION
-                ? std::regex_replace(with_scoped_namespace_start, END_SCOPE_R, "")
-                : std::regex_replace(with_scoped_namespace_start, END_SCOPE_R, "\n}\n");
-            
-            const string final_text = std::regex_replace(with_scoped_namespace_end, NAMESPACE_R, namespace_name);
+            const string final_text = std::regex_replace(with_scoped_namespace, NAMESPACE_R, namespace_name);
             
             return final_text;
         } else if (file_name.compare("src/main.cpp") == 0) {
@@ -132,7 +138,7 @@ namespace {
 
             const string scoped_namespace_name = project.project_type == workspace::project_config::ProjectType::APPLICATION
                 ? namespace_name
-                : string(project.name + "::") + namespace_name;
+                : workspace::util::convert_stemmed_name_to_namespace_name(project.name) + "::" + namespace_name;
                 
             const string final_text = std::regex_replace(with_relative_import, NAMESPACE_R, scoped_namespace_name);
             
@@ -142,15 +148,9 @@ namespace {
             const auto [stemmed_name, _, namespace_name] = workspace::util::get_qualified_names(file_name);
             
             const string with_import = std::regex_replace(text, IMPORT_R, stemmed_name + ".hpp");
-
-            const string with_scoped_namespace_start = project.project_type == workspace::project_config::ProjectType::APPLICATION
-                ? std::regex_replace(with_import, START_SCOPE_R, "")
-                : std::regex_replace(with_import, START_SCOPE_R, string("\n") + "namespace " + project.name + " {" + "\n");
-            const string with_scoped_namespace_end = project.project_type == workspace::project_config::ProjectType::APPLICATION
-                ? std::regex_replace(with_scoped_namespace_start, END_SCOPE_R, "")
-                : std::regex_replace(with_scoped_namespace_start, END_SCOPE_R, "\n\n}");
+            const string with_scoped_namespace = wrap_in_scoped_namespace_if_applicable(project, with_import, false);
             
-            const string final_text = std::regex_replace(with_scoped_namespace_end, NAMESPACE_R, namespace_name);
+            const string final_text = std::regex_replace(with_scoped_namespace, NAMESPACE_R, namespace_name);
             
             return final_text;
         } else if (file_name.compare("README.md") == 0) {
@@ -180,7 +180,7 @@ namespace workspace::scaffold {
             }
 
             ofstream file_to_write(full_path);
-            file_to_write << get_predefined_text_content(project.value(), file_name);
+            file_to_write << (project.has_value() ? get_predefined_text_content(project.value(), file_name) : "");
             file_to_write.close();
 
             if (verbose) {
@@ -206,12 +206,28 @@ namespace workspace::scaffold {
         }
     }
 
-    void create_build_tree_as_necessary() {
+    void create_working_tree_as_necessary() {
+        if (!fs::exists(".internals/")) {
+            workspace::scaffold::create_directory("", ".internals", false, false);
+        }
+        if (!fs::exists(".internals/dh_symlinks")) {
+            workspace::scaffold::create_directory("", ".internals/dh_symlinks", false, false);
+        }
+        if (!fs::exists(".internals/tmp")) {
+            workspace::scaffold::create_directory("", ".internals/tmp", false, false);
+        }
+        if (!fs::exists(".internals/timestamps.txt")) {
+            workspace::scaffold::create_file(std::nullopt, ".internals/timestamps.txt", false, true);
+        }
+
         if (!fs::exists("build/")) {
             workspace::scaffold::create_directory("", "build", false, false);
         }
         if (!fs::exists("build/binaries")) {
             workspace::scaffold::create_directory("", "build/binaries", false, false);
+        }
+        if (!fs::exists("build/dependencies/")) {
+            workspace::scaffold::create_directory("", "build/dependencies", false, false);
         }
         if (!fs::exists("build/test_binaries")) {
             workspace::scaffold::create_directory("", "build/test_binaries", false, false);
@@ -219,17 +235,9 @@ namespace workspace::scaffold {
         if (!fs::exists("build/test_binaries/unit_tests")) {
             workspace::scaffold::create_directory("", "build/test_binaries/unit_tests", false, false);
         }
-    }
 
-    void create_internals_tree_as_necessary() {
-        if (!fs::exists(".internals/")) {
-            workspace::scaffold::create_directory("", ".internals", false, false);
-        }
-        if (!fs::exists(".internals/tmp")) {
-            workspace::scaffold::create_directory("", ".internals/tmp", false, false);
-        }
-        if (!fs::exists(".internals/timestamps.txt")) {
-            workspace::scaffold::create_file(std::nullopt, ".internals/timestamps.txt", false, true);
+        if (!fs::exists("dependencies/")) {
+            workspace::scaffold::create_directory("", "dependencies", false, false);
         }
     }
 
@@ -270,6 +278,29 @@ namespace workspace::scaffold {
                     }
                 }
             }
+        }
+    }
+
+    void remove_dependency(const string& dependency, const string& version) {
+        if (fs::exists(".internals/dh_symlinks/" + dependency) || fs::is_symlink(".internals/dh_symlinks/" + dependency)) {
+            fs::remove(".internals/dh_symlinks/" + dependency);
+        }
+        
+        if (fs::exists("build/dependencies/" + dependency)) {
+            fs::remove_all("build/dependencies/" + dependency);
+        }
+
+        if (fs::exists("dependencies/" + dependency + "@" + version)) {
+            fs::remove_all("dependencies/" + dependency + "@" + version);
+        }
+
+        cout << "DELETE " << dependency << "@" << version << "\n";
+    }
+
+    void make_dependency_pristine(const string& dependency) {
+        if (fs::exists("dependencies/" + dependency)) {
+            fs::remove_all("dependencies/" + dependency + "/.internals");
+            fs::remove_all("dependencies/" + dependency + "/build");
         }
     }
 

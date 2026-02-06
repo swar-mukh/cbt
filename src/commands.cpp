@@ -3,16 +3,20 @@
 #include <cstdlib>
 #include <filesystem>
 #include <iostream>
+#include <set>
 #include <string>
 #include <vector>
 
 #include "gnu_toolchain.hpp"
+#include "workspace/dependencies_manager.hpp"
 #include "workspace/modification_identifier.hpp"
 #include "workspace/project_config.hpp"
 #include "workspace/scaffold.hpp"
 #include "workspace/util.hpp"
 
 namespace {
+    namespace fs = std::filesystem;
+    
     using std::cout;
     using std::endl;
 
@@ -37,14 +41,15 @@ namespace {
         if (create_directory(project_name)) {
             create_file(project, ".gitignore");
             create_directory(project_name, ".internals");
+            create_directory(project_name, ".internals/dh_symlinks");
             create_directory(project_name, ".internals/tmp");
             create_file(project, ".internals/timestamps.txt");
             create_directory(project_name, "build");
             create_directory(project_name, "build/binaries");
+            create_directory(project_name, "build/dependencies");
             create_directory(project_name, "build/test_binaries");
             create_directory(project_name, "build/test_binaries/unit_tests");
             create_directory(project_name, "dependencies");
-            create_file(project, "dependencies/.gitkeep");
             create_directory(project_name, "docs");
             create_file(project, "docs/LICENSE.txt");
             create_file(project, "docs/Roadmap.md");
@@ -81,6 +86,41 @@ namespace {
         } else {
             cout << "Could not create project '" << project_name << "'!" << endl;
         }
+    }
+
+    void list_directories_containing_binaries(std::set<string>& directories_containing_binaries, const string& build_path) {
+        const string BUILD_PATH{ workspace::util::get_platform_formatted_filename(fs::path(build_path)) };
+
+        for (auto dir_entry = fs::recursive_directory_iterator("build"); dir_entry != fs::recursive_directory_iterator(); ++dir_entry) {
+            const string normalised_path{ workspace::util::get_platform_formatted_filename(dir_entry->path().string()) };
+
+            if (!normalised_path.starts_with(BUILD_PATH)) {
+                dir_entry.disable_recursion_pending();
+            }
+            
+            if (fs::is_directory(*dir_entry)) {
+                const int files_count = std::count_if(
+                    fs::directory_iterator(dir_entry->path()),
+                    {}, 
+                    [](auto& file){ return file.is_regular_file(); }
+                );
+
+                if (files_count != 0) {
+                    directories_containing_binaries.insert(normalised_path);
+                }
+            }
+        }
+    }
+
+    bool are_dependencies_unresolved(const SurfaceDependencies& dependencies) {
+        for (const auto& dependency: dependencies) {
+            if (!fs::exists("build/dependencies/" + dependency.name)) {
+                cout << "Dependency '" << dependency.name << "' not resolved! Run 'cbt resolve-dependencies' first." << endl;
+                return true;
+            }
+        }
+
+        return false;
     }
 }
 
@@ -121,17 +161,28 @@ namespace commands {
         }
     }
 
-    void compile_project() {
-        workspace::scaffold::create_build_tree_as_necessary();
-        workspace::scaffold::create_internals_tree_as_necessary();
+    void resolve_dependencies() {
+        const Project project = convert_cfg_to_model();
+
+        workspace::scaffold::create_working_tree_as_necessary();
+
+        workspace::dependencies_manager::resolve_dependencies(project.dependencies);
+    }
+
+    void compile_project(const bool compile_as_dependency) {
+        workspace::scaffold::create_working_tree_as_necessary();
+
+        const Project project = convert_cfg_to_model();
+
+        if (!compile_as_dependency && are_dependencies_unresolved(project.dependencies)) {
+            return;
+        }
 
         const int literal_length_of_headers = string("headers/").length();
         const int literal_length_of_src = string("src/").length();
         const int literal_length_of_extension = string(".cpp").length();
 
-        const Project project = convert_cfg_to_model();
-
-        workspace::modification_identifier::SourceFiles annotated_files = workspace::modification_identifier::list_all_files_annotated(project);
+        workspace::modification_identifier::SourceFiles annotated_files = workspace::modification_identifier::list_all_files_annotated(project, compile_as_dependency);
         int number_of_cpp_files_to_compile{ 0 };
 
         for (auto const& file: annotated_files) {
@@ -158,7 +209,7 @@ namespace commands {
             }
         }
 
-        cout << "[COMMAND] " << gnu_toolchain::get_compilation_command(project) << endl << endl;
+        cout << "[COMMAND] " << gnu_toolchain::get_compilation_command(project, compile_as_dependency) << endl << endl;
 
         int files_succesfully_compiled_count{ 0 };
 
@@ -171,7 +222,7 @@ namespace commands {
                 } else {
                     file.compilation_start_timestamp = workspace::modification_identifier::get_current_fileclock_timestamp();
 
-                    const int result = gnu_toolchain::compile_file(project, file.file_name, stemmed_cpp_file);
+                    const int result = gnu_toolchain::compile_file(project, file.file_name, stemmed_cpp_file, compile_as_dependency);
 
                     file.compilation_end_timestamp = workspace::modification_identifier::get_current_fileclock_timestamp();
                     file.was_successful = (result == 0);
@@ -196,13 +247,11 @@ namespace commands {
             cout << std::right << std::setw(8) << "RECREATE " << "build/" << endl;
         }
 
-        workspace::scaffold::create_build_tree_as_necessary();
-
         if (fs::remove_all(fs::current_path() / ".internals")) {
             cout << std::right << std::setw(8) << "RECREATE " << ".internals/" << endl;
         }
 
-        workspace::scaffold::create_internals_tree_as_necessary();
+        workspace::scaffold::create_working_tree_as_necessary();
     }
 
     void build_project() {
@@ -223,35 +272,22 @@ namespace commands {
             return;
         }
 
-        std::vector<string> directories_containing_binaries;
-
-        const string BUILD_PATH{ workspace::util::get_platform_formatted_filename(fs::path("build/binaries")) };
-        const string SEPARATOR{ fs::path::preferred_separator };
-
-        for (auto dir_entry = fs::recursive_directory_iterator("build"); dir_entry != fs::recursive_directory_iterator(); ++dir_entry) {
-            const string normalised_path{ workspace::util::get_platform_formatted_filename(dir_entry->path().string()) };
-
-            if (!normalised_path.starts_with(BUILD_PATH)) {
-                dir_entry.disable_recursion_pending();
-            }
-            
-            if (fs::is_directory(*dir_entry)) {
-                const int files_count = std::count_if(
-                    fs::directory_iterator(dir_entry->path()),
-                    {}, 
-                    [](auto& file){ return file.is_regular_file(); }
-                );
-
-                if (files_count != 0) {
-                    directories_containing_binaries.push_back(normalised_path);
-                }
-            }
+        if (are_dependencies_unresolved(project.dependencies)) {
+            return;
         }
 
-        if (directories_containing_binaries.size() == 0) {
+        std::set<string> non_empty_directories;
+        const string SEPARATOR{ fs::path::preferred_separator };
+
+        list_directories_containing_binaries(non_empty_directories, "build/binaries");
+        list_directories_containing_binaries(non_empty_directories, "build/dependencies");
+        
+        if (non_empty_directories.size() == 0) {
             cout << "No binaries present! Run 'cbt compile-project' first." << endl;
             return;
         }
+
+        std::vector<string> directories_containing_binaries(non_empty_directories.begin(), non_empty_directories.end());
 
         #if defined(_WIN32) || defined(_WIN64)
         const string BINARY_NAME{ project.name + ".exe" };
@@ -265,9 +301,13 @@ namespace commands {
     }
 
     void run_unit_tests() {
-        workspace::scaffold::create_build_tree_as_necessary();
+        workspace::scaffold::create_working_tree_as_necessary();
 
         const Project project = convert_cfg_to_model();
+
+        if (are_dependencies_unresolved(project.dependencies)) {
+            return;
+        }
 
         const workspace::modification_identifier::RawDependencyTree tree = workspace::modification_identifier::get_files_to_test(project);
 
@@ -287,30 +327,55 @@ namespace commands {
         const fs::path harness{ "headers/cbt_tools/test_harness.hpp" };
 
         std::vector<fs::path> binaries_to_execute{};
+        const size_t literal_length_of_headers{ std::string("headers/").length() };
+        const size_t literal_length_of_dependencies{ std::string(".internals/dh_symlinks/").length() };
 
         cout << "[COMMAND] " << gnu_toolchain::get_test_execution_command(project, EXTENSION) << endl << endl;
 
         for (auto const& [file, dependencies]: tree) {
             std::vector<string> files_to_link{ file };
-            const fs::path scoped_directory_of_file = fs::relative(fs::path{ file }.parent_path(), "tests/unit_tests");
+            const fs::path scoped_directory_of_file{ fs::relative(fs::path{ file }.parent_path(), "tests/unit_tests") };
             const fs::path build_directory_under_check{ "build/test_binaries/unit_tests" / scoped_directory_of_file };
 
             if (!fs::exists(build_directory_under_check)) {
                 workspace::scaffold::create_directory(string("."), build_directory_under_check.string(), true, false);
             }
 
-            const fs::path corresponding_header_file = fs::path("headers" / scoped_directory_of_file / fs::path(file).stem().replace_extension(".hpp"));
-            
+            const fs::path corresponding_header_file{ fs::path("headers" / scoped_directory_of_file / fs::path(file).stem().replace_extension(".hpp")) };
+
             for (auto const& dependency: dependencies) {
                 if (!fs::equivalent(corresponding_header_file, dependency) && !fs::equivalent(dependency, harness)) {
-                    const fs::path scoped_directory_of_dependency = fs::relative(fs::path{ dependency }.parent_path(), "headers");
-                    const fs::path corresponding_implementation_file = fs::path("src" / scoped_directory_of_dependency / fs::path(dependency).stem().replace_extension(".cpp"));
+                    const bool is_own_dependency{ dependency.starts_with("headers") };
+
+                    const fs::path corresponding_implementation_file{ (is_own_dependency
+                        ? fs::path("src/" + dependency.substr(literal_length_of_headers))
+                        : fs::path([&dependency](){
+                                const string symlink{ fs::read_symlink(dependency.substr(0, dependency.rfind("/"))).string() };
+
+                                const size_t start{ symlink.rfind("dependencies/") };
+                                const size_t stop{ symlink.rfind("/headers") };
+
+                                const std::string shortened_symlink{ symlink.substr(start, stop - start) };
+
+                                const size_t dep_start{ shortened_symlink.find("/") };
+                                const size_t dep_stop{ shortened_symlink.find("@") };
+
+                                const std::string dependency_name{ shortened_symlink.substr(dep_start + 1, dep_stop - dep_start - 1) };
+
+                                return shortened_symlink + "/src/" + dependency.substr(dependency.find(dependency_name) + dependency_name.length() + 1);
+                            }())
+                        ).replace_extension("cpp")
+                    };
 
                     if (fs::exists(corresponding_implementation_file)) {
-                        const fs::path corresponding_binary = fs::path("build/binaries" / scoped_directory_of_dependency / fs::path(dependency).stem().replace_extension(".o"));
+                        const fs::path corresponding_binary{ (is_own_dependency
+                            ? fs::path("build/binaries/" + dependency.substr(literal_length_of_headers))
+                            : fs::path("build/dependencies/" + dependency.substr(literal_length_of_dependencies))
+                            ).replace_extension("o")
+                        };
 
                         if (!fs::exists(corresponding_binary)) {
-                            throw std::runtime_error("Corresponding binary for '" + workspace::util::get_platform_formatted_filename(dependency) + "' not found! Run `cbt compile-project` first.");
+                            throw std::runtime_error("Corresponding binary for '" + workspace::util::get_platform_formatted_filename(dependency) + "' not found! Run `cbt " + (is_own_dependency ? "compile-project" : "resolve-dependencies") + "`.");
                         } else {
                             files_to_link.push_back(corresponding_binary.string());
                         }
@@ -318,9 +383,9 @@ namespace commands {
                 }
             }
 
-            const fs::path test_binary = fs::path("build/test_binaries/unit_tests" / scoped_directory_of_file / fs::path(file).stem().replace_extension(EXTENSION));
-            
+            const fs::path test_binary{ fs::path("build/test_binaries/unit_tests" / scoped_directory_of_file / fs::path(file).stem().replace_extension(EXTENSION)) };
             const int result = gnu_toolchain::create_test_binary(project, files_to_link, test_binary.string());
+            
             cout << "[COMPILE]" << std::left << std::setw(6) << (result == 0 ? "[OK]" : "[NOK]") << workspace::util::get_platform_formatted_filename(test_binary) << endl;
 
             if (result == 0) {
@@ -378,6 +443,8 @@ namespace commands {
             << endl
             << "create-file <file_name>         - Generate respective C++ files under 'headers/', 'src/' and 'tests/' directories" << endl
             << "create-file <path/to/file_name> - Same as above, but will create necessary sub-directories if required" << endl
+            << endl
+            << "resolve-dependencies            - Sync dependencies through 'project.cfg'" << endl
             << endl
             << "compile-project                 - Compile all files and generate respective binaries under 'build/binaries/'" << endl
             << "build-project                   - (For applications only) Perform linking and generate final executable under 'build/'" << endl
