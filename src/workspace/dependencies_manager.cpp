@@ -2,9 +2,11 @@
 
 #include <cstdlib>
 #include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <map>
 #include <set>
+#include <stdexcept>
 #include <string>
 
 #include "workspace/project_config.hpp"
@@ -170,7 +172,7 @@ namespace {
         }
     }
 
-    void compile_uncompiled_dependencies(const SurfaceDependencies& resolved_dependencies) {
+    int compile_uncompiled_dependencies(const SurfaceDependencies& resolved_dependencies) {
         fs::path project_root{ fs::current_path() };
         int compiled_dependencies_count{ 0 };
 
@@ -200,11 +202,17 @@ namespace {
             }
         }
 
-        if (compiled_dependencies_count == 0) {
-            std::cout << "[INFO] All dependencies are up-to-date!\n";
-        } else {
-            std::cout << "[INFO] Compiled " << compiled_dependencies_count << " new dependencies.\n";
+        return compiled_dependencies_count;
+    }
+
+    void update_lockfile(const SurfaceDependencies& resolved_dependencies) {
+        std::ofstream file_to_write("dependencies.lock");
+
+        for (const auto& dependency: resolved_dependencies) {
+            file_to_write << dependency_to_string(dependency, false) << "\n";
         }
+        
+        file_to_write.close();
     }
 }
 
@@ -220,6 +228,15 @@ namespace workspace::dependencies_manager {
 
         remove_unnecessary_dependencies(resolved_dependencies, locally_stored_dependencies);
         create_header_symlinks(resolved_dependencies);
-        compile_uncompiled_dependencies(resolved_dependencies);
+
+        const int compiled_dependencies_count{ compile_uncompiled_dependencies(resolved_dependencies) };
+
+        if (compiled_dependencies_count == 0) {
+            std::cout << "[INFO] All dependencies are up-to-date!\n";
+        } else {
+            update_lockfile(resolved_dependencies);
+
+            std::cout << "[INFO] Compiled " << compiled_dependencies_count << " new dependencies.\n";
+        }
     }
 }
