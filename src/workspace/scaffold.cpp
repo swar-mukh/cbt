@@ -281,8 +281,8 @@ namespace workspace::scaffold {
         }
     }
 
-    void remove_dependency(const string& dependency) {
-        if (fs::exists(".internals/dh_symlinks/" + dependency)) {
+    void remove_dependency(const string& dependency, const string& version) {
+        if (fs::exists(".internals/dh_symlinks/" + dependency) || fs::is_symlink(".internals/dh_symlinks/" + dependency)) {
             fs::remove(".internals/dh_symlinks/" + dependency);
         }
         
@@ -290,11 +290,11 @@ namespace workspace::scaffold {
             fs::remove_all("build/dependencies/" + dependency);
         }
 
-        if (fs::exists("dependencies/" + dependency)) {
-            fs::remove_all("dependencies/" + dependency);
+        if (fs::exists("dependencies/" + dependency + "@" + version)) {
+            fs::remove_all("dependencies/" + dependency + "@" + version);
         }
 
-        cout << "DELETE " << dependency << "\n";
+        cout << "DELETE " << dependency << "@" << version << "\n";
     }
 
     void make_dependency_pristine(const string& dependency) {

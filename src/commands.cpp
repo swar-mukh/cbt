@@ -3,7 +3,6 @@
 #include <cstdlib>
 #include <filesystem>
 #include <iostream>
-#include <regex>
 #include <set>
 #include <string>
 #include <vector>
@@ -113,10 +112,10 @@ namespace {
         }
     }
 
-    bool are_dependencies_unresolved(const std::set<std::string>& dependencies) {
+    bool are_dependencies_unresolved(const SurfaceDependencies& dependencies) {
         for (const auto& dependency: dependencies) {
-            if (!fs::exists("build/dependencies/" + dependency)) {
-                cout << "Dependency '" << dependency << "' not resolved! Run 'cbt resolve-dependencies' first." << endl;
+            if (!fs::exists("build/dependencies/" + dependency.name)) {
+                cout << "Dependency '" << dependency.name << "' not resolved! Run 'cbt resolve-dependencies' first." << endl;
                 return true;
             }
         }
@@ -343,18 +342,27 @@ namespace commands {
             }
 
             const fs::path corresponding_header_file{ fs::path("headers" / scoped_directory_of_file / fs::path(file).stem().replace_extension(".hpp")) };
-            
+
             for (auto const& dependency: dependencies) {
                 if (!fs::equivalent(corresponding_header_file, dependency) && !fs::equivalent(dependency, harness)) {
                     const bool is_own_dependency{ dependency.starts_with("headers") };
 
                     const fs::path corresponding_implementation_file{ (is_own_dependency
                         ? fs::path("src/" + dependency.substr(literal_length_of_headers))
-                        : fs::path("dependencies/" + [&dependency, &literal_length_of_dependencies](){
-                                const std::string temp{ dependency.substr(literal_length_of_dependencies) };
-                                const size_t pos{ temp.find("/") + 1};
-                                
-                                return temp.substr(0, pos) + "src/" + temp.substr(pos);
+                        : fs::path([&dependency](){
+                                const string symlink{ fs::read_symlink(dependency.substr(0, dependency.rfind("/"))).string() };
+
+                                const size_t start{ symlink.rfind("dependencies/") };
+                                const size_t stop{ symlink.rfind("/headers") };
+
+                                const std::string shortened_symlink{ symlink.substr(start, stop - start) };
+
+                                const size_t dep_start{ shortened_symlink.find("/") };
+                                const size_t dep_stop{ shortened_symlink.find("@") };
+
+                                const std::string dependency_name{ shortened_symlink.substr(dep_start + 1, dep_stop - dep_start - 1) };
+
+                                return shortened_symlink + "/src/" + dependency.substr(dependency.find(dependency_name) + dependency_name.length() + 1);
                             }())
                         ).replace_extension("cpp")
                     };
@@ -367,7 +375,7 @@ namespace commands {
                         };
 
                         if (!fs::exists(corresponding_binary)) {
-                            throw std::runtime_error("Corresponding binary for '" + workspace::util::get_platform_formatted_filename(dependency) + "' not found! Run `cbt resolve-dependencies` first.");
+                            throw std::runtime_error("Corresponding binary for '" + workspace::util::get_platform_formatted_filename(dependency) + "' not found! Run `cbt " + (is_own_dependency ? "compile-project" : "resolve-dependencies") + "`.");
                         } else {
                             files_to_link.push_back(corresponding_binary.string());
                         }

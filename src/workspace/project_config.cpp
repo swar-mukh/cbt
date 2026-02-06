@@ -36,9 +36,7 @@ namespace workspace::project_config {
                 .test_flags{ "-g -Og -s" }
             },
             .dependencies{
-                "author1/lib1",
-                "author1/lib2",
-                "author2/lib1",
+                { .name{ "cbt_tools" }, .version{ "2024-08-31" }, .url{ "https://github.com/swar-mukh/cbt_tools" } }
             }
         };
     }
@@ -84,6 +82,21 @@ namespace workspace::project_config {
         else if (project_type.compare("library") == 0) { return LIBRARY; }
         else {
             throw std::domain_error("Invalid project type");
+        };
+    }
+
+    string dependency_to_string(const SurfaceDependency& dependency, const bool exclude_url) {
+        return dependency.name + "@" + dependency.version + (exclude_url ? "" : (":" + dependency.url));
+    }
+
+    SurfaceDependency parse_dependency(const string& value) {
+        const auto [name, rest] = workspace::util::get_key_value_pair_from_line(value, "@");
+        const auto [version, url] =  workspace::util::get_key_value_pair_from_line(rest, AUTHOR_DELIMITER);
+
+        return SurfaceDependency{
+            .name{ name },
+            .version{ version },
+            .url{ url }
         };
     }
 
@@ -143,7 +156,7 @@ namespace workspace::project_config {
                 } else if (key.compare("config{test_flags}") == 0) {
                     project.config.test_flags = value;
                 } else if (key.compare("dependencies[]") == 0) {
-                    project.dependencies.insert(value);
+                    project.dependencies.insert(parse_dependency(value));
                 } else {
                     throw std::runtime_error("Invalid configuration at line " + std::to_string(line_number) + " for key '" + key + "'");
                 }
@@ -198,8 +211,8 @@ namespace workspace::project_config {
         
         string dependencies_text{ "; add your `dependencies` in the format mentioned below" };
 
-        for (const string &dependency: project.dependencies) {
-            dependencies_text += std::string("\n; dependencies[]=") + dependency;
+        for (const SurfaceDependency &dependency: project.dependencies) {
+            dependencies_text += std::string("\n; dependencies[]=") + dependency_to_string(dependency, false);
         }
 
         return (add_disclaimer_text ? (disclaimer_text + "\n\n") : "") 

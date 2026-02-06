@@ -38,6 +38,34 @@ namespace workspace::project_config {
         string test_flags;
     };
 
+    struct SurfaceDependency {
+        string name;
+        string version;
+        string url;
+    };
+
+    struct SurfaceDependencyComparator {
+        using is_transparent = void;
+
+        bool operator()(const SurfaceDependency& lhs, const SurfaceDependency& rhs) const {
+            if (lhs.name == rhs.name) {
+                return lhs.version > rhs.version;
+            }
+
+            return lhs.name < rhs.name;
+        }
+
+        bool operator()(const SurfaceDependency& lhs, const std::string& rhs) const {
+            return lhs.name < rhs;
+        }
+
+        bool operator()(const std::string& lhs, const SurfaceDependency& rhs) const {
+            return lhs < rhs.name;
+        }
+    };
+
+    using SurfaceDependencies = std::set<SurfaceDependency, SurfaceDependencyComparator>;
+
     struct Project {
         string name;
         string description;
@@ -49,22 +77,34 @@ namespace workspace::project_config {
         std::set<Platform> platforms;
         Config config;
 
-        std::set<string> dependencies;
+        SurfaceDependencies dependencies;
     };
 
     struct ProjectComparator {
         using is_transparent = void;
 
         bool operator()(const Project& lhs, const Project& rhs) const {
+            if (lhs.name == rhs.name) {
+                return lhs.version > rhs.version;
+            }
+
             return lhs.name < rhs.name;
         }
 
-        bool operator()(const Project& lhs, const std::string& rhs) const {
-            return lhs.name < rhs;
+        bool operator()(const Project& lhs, const SurfaceDependency& rhs) const {
+            if (lhs.name == rhs.name) {
+                return lhs.version > rhs.version;
+            }
+
+            return lhs.name < rhs.name;
         }
 
-        bool operator()(const std::string& lhs, const Project& rhs) const {
-            return lhs < rhs.name;
+        bool operator()(const SurfaceDependency& lhs, const Project& rhs) const {
+            if (lhs.name == rhs.name) {
+                return lhs.version > rhs.version;
+            }
+
+            return lhs.name < rhs.name;
         }
     };
 
@@ -77,6 +117,9 @@ namespace workspace::project_config {
 
     string project_type_to_string(const ProjectType& project_type);
     ProjectType string_to_project_type(const string& project_type);
+
+    std::string dependency_to_string(const SurfaceDependency& dependency, const bool exclude_url = true);
+    SurfaceDependency parse_dependency(const string& value);
 
     Project convert_cfg_to_model();
     string convert_model_to_cfg(const Project& project, const bool add_disclaimer_text = true);
