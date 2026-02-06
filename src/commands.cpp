@@ -282,7 +282,7 @@ namespace commands {
         list_directories_containing_binaries(non_empty_directories, "build/binaries");
         list_directories_containing_binaries(non_empty_directories, "build/dependencies");
         
-        if (non_empty_directories.size() == 0) {
+        if (non_empty_directories.empty()) {
             cout << "No binaries present! Run 'cbt compile-project' first." << endl;
             return;
         }
@@ -311,7 +311,7 @@ namespace commands {
 
         const workspace::modification_identifier::RawDependencyTree tree = workspace::modification_identifier::get_files_to_test(project);
 
-        if (tree.size() == 0) {
+        if (tree.empty()) {
             cout << "[INFO] Nothing to compile or test. All files are up-to-date!" << endl;
             return;
         }

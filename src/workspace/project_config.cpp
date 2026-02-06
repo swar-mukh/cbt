@@ -162,11 +162,11 @@ namespace workspace::project_config {
                 }
             }
 
-            if (project.authors.size() == 0) {
+            if (project.authors.empty()) {
                 throw std::runtime_error("At least one author is required in 'project.cfg'");
             }
 
-            if (project.platforms.size() == 0) {
+            if (project.platforms.empty()) {
                 throw std::runtime_error("At least one platform is required in 'project.cfg'");
             }
 
