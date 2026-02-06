@@ -102,12 +102,11 @@ namespace {
         }
     }
 
-    void linearise(const SurfaceDependencies& dependencies, std::map<std::string, int>& dependency_frequency, const Projects& locally_stored_dependencies) {
+    void linearise(const SurfaceDependencies& dependencies, std::map<SurfaceDependency, int, SurfaceDependencyComparator>& dependency_frequency, const Projects& locally_stored_dependencies) {
         for (const auto& dependency: dependencies) {
-            const std::string versioned_name{ dependency_to_string(dependency) };
-            const bool is_visited{ dependency_frequency.contains(versioned_name) };
+            const bool is_visited{ dependency_frequency.contains(dependency) };
 
-            dependency_frequency[versioned_name]++;
+            dependency_frequency[dependency]++;
 
             if (!is_visited) {
                 SurfaceDependencies transitive_dependencies = get_transitive_dependencies(dependency, locally_stored_dependencies);
@@ -116,80 +115,76 @@ namespace {
         }
     }
 
-    const std::map<std::string, int> resolve_version(const std::map<std::string, int>& dependency_frequency) {
-        std::map<std::string, std::pair<std::string, int>> bucket;
-        std::map<std::string, int> resolved_dependencies;
+    SurfaceDependencies resolve_versions(const std::map<SurfaceDependency, int, SurfaceDependencyComparator>& dependency_frequency) {
+        std::map<std::string, SurfaceDependency> bucket;
+        SurfaceDependencies resolved_dependencies;
 
-        for (const auto& [versioned_name, count]: dependency_frequency) {
-            const auto [dependency_name, version] = workspace::util::get_key_value_pair_from_line(versioned_name, "@");
-            
-            const auto entry{ bucket.find(dependency_name) };
+        for (const auto& [dependency, count]: dependency_frequency) {
+            const auto entry{ bucket.find(dependency.name) };
 
             if (entry == bucket.end()) {
-                bucket[dependency_name] = std::make_pair(version, count);
+                bucket[dependency.name] = dependency;
             } else {
-                const auto existing_parsed_date{ workspace::util::parse_date(entry->second.first) };
-                const auto candidate_parsed_date{ workspace::util::parse_date(version) };
+                const auto existing_parsed_date{ workspace::util::parse_date(entry->second.version) };
+                const auto candidate_parsed_date{ workspace::util::parse_date(dependency.version) };
 
                 if (candidate_parsed_date > existing_parsed_date) {
-                    entry->second = std::make_pair(version, count);
+                    entry->second = dependency;
                 }
             }
         }
 
-        for (const auto& [dependency_name, versioned_count]: bucket) {
-            resolved_dependencies[dependency_name + "@" + versioned_count.first] = versioned_count.second;
+        for (const auto& [_, dependency]: bucket) {
+            resolved_dependencies.insert(dependency);
         }
 
         return resolved_dependencies;
     }
 
-    void remove_unnecessary_dependencies(const std::map<std::string, int>& dependency_frequency, const Projects& locally_stored_dependencies) {
+    void remove_unnecessary_dependencies(const SurfaceDependencies& resolved_dependencies, const Projects& locally_stored_dependencies) {
         for (const auto& project: locally_stored_dependencies) {
-            if (!dependency_frequency.contains(project.name + "@" + project.version)) {
+            if (!resolved_dependencies.contains(SurfaceDependency{project.name, project.version})) {
                 workspace::scaffold::remove_dependency(project.name, project.version);
             }
         }
     }
 
-    void create_header_symlinks(const std::map<std::string, int>& resolved_dependencies) {
+    void create_header_symlinks(const SurfaceDependencies& resolved_dependencies) {
         const fs::path project_root{ fs::current_path() };
         const fs::path symlink_path{ project_root / ".internals/dh_symlinks" };
 
-        for (const auto& [dependency, _]: resolved_dependencies) {
-            const auto [dependency_name, version] = workspace::util::get_key_value_pair_from_line(dependency, "@");
-
-            if (fs::exists(symlink_path / dependency_name) || fs::is_symlink(symlink_path / dependency_name)) {
-                fs::remove(symlink_path / dependency_name);
+        for (const auto& dependency: resolved_dependencies) {
+            if (fs::exists(symlink_path / dependency.name) || fs::is_symlink(symlink_path / dependency.name)) {
+                fs::remove(symlink_path / dependency.name);
             }
             
             #if defined(_WIN32) || defined(_WIN64)
             std::wstring cmd = L"mklink /J \"" +
-                (symlink_path / dependency_name).make_preferred().wstring() + L"\\\" \"" +
-                (project_root / L"dependencies" / dependency / L"headers").make_preferred().wstring() + L"\"";
+                (symlink_path / dependency.name).make_preferred().wstring() + L"\\\" \"" +
+                (project_root / L"dependencies" / dependency_to_string(dependency) / L"headers").make_preferred().wstring() + L"\"";
                 
             system(std::string(cmd.begin(), cmd.end()).c_str());
             #else
-            fs::create_directory_symlink(project_root / "dependencies" / dependency / "headers", symlink_path / dependency_name);
+            fs::create_directory_symlink(project_root / "dependencies" / dependency_to_string(dependency) / "headers", symlink_path / dependency.name);
             #endif
         }
     }
 
-    void compile_uncompiled_dependencies(const std::map<std::string, int>& dependency_frequency) {
+    void compile_uncompiled_dependencies(const SurfaceDependencies& resolved_dependencies) {
         fs::path project_root{ fs::current_path() };
         int compiled_dependencies_count{ 0 };
 
-        for (const auto& [dependency, _]: dependency_frequency) {
-            const auto [dependency_name, version] = workspace::util::get_key_value_pair_from_line(dependency, "@");
-            
-            if (!fs::exists(project_root / "build/dependencies" / dependency_name)) {
-                fs::path dependency_root{ project_root / "dependencies" / dependency };
+        for (const auto& dependency: resolved_dependencies) {
+            if (!fs::exists(project_root / "build/dependencies" / dependency.name)) {
+                const std::string versioned_name{ dependency_to_string(dependency) };
+
+                fs::path dependency_root{ project_root / "dependencies" / versioned_name };
                 fs::path dependency_build_root{ dependency_root / "build/binaries" };
-                fs::path lifted_build_root{ project_root / "build/dependencies" / dependency_name };
+                fs::path lifted_build_root{ project_root / "build/dependencies" / dependency.name };
                 
                 fs::current_path(dependency_root);
 
-                std::cout << "[DEPENDENCY] " << dependency << "\n\n";
+                std::cout << "[DEPENDENCY] " << versioned_name << "\n\n";
 
                 commands::compile_project(true);
 
@@ -199,7 +194,7 @@ namespace {
 
                 fs::rename(dependency_build_root, lifted_build_root);
 
-                workspace::scaffold::make_dependency_pristine(dependency);
+                workspace::scaffold::make_dependency_pristine(versioned_name);
 
                 compiled_dependencies_count++;
             }
@@ -217,11 +212,11 @@ namespace workspace::dependencies_manager {
     void resolve_dependencies(const SurfaceDependencies& dependencies) {
         Projects locally_stored_dependencies = list_all_dependencies_available_locally();
 
-        std::map<std::string, int> dependency_frequency;
+        std::map<SurfaceDependency, int, SurfaceDependencyComparator> dependency_frequency;
 
         linearise(dependencies, dependency_frequency, locally_stored_dependencies);
 
-        const std::map<std::string, int> resolved_dependencies{ resolve_version(dependency_frequency) };
+        const SurfaceDependencies resolved_dependencies{ resolve_versions(dependency_frequency) };
 
         remove_unnecessary_dependencies(resolved_dependencies, locally_stored_dependencies);
         create_header_symlinks(resolved_dependencies);
