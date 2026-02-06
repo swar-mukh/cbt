@@ -8,6 +8,24 @@
 #include "workspace/scaffold.hpp"
 #include "workspace/util.hpp"
 
+namespace {
+    using namespace workspace::project_config;
+
+    void validate_project_configurations(const Project& project) {
+        if (project.name.length() == 0) {
+            throw std::runtime_error("Project name in 'project.cfg' cannot be empty");
+        }
+
+        if (project.authors.size() == 0) {
+            throw std::runtime_error("At least one author is required in 'project.cfg'");
+        }
+
+        if (project.platforms.size() == 0) {
+            throw std::runtime_error("At least one platform is required in 'project.cfg'");
+        }
+    }
+}
+
 namespace workspace::project_config {
     namespace fs = std::filesystem;
 
@@ -62,7 +80,9 @@ namespace workspace::project_config {
         else if (platform.compare("macos") == 0) { return MACOS; }
         else if (platform.compare("unix") == 0) { return UNIX; }
         else if (platform.compare("windows") == 0) { return WINDOWS; }
-        else return _UNSUPPORTED;
+        else {
+            throw std::domain_error("Unsupported platform '" + platform + "'");
+        };
     }
 
     string project_type_to_string(const ProjectType& project_type) {
@@ -81,7 +101,7 @@ namespace workspace::project_config {
         if (project_type.compare("application") == 0) { return APPLICATION; }
         else if (project_type.compare("library") == 0) { return LIBRARY; }
         else {
-            throw std::domain_error("Invalid project type");
+            throw std::domain_error("Invalid project type '" + project_type + "'");
         };
     }
 
@@ -162,13 +182,7 @@ namespace workspace::project_config {
                 }
             }
 
-            if (project.authors.empty()) {
-                throw std::runtime_error("At least one author is required in 'project.cfg'");
-            }
-
-            if (project.platforms.empty()) {
-                throw std::runtime_error("At least one platform is required in 'project.cfg'");
-            }
+            validate_project_configurations(project);
 
             return project;
         } else {

@@ -17,8 +17,7 @@ namespace workspace::project_config {
         LINUX,
         MACOS,
         UNIX,
-        WINDOWS,
-        _UNSUPPORTED
+        WINDOWS
     };
 
     struct Author {

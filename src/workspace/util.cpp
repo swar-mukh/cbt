@@ -175,6 +175,16 @@ namespace workspace::util {
 
         iss >> yyyy >> dash >> mm >> dash >> dd;
 
-        return std::chrono::year{ yyyy } / std::chrono::month{ static_cast<unsigned>(mm) } / std::chrono::day{ static_cast<unsigned>(dd) };
+        std::chrono::year_month_day ymd{
+            std::chrono::year{ yyyy },
+            std::chrono::month{ static_cast<unsigned>(mm) },
+            std::chrono::day{ static_cast<unsigned>(dd) }
+        };
+
+        if (!ymd.ok()) {
+            throw std::invalid_argument("Invalid date '" + iso_date + "'");
+        }
+
+        return ymd;
     }
 }
