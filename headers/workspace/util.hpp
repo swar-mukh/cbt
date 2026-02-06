@@ -1,6 +1,7 @@
 #ifndef WORKSPACE_UTIL
 #define WORKSPACE_UTIL
 
+#include <chrono>
 #include <filesystem>
 #include <string>
 #include <tuple>

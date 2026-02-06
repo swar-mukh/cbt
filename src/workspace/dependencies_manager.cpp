@@ -1,6 +1,7 @@
 #include "workspace/dependencies_manager.hpp"
 
 #include <cstdlib>
+#include <chrono>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
