@@ -2,3 +2,4 @@
 .internals
 build
 environments/*.env
+dependencies
