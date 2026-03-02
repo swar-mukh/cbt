@@ -46,6 +46,55 @@ function build() {
     esac
 }
 
+function link() {
+    echo "==========="
+    echo "Phase: link"
+    echo "==========="
+    echo
+
+    if [ ! -f build/cbt ]; then
+        echo "[ACTION] Compile and build project first"
+        exit 1
+    fi
+
+    if [ ! -d /opt/cbt ]; then
+        sudo mkdir -p /opt/cbt
+        echo "[DIR] Create '/opt/cbt/'"
+    fi
+
+    sudo cp build/cbt /opt/cbt/
+    echo "[COPY] 'cbt' updated"
+
+    if [[ ":$PATH:" != *":/opt/cbt:"* ]]; then
+        CURRENT_SHELL=$(basename "$SHELL")
+
+        case "$CURRENT_SHELL" in
+            bash)     RC_FILE="$HOME/.bashrc";;
+            zsh)      RC_FILE="$HOME/.zshrc";;
+            ksh)      RC_FILE="$HOME/.kshrc";;
+            tcsh)     RC_FILE="$HOME/.tcshrc";;
+            csh)      RC_FILE="$HOME/.cshrc";;
+            fish)     RC_FILE="$HOME/.config/fish/config.fish";;
+            dash|ash) RC_FILE="$HOME/.profile";;
+            *)        RC_FILE="$HOME/.profile";;
+        esac
+
+        if [ "$CURRENT_SHELL" = "fish" ]; then
+            if ! grep -Fxq "set -Ux PATH /opt/cbt \$PATH" "$RC_FILE" 2>/dev/null; then
+                echo "set -Ux PATH /opt/cbt \$PATH" >> "$RC_FILE"
+            fi
+        else
+            if ! grep -Fxq "export PATH=\$PATH:/opt/cbt" "$RC_FILE" 2>/dev/null; then
+                echo "export PATH=\$PATH:/opt/cbt" >> "$RC_FILE"
+            fi
+        fi
+
+        echo "[ACTION] Restart your shell or run 'source $RC_FILE' to apply changes."
+    else
+        echo "[INFO] Updated 'cbt' available globally"
+    fi
+}
+
 function clean() {
     echo "============"
     echo "Phase: clean"
@@ -65,9 +114,10 @@ for i in "$@"; do
         init)    init;;
         compile) compile;;
         build)   build;;
+        link)    link;;
         clean)   clean;;
         *)
-            echo "Invalid option!"
+            echo "Invalid option! Available options: 'init', 'compile', 'build', 'link' and 'clean'."
             echo
             exit -1
             ;;

@@ -20,10 +20,12 @@ for %%a in (%*) do (
         call :compile
     ) else if %%a == build (
         call :build
+    ) else if %%a == link (
+        call :link
     ) else if %%a == clean (
         call :clean
     ) else (
-        echo Invalid option!
+        echo Invalid option! Available options: 'init', 'compile', 'build', 'link' and 'clean'.
         exit /b 1
     )
     echo.
@@ -64,6 +66,34 @@ exit /b 0
     echo.
     echo "[BUILD] build/cbt.exe" && g++ %BUILD_FLAGS% %BINARIES_DIR%/*.o %BINARIES_DIR%/workspace/*.o -o build/cbt.exe
     echo "[HASH] build/cbt.exe" && certutil -hashfile build\cbt.exe SHA256 > build\Windows.sha256.checksum.txt
+    exit /b 0
+
+:link
+    echo "==========="
+    echo "Phase: link"
+    echo "==========="
+    echo.
+    if not exist "build\cbt.exe" (
+        echo "[ACTION] Compile and build project first"
+        exit /b 1
+    )
+    if not exist "C:\cbt" (
+        mkdir "C:\cbt"
+        echo "[DIR] Create 'C:\cbt'"
+    )
+    copy /Y "build\cbt.exe" "C:\cbt\cbt.exe" >nul
+    echo "[COPY] 'cbt.exe' updated"
+    set "CURRENT_PATH=%PATH%"
+    echo %CURRENT_PATH% | find /I "C:\cbt" >nul
+    if errorlevel 1 (
+        echo "[ACTION] Add 'C:\cbt' to PATH via System Environment GUI"
+        echo "[ACTION] Open 'Start' > 'Run' > Type 'sysdm.cpl' > Hit 'OK'"
+        echo "[ACTION] Go to 'Advanced' > 'Environment Variables'"
+        echo "[ACTION] Under 'User variables' > Double click 'Path' > Hit 'Add' > Type 'C:\cbt' > Hit 'OK'"
+        echo "[ACTION] Re-open terminal"
+    ) else (
+        echo "[INFO] 'cbt' available globally"
+    )
     exit /b 0
 
 :clean
