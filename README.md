@@ -106,7 +106,14 @@ For other platforms, or for building from source, read on.
   ```
 3. The executable will be placed under the `build/` directory with the name `cbt` (or `cbt.exe` on `Windows`).
 4. Run `./build/cbt help` (or `.\build\cbt.exe` on `Windows`) to get all available commands.
-5. Add the binary to your OS' `PATH`.
+5. Add the binary to your OS' `PATH`:
+  ```sh
+  # On *nix platforms
+  $ ./script.sh link
+
+  # On Windows
+  > .\script.bat link
+  ```
 
 **Note:** During the `build` stage through `script.sh`, pay attention to the following:
 
