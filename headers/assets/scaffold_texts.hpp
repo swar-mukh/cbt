@@ -665,6 +665,28 @@ namespace assets::scaffold_texts {
         - [ ] Perform R/W
         - [ ] Subject code to thorough testing
     )";
+
+    const string DOCKERIGNORE = R"(
+    .git
+    .internals
+    build
+    dependencies
+    )";
+
+    const string DOCKERFILE = R"(
+    FROM alpine:3.18 AS builder
+    RUN apl add --no-cache bash g++ musl-dev curl tar
+    SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+    WORKDIR /internal
+    RUN curl -L https://github.com/swar-mukh/cbt/archive/refs/tags/cbt-2026.02.06.tar.gz | tar xz --strip-components=1 \
+        && ./script.sh init compile build \
+        && mkdir /opt/cbt \
+        && mv build/cbt /opt/cbt/.
+    ENV PATH="/opt/cbt:${PATH}"
+    WORKDIR /@PROJECT_NAME
+    COPY . .
+    RUN cbt compile-project && cbt build-project
+    )";
 }
 
 #endif

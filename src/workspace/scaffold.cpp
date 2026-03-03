@@ -168,6 +168,12 @@ namespace {
             return with_project_name;
         } else if (file_name.compare("project.cfg") == 0) {
             return workspace::project_config::convert_model_to_cfg(project);
+        } else if (file_name.compare(".dockerignore") == 0) {
+            return remove_raw_literal_indentations(DOCKERIGNORE);
+        } else if (file_name.compare("Dockerfile") == 0) {
+            const string text{ remove_raw_literal_indentations(DOCKERFILE) };
+            
+            return std::regex_replace(text, PROJECT_NAME_R, project.name);
         } else {
             return "";
         }
