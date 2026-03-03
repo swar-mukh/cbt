@@ -172,8 +172,14 @@ namespace {
             return remove_raw_literal_indentations(DOCKERIGNORE);
         } else if (file_name.compare("Dockerfile") == 0) {
             const string text{ remove_raw_literal_indentations(DOCKERFILE) };
-            
-            return std::regex_replace(text, PROJECT_NAME_R, project.name);
+
+            if (project.project_type == workspace::project_config::ProjectType::APPLICATION) {
+                const string deployment_text{ remove_raw_literal_indentations(DOCKERFILE_WITH_DEPLOYMENT) };
+
+                return std::regex_replace(text + "\n" + deployment_text, PROJECT_NAME_R, project.name);
+            } else {
+                return std::regex_replace(text, PROJECT_NAME_R, project.name);
+            }
         } else {
             return "";
         }

@@ -687,6 +687,17 @@ namespace assets::scaffold_texts {
     COPY . .
     RUN cbt compile-project && cbt build-project
     )";
+
+    const string DOCKERFILE_WITH_DEPLOYMENT = R"(
+    FROM alpine:3.18 AS deployment
+    RUN apk add --no-cache libstdc++ libgcc
+    WORKDIR /app
+    RUN mkdir environments
+    COPY --from=builder /@PROJECT_NAME/environments/.env.template /@PROJECT_NAME/environments/production.env environments/
+    COPY --from=builder /@PROJECT_NAME/build/@PROJECT_NAME /usr/local/bin/@PROJECT_NAME
+    ENV env=production
+    ENTRYPOINT ["@PROJECT_NAME"]
+    )";
 }
 
 #endif
