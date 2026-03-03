@@ -22,9 +22,48 @@ namespace assets::scaffold_texts {
 
     Discuss your setup here
 
+    ## Workflow
+
+    At any point run `cbt help` to get a list of all available commands.
+
+    ### Containersation
+
+    If you are developing using `docker` or `podman`, use the following workflow:
+
+    1. Build the image targeting the `builder` stage:
+       ```sh
+       $ docker build --target builder -t @PROJECT_NAME-dev-platform
+       ```
+    2. Mount the project directory into the container:
+       ```sh
+       # On *nix platforms
+       $ docker run -it --rm -v $(pwd):/@PROJECT_NAME @PROJECT_NAME-dev-platform bash
+
+       # On Windows (via Command Prompt)
+       > docker run -it --rm -v %cd%:/@PROJECT_NAME @PROJECT_NAME-dev-platform bash
+       
+       # On Windows (via PowerShell)
+       > docker run -it --rm -v ${PWD}:/@PROJECT_NAME @PROJECT_NAME-dev-platform bash
+       
+       # On Windows (via Git Bash)
+       > docker run -it --rm -v "/$(pwd):/@PROJECT_NAME" @PROJECT_NAME-dev-platform bash
+       ```
+    3. Whatever changes you make to the source code, will now be reflected in the container, allowing you to compile and test from within the container itself
+    @DOCKER_APPLICATION_WORKFLOW_CONTINUATION
     ## Code of contribution
 
     Discuss rules of engagement here
+    )";
+
+    const string DOCKER_APPLICATION_WORKFLOW_CONTINUATION = R"(
+    4. Ship the final (lean) image targeting the `deployment` stage:
+       ```sh
+       $ docker build --target deployment -t @PROJECT_NAME .
+       ```
+    5. Run the image:
+       ```sh
+       $ docker run -it @PROJECT_NAME
+       ```
     )";
 
     const string CBT_TOOLS_ENV_MANAGER_HPP = R"(
