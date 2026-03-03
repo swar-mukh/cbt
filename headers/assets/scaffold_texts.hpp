@@ -22,9 +22,48 @@ namespace assets::scaffold_texts {
 
     Discuss your setup here
 
+    ## Workflow
+
+    At any point run `cbt help` to get a list of all available commands.
+
+    ### Containersation
+
+    If you are developing using `docker` or `podman`, use the following workflow:
+
+    1. Build the image targeting the `builder` stage:
+       ```sh
+       $ docker build --target builder -t @PROJECT_NAME-dev-platform .
+       ```
+    2. Mount the project directory into the container:
+       ```sh
+       # On *nix platforms
+       $ docker run -it --rm -v $(pwd):/@PROJECT_NAME @PROJECT_NAME-dev-platform bash
+
+       # On Windows (via Command Prompt)
+       > docker run -it --rm -v %cd%:/@PROJECT_NAME @PROJECT_NAME-dev-platform bash
+       
+       # On Windows (via PowerShell)
+       > docker run -it --rm -v ${PWD}:/@PROJECT_NAME @PROJECT_NAME-dev-platform bash
+       
+       # On Windows (via Git Bash)
+       > docker run -it --rm -v "/$(pwd):/@PROJECT_NAME" @PROJECT_NAME-dev-platform bash
+       ```
+    3. Whatever changes you make to the source code, will now be reflected in the container, allowing you to compile and test from within the container itself
+    @DOCKER_APPLICATION_WORKFLOW_CONTINUATION
     ## Code of contribution
 
     Discuss rules of engagement here
+    )";
+
+    const string DOCKER_APPLICATION_WORKFLOW_CONTINUATION = R"(
+    4. Ship the final (lean) image targeting the `deployment` stage:
+       ```sh
+       $ docker build --target deployment -t @PROJECT_NAME .
+       ```
+    5. Run the image:
+       ```sh
+       $ docker run -it @PROJECT_NAME
+       ```
     )";
 
     const string CBT_TOOLS_ENV_MANAGER_HPP = R"(
@@ -664,6 +703,42 @@ namespace assets::scaffold_texts {
         - [ ] Get necessary interface descriptions
         - [ ] Perform R/W
         - [ ] Subject code to thorough testing
+    )";
+
+    const string DOCKERIGNORE = R"(
+    .git
+    .github
+    .gitignore
+    .internals
+    build
+    dependencies
+    .DS_Store
+    )";
+
+    const string DOCKERFILE = R"(
+    FROM alpine:3.18 AS builder
+    RUN apk add --no-cache bash g++ musl-dev curl tar
+    SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+    WORKDIR /internal
+    RUN curl -L https://github.com/swar-mukh/cbt/archive/refs/tags/cbt-2026.02.06.tar.gz | tar xz --strip-components=1 \
+        && ./script.sh init compile build \
+        && mkdir /opt/cbt \
+        && mv build/cbt /opt/cbt/.
+    ENV PATH="/opt/cbt:${PATH}"
+    WORKDIR /@PROJECT_NAME
+    COPY . .
+    RUN cbt compile-project && cbt build-project
+    )";
+
+    const string DOCKERFILE_WITH_DEPLOYMENT = R"(
+    FROM alpine:3.18 AS deployment
+    RUN apk add --no-cache libstdc++ libgcc
+    WORKDIR /app
+    RUN mkdir environments
+    COPY --from=builder /@PROJECT_NAME/environments/.env.template /@PROJECT_NAME/environments/production.env environments/
+    COPY --from=builder /@PROJECT_NAME/build/@PROJECT_NAME /usr/local/bin/@PROJECT_NAME
+    ENV env=production
+    ENTRYPOINT ["@PROJECT_NAME"]
     )";
 }
 

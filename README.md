@@ -78,9 +78,7 @@ help                            - Shows this help message
 
 Ready-made binaries for Ubuntu and Windows are available through [Releases](https://github.com/swar-mukh/cbt/releases).
 
-Also ensure that `GNU` toolchain (minimum `9.4.0` required), `curl` and `tar` are available on your system.
-
-For other platforms, or for building from source, read on.
+For development through containerisation technologies (e.g. `docker` or `podman`), head over to the [Containerisation](#containerisation) section. For other platforms, or for building from source, read on.
 
 ### Notes
 
@@ -114,6 +112,7 @@ For other platforms, or for building from source, read on.
   # On Windows
   > .\script.bat link
   ```
+6. Run `cbt help` or `cbt info` to ensure that it is available globally.
 
 **Note:** During the `build` stage through `script.sh`, pay attention to the following:
 
@@ -122,6 +121,38 @@ For other platforms, or for building from source, read on.
 3. If `uname` is not available on your platform, replace `$(uname -s)` with `"$OSTYPE"` in line 39, and update the options accordingly.
 
 In any of the above case(s), the format for the file-name containing the checksum is `<platform>.sha256.checksum.txt`.
+
+### Containerisation
+
+If you are developing using `docker` or `podman`, use the following workflow:
+
+1. Build the image targeting the `builder` stage:
+  ```sh
+  $ docker build --target builder -t cbt-dev-platform .
+  ```
+2. Mount the project directory into the container:
+  ```sh
+  # On *nix platforms
+  $ docker run -it --rm -v $(pwd):/cbt cbt-dev-platform bash
+
+  # On Windows (via Command Prompt)
+  > docker run -it --rm -v %cd%:/cbt cbt-dev-platform bash
+  
+  # On Windows (via PowerShell)
+  > docker run -it --rm -v ${PWD}:/cbt cbt-dev-platform bash
+  
+  # On Windows (via Git Bash)
+  > docker run -it --rm -v "/$(pwd):/cbt" cbt-dev-platform bash
+  ```
+3. Whatever changes you make to the source code, will now be reflected in the container, allowing you to compile and test from within the container itself.
+4. Ship the final (lean) image targeting the `deployment` stage:
+  ```sh
+  $ docker build --target deployment -t cbt .
+  ```
+5. Run the image:
+  ```sh
+  $ docker run -it cbt
+  ```
 
 ## Roadmap
 
@@ -143,3 +174,4 @@ In any of the above case(s), the format for the file-name containing the checksu
 | 12 | Optimise compilation and building by inspecting dependency graph | `✅ Complete` | _<ul><li>Should we go all in with C++ modules instead? (**Update: Postponed for now**)</li><li>How to mix-n-match traditional HPP/CPP files with module files in the same project? (**Update: Postponed for now**)</li></ul>_ |
 | 13 | Support scaffold for daemons (*nix) and services (Windows)  | `💤 TBD` | _Refer to [this](https://github.com/swar-mukh/cbt/discussions/2) discussion_|
 | 14 | Add support for `lint`ing  | `💤 TBD` | _`cppcheck` seems to be a good fit for integration_ |
+| 15 | Add support for working with containerisation technologies  | `✅ Complete` ||

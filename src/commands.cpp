@@ -1,5 +1,6 @@
 #include "commands.hpp"
 
+#include <algorithm>
 #include <cstdlib>
 #include <filesystem>
 #include <iostream>
@@ -69,6 +70,8 @@ namespace {
             create_directory(project_name, "src/cbt_tools");
             create_file(project, "src/cbt_tools/env_manager.cpp");
             create_file(project, "src/cbt_tools/utils.cpp");
+            create_file(project, ".dockerignore");
+            create_file(project, "Dockerfile");
 
             if (project_type == ProjectType::APPLICATION) {
                 create_file(project, "src/main.cpp");

@@ -36,6 +36,7 @@ namespace {
     const std::regex RELATIVE_SRC_R{ "@RELATIVE_SRC_FILE_NAME" };
     const std::regex START_SCOPE_R{ "@START_SCOPE" };
     const std::regex END_SCOPE_R{ "@END_SCOPE" };
+    const std::regex DOCKER_APPLICATION_WORKFLOW_CONTINUATION_R{ "@DOCKER_APPLICATION_WORKFLOW_CONTINUATION" };
 
     string remove_raw_literal_indentations(const string& raw_literal) {
         string line, final_string;
@@ -165,9 +166,29 @@ namespace {
             const string text{ remove_raw_literal_indentations(README_MD) };
             const string with_project_name = std::regex_replace(text, PROJECT_NAME_R, project.name);
 
-            return with_project_name;
+            if (project.project_type == workspace::project_config::ProjectType::APPLICATION) {
+                const string deployment_text{ remove_raw_literal_indentations(DOCKER_APPLICATION_WORKFLOW_CONTINUATION) };
+
+                const string with_deployment_text = std::regex_replace(with_project_name, DOCKER_APPLICATION_WORKFLOW_CONTINUATION_R, deployment_text);
+                
+                return std::regex_replace(with_deployment_text, PROJECT_NAME_R, project.name);
+            } else {
+                return std::regex_replace(with_project_name, DOCKER_APPLICATION_WORKFLOW_CONTINUATION_R, "");
+            }
         } else if (file_name.compare("project.cfg") == 0) {
             return workspace::project_config::convert_model_to_cfg(project);
+        } else if (file_name.compare(".dockerignore") == 0) {
+            return remove_raw_literal_indentations(DOCKERIGNORE);
+        } else if (file_name.compare("Dockerfile") == 0) {
+            const string text{ remove_raw_literal_indentations(DOCKERFILE) };
+
+            if (project.project_type == workspace::project_config::ProjectType::APPLICATION) {
+                const string deployment_text{ remove_raw_literal_indentations(DOCKERFILE_WITH_DEPLOYMENT) };
+
+                return std::regex_replace(text + "\n" + deployment_text, PROJECT_NAME_R, project.name);
+            } else {
+                return std::regex_replace(text, PROJECT_NAME_R, project.name);
+            }
         } else {
             return "";
         }
