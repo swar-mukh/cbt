@@ -707,9 +707,12 @@ namespace assets::scaffold_texts {
 
     const string DOCKERIGNORE = R"(
     .git
+    .github
+    .gitignore
     .internals
     build
     dependencies
+    .DS_Store
     )";
 
     const string DOCKERFILE = R"(
