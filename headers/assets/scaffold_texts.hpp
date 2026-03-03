@@ -675,7 +675,7 @@ namespace assets::scaffold_texts {
 
     const string DOCKERFILE = R"(
     FROM alpine:3.18 AS builder
-    RUN apl add --no-cache bash g++ musl-dev curl tar
+    RUN apk add --no-cache bash g++ musl-dev curl tar
     SHELL ["/bin/bash", "-o", "pipefail", "-c"]
     WORKDIR /internal
     RUN curl -L https://github.com/swar-mukh/cbt/archive/refs/tags/cbt-2026.02.06.tar.gz | tar xz --strip-components=1 \
