@@ -32,7 +32,7 @@ namespace assets::scaffold_texts {
 
     1. Build the image targeting the `builder` stage:
        ```sh
-       $ docker build --target builder -t @PROJECT_NAME-dev-platform
+       $ docker build --target builder -t @PROJECT_NAME-dev-platform .
        ```
     2. Mount the project directory into the container:
        ```sh

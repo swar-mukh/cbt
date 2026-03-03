@@ -128,7 +128,7 @@ If you are developing using `docker` or `podman`, use the following workflow:
 
 1. Build the image targeting the `builder` stage:
   ```sh
-  $ docker build --target builder -t cbt-dev-platform
+  $ docker build --target builder -t cbt-dev-platform .
   ```
 2. Mount the project directory into the container:
   ```sh
