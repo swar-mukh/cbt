@@ -42,8 +42,8 @@ namespace workspace::project_config {
             .version{ workspace::util::get_ISO_date() },
             .project_type{ project_type },
             .authors{
-                { .name{ "Sample LName" }, .email_id{ "sample_lname@domain.tld" } },
-                { .name{ "Another MName LName" }, .email_id{ "another_mname_lname@domain.tld" } }
+                { "sample_lname@domain.tld", "Sample LName" },
+                { "another_mname_lname@domain.tld", "Another MName LName" }
             },
             .platforms{ Platform::BSD, Platform::LINUX, Platform::MACOS, Platform::UNIX, Platform::WINDOWS },
             .config{
@@ -162,7 +162,12 @@ namespace workspace::project_config {
                     project.project_type = string_to_project_type(value);
                 } else if (key.compare("authors[]") == 0) {
                     const auto [name, email_id] = workspace::util::get_key_value_pair_from_line(value, AUTHOR_DELIMITER);
-                    project.authors.insert(Author{ .name{ name }, .email_id{ email_id } });
+                    
+                    if (project.authors.find(email_id) != project.authors.end()) {
+                        throw std::runtime_error("Multiple authors cannot have the same E-mail ID (while resolving '" + email_id + "' for '" + name + "')");
+                    } else {
+                        project.authors[email_id] = name;
+                    }
                 } else if (key.compare("platforms[]") == 0) {
                     project.platforms.insert(string_to_platform(value));
                 } else if (key.compare("config{cpp_standard}") == 0) {
@@ -203,8 +208,8 @@ namespace workspace::project_config {
         string authors_text{ std::string("; `authors` is always an array even if there is only one entity. At least one")
             + "\n; author is required." };
 
-        for (const Author &author: project.authors) {
-            authors_text += std::string("\nauthors[]=") + author.name + AUTHOR_DELIMITER + author.email_id;
+        for (const auto& [email_id, name]: project.authors) {
+            authors_text += std::string("\nauthors[]=") + name + AUTHOR_DELIMITER + email_id;
         }
 
         string platforms_text{ std::string("; `platforms` is always an array even if there is only one supported platform,")
