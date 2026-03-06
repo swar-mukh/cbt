@@ -51,8 +51,10 @@ namespace {
     Project fetch(const SurfaceDependency& dependency) {
         const std::string versioned_name{ dependency_to_string(dependency) };
 
-        const std::string downloaded_file{ ".internals/tmp/" + versioned_name };
-        const std::string extracted_directory{ downloaded_file + "__extracted" };
+        const std::string downloaded_file_prefix{ ".internals/tmp/" + versioned_name };
+
+        const std::string downloaded_file{ downloaded_file_prefix + ".tar.gz" };
+        const std::string extracted_directory{ downloaded_file_prefix + "__extracted" };
         const std::string dependency_path{ "dependencies/" + versioned_name };
 
         const std::string download_command{ "curl -L " + dependency.url + " -o " + downloaded_file };
