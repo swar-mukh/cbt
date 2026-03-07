@@ -32,7 +32,7 @@ namespace workspace::util {
     string trim(const string& text) {
         string sequence{ text };
 
-        auto first_not_space = std::find_if_not(
+        const auto first_not_space = std::find_if_not(
             sequence.begin(),
             sequence.end(),
             [](unsigned char ch){ return std::isspace(ch); }
@@ -40,7 +40,7 @@ namespace workspace::util {
 
         sequence.erase(sequence.begin(), first_not_space);
 
-        auto last_not_space = std::find_if_not(
+        const auto last_not_space = std::find_if_not(
             sequence.rbegin(),
             sequence.rend(),
             [](unsigned char ch){ return std::isspace(ch); }
