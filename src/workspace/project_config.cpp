@@ -180,12 +180,14 @@ namespace workspace::project_config {
                 
                 const auto [key, value] = workspace::util::get_key_value_pair_from_line(line, DELIMITER);
 
+                const string ERROR_LOCATION{ "(in 'project.cfg' at line " + std::to_string(line_number) + ")" };
+
                 if (key.empty()) {
-                    throw std::runtime_error("Invalid empty attribute (in 'project.cfg' at line " + std::to_string(line_number) + ")");
+                    throw std::runtime_error("Invalid empty attribute " + ERROR_LOCATION);
                 } else if (!is_valid_attribute(key)) {
-                    throw std::runtime_error("Unrecognised attribute '" + key + "' (in 'project.cfg' at line " + std::to_string(line_number) + ")");
+                    throw std::runtime_error("Unrecognised attribute '" + key + "' " + ERROR_LOCATION);
                 } else if (value.empty()) {
-                    throw std::runtime_error("Missing entry '" + key + "' (in 'project.cfg' at line " + std::to_string(line_number) + ")");
+                    throw std::runtime_error("Missing entry '" + key + "' " + ERROR_LOCATION);
                 }
             
                 if (key.compare("name") == 0) {
@@ -206,7 +208,7 @@ namespace workspace::project_config {
                     const auto [name, email_id] = workspace::util::get_key_value_pair_from_line(value, AUTHOR_DELIMITER);
                     
                     if (project.authors.contains(email_id)) {
-                        throw std::runtime_error("Multiple authors cannot have the same E-mail ID (while resolving '" + email_id + "') (in 'project.cfg' at line " + std::to_string(line_number) + ")");
+                        throw std::runtime_error("Multiple authors cannot have the same E-mail ID (while resolving '" + email_id + "') " + ERROR_LOCATION);
                     } else {
                         project.authors[email_id] = name;
                     }
@@ -216,11 +218,11 @@ namespace workspace::project_config {
                     const std::string cpp_standard{ workspace::util::change_case(value, workspace::util::TextCase::LOWER_CASE) };
                     
                     if(UNSUPPORTED_CPP_STANDARDS.contains(cpp_standard)) {
-                        throw std::runtime_error("Minimum supported C++ standard by cbt is 'C++17' (in 'project.cfg' at line " + std::to_string(line_number) + ")");
+                        throw std::runtime_error("Minimum supported C++ standard by cbt is 'C++17' " + ERROR_LOCATION);
                     } else if (SUPPORTED_CPP_STANDARDS.contains(cpp_standard)) {
                         project.config.cpp_standard = cpp_standard;
                     } else {
-                        throw std::runtime_error("Invalid C++ standard '" + value + "' (in 'project.cfg' at line " + std::to_string(line_number) + ")");
+                        throw std::runtime_error("Invalid C++ standard '" + value + "' " + ERROR_LOCATION);
                     }
                 } else if (key.compare("config{safety_flags}") == 0) {
                     project.config.safety_flags = value;
