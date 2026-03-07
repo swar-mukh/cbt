@@ -7,6 +7,7 @@
 #include <functional>
 #include <iostream>
 #include <regex>
+#include <stdexcept>
 #include <string>
 #include <tuple>
 
@@ -26,6 +27,28 @@ namespace workspace::util {
         );
 
         return text;
+    }
+
+    string trim(const string& text) {
+        string sequence{ text };
+
+        const auto first_not_space = std::find_if_not(
+            sequence.begin(),
+            sequence.end(),
+            [](unsigned char ch){ return std::isspace(ch); }
+        );
+
+        sequence.erase(sequence.begin(), first_not_space);
+
+        const auto last_not_space = std::find_if_not(
+            sequence.rbegin(),
+            sequence.rend(),
+            [](unsigned char ch){ return std::isspace(ch); }
+        ).base();
+
+        sequence.erase(last_not_space, sequence.end()); 
+
+        return sequence;
     }
 
     std::tuple<bool, string> does_name_contain_special_characters(const string& text, const bool is_it_for_project) {
@@ -137,10 +160,14 @@ namespace workspace::util {
     }
 
     std::tuple<string, string> get_key_value_pair_from_line(const string& line, const string& delimiter) {
-        const int delimiter_position = line.find(delimiter);
+        const size_t delimiter_position = line.find(delimiter);
 
-        const string key = line.substr(0, delimiter_position);
-        const string value = line.substr(delimiter_position + 1);
+        if (delimiter_position == string::npos) {
+            return std::make_tuple(line, "");
+        }
+
+        const string key = trim(line.substr(0, delimiter_position));
+        const string value = trim(line.substr(delimiter_position + 1));
 
         return std::make_tuple(key, value);
     }

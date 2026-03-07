@@ -1,6 +1,7 @@
 #ifndef WORKSPACE_PROJECT_CONFIG
 #define WORKSPACE_PROJECT_CONFIG
 
+#include <map>
 #include <set>
 #include <string>
 
@@ -18,15 +19,6 @@ namespace workspace::project_config {
         MACOS,
         UNIX,
         WINDOWS
-    };
-
-    struct Author {
-        string name;
-        string email_id;
-        
-        bool operator<(const Author &another_author) const {
-            return this->name < another_author.name;
-        }
     };
 
     struct Config {
@@ -72,7 +64,7 @@ namespace workspace::project_config {
 
         ProjectType project_type;
 
-        std::set<Author> authors;
+        std::map<string, string> authors;
         std::set<Platform> platforms;
         Config config;
 

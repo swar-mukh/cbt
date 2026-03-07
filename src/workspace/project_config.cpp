@@ -3,6 +3,7 @@
 #include <filesystem>
 #include <fstream>
 #include <stdexcept>
+#include <set>
 #include <string>
 
 #include "workspace/scaffold.hpp"
@@ -11,17 +12,50 @@
 namespace {
     using namespace workspace::project_config;
 
-    void validate_project_configurations(const Project& project) {
-        if (project.name.length() == 0) {
-            throw std::runtime_error("Project name in 'project.cfg' cannot be empty");
+    const std::set<std::string> VALID_ATTRIBUTES{
+        "name",
+        "description",
+        "version",
+        "type",
+        "authors[]",
+        "platforms[]",
+        "config{cpp_standard}",
+        "config{safety_flags}",
+        "config{compile_time_flags}",
+        "config{build_flags}",
+        "config{test_flags}",
+        "dependencies[]"
+    };
+    const std::set<std::string> UNSUPPORTED_CPP_STANDARDS{ "c++98", "c++03", "c++11", "c++14" };
+    const std::set<std::string> SUPPORTED_CPP_STANDARDS{ "c++17", "c++20", "c++23" };
+
+    bool is_valid_attribute(const std::string& attribute) {
+        return VALID_ATTRIBUTES.contains(attribute);
+    }
+
+    void validate_required_fields(const Project& project) {
+        if (project.name.empty()) {
+            throw std::runtime_error("Missing entry 'name' (in 'project.cfg')");
+        }
+
+        if (project.description.empty()) {
+            throw std::runtime_error("Missing entry 'description' (in 'project.cfg')");
+        }
+
+        if (project.version.empty()) {
+            throw std::runtime_error("Missing entry 'version' (in 'project.cfg')");
         }
 
         if (project.authors.size() == 0) {
-            throw std::runtime_error("At least one author is required in 'project.cfg'");
+            throw std::runtime_error("At least one author is required (in 'project.cfg')");
         }
 
         if (project.platforms.size() == 0) {
-            throw std::runtime_error("At least one platform is required in 'project.cfg'");
+            throw std::runtime_error("At least one platform is required (in 'project.cfg')");
+        }
+
+        if (project.config.cpp_standard.empty()) {
+            throw std::runtime_error("Missing entry 'config{cpp_standard}' (in 'project.cfg')");
         }
     }
 }
@@ -42,12 +76,12 @@ namespace workspace::project_config {
             .version{ workspace::util::get_ISO_date() },
             .project_type{ project_type },
             .authors{
-                { .name{ "Sample LName" }, .email_id{ "sample_lname@domain.tld" } },
-                { .name{ "Another MName LName" }, .email_id{ "another_mname_lname@domain.tld" } }
+                { "sample_lname@domain.tld", "Sample LName" },
+                { "another_mname_lname@domain.tld", "Another MName LName" }
             },
             .platforms{ Platform::BSD, Platform::LINUX, Platform::MACOS, Platform::UNIX, Platform::WINDOWS },
             .config{
-                .cpp_standard{ "c++2a" },
+                .cpp_standard{ "c++20" },
                 .safety_flags{ "-Wall -Wextra -pedantic" },
                 .compile_time_flags{ "-Os -s" },
                 .build_flags{ "-O3 -s" },
@@ -145,6 +179,16 @@ namespace workspace::project_config {
                     : raw_line;
                 
                 const auto [key, value] = workspace::util::get_key_value_pair_from_line(line, DELIMITER);
+
+                const string ERROR_LOCATION{ "(in 'project.cfg' at line " + std::to_string(line_number) + ")" };
+
+                if (key.empty()) {
+                    throw std::runtime_error("Invalid empty attribute " + ERROR_LOCATION);
+                } else if (!is_valid_attribute(key)) {
+                    throw std::runtime_error("Unrecognised attribute '" + key + "' " + ERROR_LOCATION);
+                } else if (value.empty()) {
+                    throw std::runtime_error("Missing entry '" + key + "' " + ERROR_LOCATION);
+                }
             
                 if (key.compare("name") == 0) {
                     const auto [is_valid, reason_if_any] = workspace::util::is_valid_project_name(value);
@@ -162,11 +206,24 @@ namespace workspace::project_config {
                     project.project_type = string_to_project_type(value);
                 } else if (key.compare("authors[]") == 0) {
                     const auto [name, email_id] = workspace::util::get_key_value_pair_from_line(value, AUTHOR_DELIMITER);
-                    project.authors.insert(Author{ .name{ name }, .email_id{ email_id } });
+                    
+                    if (project.authors.contains(email_id)) {
+                        throw std::runtime_error("Multiple authors cannot have the same E-mail ID (while resolving '" + email_id + "') " + ERROR_LOCATION);
+                    } else {
+                        project.authors[email_id] = name;
+                    }
                 } else if (key.compare("platforms[]") == 0) {
                     project.platforms.insert(string_to_platform(value));
                 } else if (key.compare("config{cpp_standard}") == 0) {
-                    project.config.cpp_standard = value;
+                    const std::string cpp_standard{ workspace::util::change_case(value, workspace::util::TextCase::LOWER_CASE) };
+                    
+                    if(UNSUPPORTED_CPP_STANDARDS.contains(cpp_standard)) {
+                        throw std::runtime_error("Minimum supported C++ standard by cbt is 'C++17' " + ERROR_LOCATION);
+                    } else if (SUPPORTED_CPP_STANDARDS.contains(cpp_standard)) {
+                        project.config.cpp_standard = cpp_standard;
+                    } else {
+                        throw std::runtime_error("Invalid C++ standard '" + value + "' " + ERROR_LOCATION);
+                    }
                 } else if (key.compare("config{safety_flags}") == 0) {
                     project.config.safety_flags = value;
                 } else if (key.compare("config{compile_time_flags}") == 0) {
@@ -182,7 +239,7 @@ namespace workspace::project_config {
                 }
             }
 
-            validate_project_configurations(project);
+            validate_required_fields(project);
 
             return project;
         } else {
@@ -203,8 +260,8 @@ namespace workspace::project_config {
         string authors_text{ std::string("; `authors` is always an array even if there is only one entity. At least one")
             + "\n; author is required." };
 
-        for (const Author &author: project.authors) {
-            authors_text += std::string("\nauthors[]=") + author.name + AUTHOR_DELIMITER + author.email_id;
+        for (const auto& [email_id, name]: project.authors) {
+            authors_text += std::string("\nauthors[]=") + name + AUTHOR_DELIMITER + email_id;
         }
 
         string platforms_text{ std::string("; `platforms` is always an array even if there is only one supported platform,")
