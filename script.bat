@@ -1,7 +1,7 @@
 @echo off
 setlocal
 
-set CPP_STANDARD=c++2a
+set CPP_STANDARD=c++20
 set SAFETY_FLAGS=-Wall -Wextra -pedantic
 
 set HEADERS_DIR=headers

@@ -81,7 +81,7 @@ namespace workspace::project_config {
             },
             .platforms{ Platform::BSD, Platform::LINUX, Platform::MACOS, Platform::UNIX, Platform::WINDOWS },
             .config{
-                .cpp_standard{ "c++2a" },
+                .cpp_standard{ "c++20" },
                 .safety_flags{ "-Wall -Wextra -pedantic" },
                 .compile_time_flags{ "-Os -s" },
                 .build_flags{ "-O3 -s" },

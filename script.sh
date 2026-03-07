@@ -1,4 +1,4 @@
-readonly CPP_STANDARD="c++2a"
+readonly CPP_STANDARD="c++20"
 readonly SAFETY_FLAGS="-Wall -Wextra -pedantic"
 
 readonly HEADERS_DIR="headers"

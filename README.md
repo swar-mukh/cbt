@@ -84,7 +84,7 @@ For development through containerisation technologies (e.g. `docker` or `podman`
 
 1. `cbt` is developed in `WSL2 Ubuntu 20.04` and `Windows 11`.
 2. There is a hard dependency on `g++` as the underlying tool.
-3. There is a hard dependency on `C++2a` standard. Ensure your `GNU` toolchain is at least `9.4.0`.
+3. There is a hard dependency on `C++20` standard. Ensure your `GNU` toolchain is at least `9.4.0`.
 4. `GNU` toolchain used for development is `11.4.0`.
 5. If on Windows, MinGW can be downloaded from [WinLibs](https://winlibs.com/).
 6. On a Mac, `g++` is actually a tiny wrapper over `clang`. This shouldn't be a problem as such, but if you want to develop exclusively through `g++`, then download the binary (through Homebrew or MacPorts, etc.) and alias `g++` to the appropriate downloaded binary, i.e. `alias g++=g++-<version>`.

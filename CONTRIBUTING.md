@@ -37,7 +37,7 @@ Here are few ways you can contribute:
 
 ***Note:** This section applicable only for code contributions. (To be continuously updated)*
 
-1. Use idiomatic C++ as much as possible. `C++2a` is the base standard.
+1. Use idiomatic C++ as much as possible. `C++20` is the base standard.
 2. Use `.hpp` and `.cpp` extensions for header and implementation files, respectively. Usage of any other extension(s) will **not** be entertained.
 3. A header file *may not* have a corresponding implementation file; but an implementation file **must** have a corresponding header file.
 4. No private attributes/functionalities/implementations should be present in header files. All such private entities **must** be in un-named `namespace`s in the corresponding implementation file.
