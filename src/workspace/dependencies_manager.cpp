@@ -76,6 +76,8 @@ namespace {
 
                 if (project.name != dependency.name || project.version != dependency.version) {
                     error = "Project name/version mismatch with that provided in dependency declaration (while resolving '" + versioned_name + "')";
+                } else if (project.project_type != workspace::project_config::ProjectType::LIBRARY) {
+                    error = "Project is not a library (while resolving '" + versioned_name + "')";
                 } else {
                     fs::rename(extracted_directory, dependency_path);
                 }
