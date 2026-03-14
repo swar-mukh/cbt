@@ -102,6 +102,11 @@ namespace {
             return remove_raw_literal_indentations(CBT_TOOLS_ENV_MANAGER_CPP);
         } else if (file_name.compare("src/cbt_tools/utils.cpp") == 0) {
             return remove_raw_literal_indentations(CBT_TOOLS_UTILS_CPP);
+        } else if (file_name.ends_with(".h")) {
+            const string text{ remove_raw_literal_indentations(SAMPLE_H) };
+            const auto [_1, guard_name, _2] = workspace::util::get_qualified_names(file_name, true);
+            
+            return use_scoped_guard_if_applicable(project, text, guard_name);
         } else if (file_name.ends_with(".hpp")) {
             const string text{ remove_raw_literal_indentations(SAMPLE_HPP) };
             const auto [stemmed_name, guard_name, namespace_name] = workspace::util::get_qualified_names(file_name);
@@ -115,16 +120,18 @@ namespace {
         } else if (file_name.compare("src/main.cpp") == 0) {
             return remove_raw_literal_indentations(MAIN_CPP);
         } else if (file_name.starts_with("tests/unit_tests/")) {
-            const string text{ remove_raw_literal_indentations(SAMPLE_TEST_CPP) };
-            const auto [stemmed_name, _, namespace_name] = workspace::util::get_qualified_names(file_name);
+            const bool requires_c_linkage{ file_name.starts_with("tests/unit_tests/c/") };
 
-            const string with_import = std::regex_replace(text, IMPORT_R, stemmed_name + ".cpp");
+            const string text{ remove_raw_literal_indentations(requires_c_linkage ? SAMPLE_TEST_C : SAMPLE_TEST_CPP) };
+            const auto [stemmed_name, _, namespace_name] = workspace::util::get_qualified_names(file_name, requires_c_linkage);
+
+            const string with_import = std::regex_replace(text, IMPORT_R, stemmed_name + (requires_c_linkage ? "" : ".cpp"));
             
             #if defined(_WIN32) || defined(_WIN64)
             const string relative_path{ 
                 std::regex_replace(
                     fs::relative(
-                        "./src/" + stemmed_name + ".cpp",
+                        "./src/" + stemmed_name + (requires_c_linkage ? "" : ".cpp"),
                         "./" + fs::path(file_name).parent_path().string()
                     ).string(),
                     std::regex("\\\\"),
@@ -133,7 +140,7 @@ namespace {
             };
             #else
             const string relative_path{ fs::relative(
-                    "./src/" + stemmed_name + ".cpp",
+                    "./src/" + stemmed_name + (requires_c_linkage ? "" : ".cpp"),
                     "./" + fs::path(file_name).parent_path().string()
                 ).string()
             };
@@ -152,6 +159,11 @@ namespace {
             const string final_text = std::regex_replace(with_relative_import, NAMESPACE_R, scoped_namespace_name);
             
             return final_text;
+        } else if (file_name.ends_with(".c")) {
+            const string text{ remove_raw_literal_indentations(SAMPLE_C) };
+            const auto [stemmed_name, _1, _2] = workspace::util::get_qualified_names(file_name, true);
+            
+            return std::regex_replace(text, IMPORT_R, stemmed_name + ".h");
         } else if (file_name.ends_with(".cpp")) {
             const string text{ remove_raw_literal_indentations(SAMPLE_CPP) };
             const auto [stemmed_name, _, namespace_name] = workspace::util::get_qualified_names(file_name);

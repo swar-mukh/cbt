@@ -96,37 +96,55 @@ namespace workspace::util {
         }
     }
     
-    std::tuple<bool, string> is_valid_file_name(const string& file_name) {
+    std::tuple<bool, string> is_valid_file_name(const string& file_name, const bool requires_c_linkage) {
         const string lowercased_file_name = change_case(file_name, TextCase::LOWER_CASE);
 
-        if (lowercased_file_name.starts_with("headers/") && lowercased_file_name.length() == string("headers/").length()) {
-            return std::make_tuple(false, "Full file name not provided");
+        if (lowercased_file_name.starts_with("/") || lowercased_file_name.ends_with("/")) {
+            return std::make_tuple(false, "File name cannot start or end with a slash, i.e. '/'");
+        } else if (lowercased_file_name.ends_with(".c") 
+            || lowercased_file_name.ends_with(".h") 
+            || lowercased_file_name.ends_with(".cpp") 
+            || lowercased_file_name.ends_with(".hpp")
+        ) {
+            return std::make_tuple(false, "File name cannot end with any extension, i.e. '.cpp' or '.c' or '.hpp' or '.h'");
+        } else if (lowercased_file_name.starts_with("headers/")) {
+            if (lowercased_file_name.length() == string("headers/").length()) {
+                return std::make_tuple(false, "Full file name not provided");
+            } else if (requires_c_linkage) {
+                if (lowercased_file_name.starts_with("headers/c/") && lowercased_file_name.length() == string("headers/c/").length()) {
+                    return std::make_tuple(false, "Full file name not provided");
+                } else if (!lowercased_file_name.starts_with("headers/c/")) {
+                    return std::make_tuple(false, "A header-only file with C linkage must start with 'headers/c/'");
+                }
+            } else {
+                if (lowercased_file_name.starts_with("headers/c/")) {
+                    return std::make_tuple(false, "'c' directory reserved only for files requiring C linkage'");
+                }
+            }
         } else if (lowercased_file_name.starts_with("src/") || lowercased_file_name.starts_with("tests/")  || lowercased_file_name.starts_with("tests/unit_tests")) {
             return std::make_tuple(false, "File name cannot start with 'src/' or 'tests/' or 'tests/unit_tests/'");
-        } else if (lowercased_file_name.starts_with("/") || lowercased_file_name.ends_with("/")) {
-            return std::make_tuple(false, "File name cannot start or end with a slash, i.e. '/'");
-        } else if (lowercased_file_name.ends_with(".cpp") || lowercased_file_name.ends_with(".hpp")) {
-            return std::make_tuple(false, "File name cannot end with any extension, i.e. '.cpp' or '.hpp'");
-        } else if (lowercased_file_name.ends_with("main")) {
-            return std::make_tuple(false, "File cannot be named as 'main'");
-        } else {
-            const auto [is_invalid, reason_if_any] = does_name_contain_special_characters(lowercased_file_name, false);
+        } else if (lowercased_file_name.starts_with("c/")) {
+            return std::make_tuple(false, requires_c_linkage ? "File name cannot start with 'c/'" : "'c' directory reserved only for files requiring C linkage'");
+        } else if (lowercased_file_name.ends_with("headers") || lowercased_file_name.ends_with("headers") || lowercased_file_name.ends_with("main")) {
+            return std::make_tuple(false, "File cannot be named as 'header' or 'headers' or 'main'");
+        }
+        
+        const auto [is_invalid, reason_if_any] = does_name_contain_special_characters(lowercased_file_name, false);
 
-            if (is_invalid) {
-                return std::make_tuple(false, reason_if_any);
-            } else {
-                return std::make_tuple(true, "");
-            }
+        if (is_invalid) {
+            return std::make_tuple(false, reason_if_any);
+        } else {
+            return std::make_tuple(true, "");
         }
     }
 
-    std::tuple<string, string, string> get_qualified_names(const string& full_file_path) {
+    std::tuple<string, string, string> get_qualified_names(const string& full_file_path, const bool requires_c_linkage) {
         string stemmed_name{""};
 
         const int literal_length_of_headers = string("headers/").length();
         const int literal_length_of_src = string("src/").length();
         const int literal_length_of_tests = string("tests/unit_tests/").length();
-        const int literal_length_of_extension = string(".cpp").length();
+        const int literal_length_of_extension = string(requires_c_linkage ? ".c" : ".cpp").length();
 
         if (full_file_path.starts_with("headers/")) {
             stemmed_name = full_file_path.substr(literal_length_of_headers, full_file_path.length() - (literal_length_of_headers + literal_length_of_extension));

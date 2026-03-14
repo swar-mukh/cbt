@@ -60,6 +60,8 @@ namespace {
             create_file(project, "environments/production.env");
             create_file(project, "environments/test.env");
             create_directory(project_name, "headers");
+            create_directory(project_name, "headers/c");
+            create_file(project, "headers/c/linkage_demo.h");
             create_directory(project_name, "headers/cbt_tools");
             create_file(project, "headers/cbt_tools/env_manager.hpp");
             create_file(project, "headers/cbt_tools/test_harness.hpp");
@@ -67,6 +69,8 @@ namespace {
             create_file(project, "headers/forward_declarations.hpp");
             create_file(project, "headers/sample.hpp");
             create_directory(project_name, "src");
+            create_directory(project_name, "src/c");
+            create_file(project, "src/c/linkage_demo.c");
             create_directory(project_name, "src/cbt_tools");
             create_file(project, "src/cbt_tools/env_manager.cpp");
             create_file(project, "src/cbt_tools/utils.cpp");
@@ -80,6 +84,8 @@ namespace {
             create_file(project, "src/sample.cpp");
             create_directory(project_name, "tests");
             create_directory(project_name, "tests/unit_tests");
+            create_directory(project_name, "tests/unit_tests/c");
+            create_file(project, "tests/unit_tests/c/linkage_demo.cpp");
             create_file(project, "tests/unit_tests/sample.cpp");
             create_file(project, "README.md");
             
@@ -144,8 +150,8 @@ namespace commands {
         create_project(project_name, ProjectType::LIBRARY);
     }
     
-    void create_file(const string& file_name) {
-        const auto [is_valid, reason_if_any] = workspace::util::is_valid_file_name(file_name);
+    void create_file(const string& file_name, const bool requires_c_linkage) {
+        const auto [is_valid, reason_if_any] = workspace::util::is_valid_file_name(file_name, requires_c_linkage);
 
         if (!is_valid) {
             cout << reason_if_any << endl;
@@ -153,14 +159,23 @@ namespace commands {
         }
 
         const Project project = convert_cfg_to_model(); 
-        const bool create_only_header_file{ file_name.starts_with("headers/") };
+
+        const bool create_only_header_file{ file_name.starts_with(requires_c_linkage ? "headers/c/" : "headers/") };
+
+        const string header_file_extension{ requires_c_linkage ? ".h" : ".hpp" };
 
         if (create_only_header_file) {
-            workspace::scaffold::create_file(project, file_name + ".hpp", true, true);
+            workspace::scaffold::create_file(project, file_name + header_file_extension, true, true);
         } else {
-            workspace::scaffold::create_file(project, string("headers/") + file_name + ".hpp", true, true);
-            workspace::scaffold::create_file(project, string("src/") + file_name + ".cpp", true, true);
-            workspace::scaffold::create_file(project, string("tests/unit_tests/") + file_name + ".cpp", true, true);
+            const string implementation_file_extension{ requires_c_linkage ? ".c" : ".cpp" };
+            
+            const string header_prefix{ requires_c_linkage ? "headers/c/" : "headers/" };
+            const string src_prefix{ requires_c_linkage ? "src/c/" : "src/" };
+            const string test_prefix{ requires_c_linkage ? "tests/unit_tests/c/" : "tests/unit_tests/" };
+
+            workspace::scaffold::create_file(project, header_prefix + file_name + header_file_extension, true, true);
+            workspace::scaffold::create_file(project, src_prefix + file_name + implementation_file_extension, true, true);
+            workspace::scaffold::create_file(project, test_prefix + file_name + ".cpp", true, true);
         }
     }
 
