@@ -465,8 +465,10 @@ namespace commands {
             << "create-application <name>       - Scaffold a new application" << endl
             << "create-library <name>           - Scaffold a new library" << endl
             << endl
-            << "create-file <file_name>         - Generate respective C++ files under 'headers/', 'src/' and 'tests/' directories" << endl
+            << "create-file <file_name>         - Generate respective C++ files under 'headers/', 'src/' and 'tests/unit_tests/' directories" << endl
             << "create-file <path/to/file_name> - Same as above, but will create necessary sub-directories if required" << endl
+            << endl
+            << "create-c-file <file_name>       - Generate respective C files under 'headers/c', 'src/c' and 'tests/unit_tests/c' directories (will create necessary sub-directories if required)" << endl
             << endl
             << "resolve-dependencies            - Sync dependencies through 'project.cfg'" << endl
             << endl
