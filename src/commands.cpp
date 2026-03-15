@@ -198,13 +198,12 @@ namespace commands {
 
         const int literal_length_of_headers = string("headers/").length();
         const int literal_length_of_src = string("src/").length();
-        const int literal_length_of_extension = string(".cpp").length();
 
         workspace::modification_identifier::SourceFiles annotated_files = workspace::modification_identifier::list_all_files_annotated(project, compile_as_dependency);
         int number_of_cpp_files_to_compile{ 0 };
 
         for (auto const& file: annotated_files) {
-            if (file.file_name.ends_with(".cpp") && file.affected) {
+            if ((file.file_name.ends_with(".c") || file.file_name.ends_with(".cpp")) && file.affected) {
                 ++number_of_cpp_files_to_compile;
             }
         }
@@ -232,15 +231,22 @@ namespace commands {
         int files_succesfully_compiled_count{ 0 };
 
         for (auto& file: annotated_files) {
-            if (file.file_name.ends_with(".cpp") && file.affected) {
-                const string stemmed_cpp_file = file.file_name.substr(literal_length_of_src, file.file_name.length() - (literal_length_of_src + literal_length_of_extension));
+            if ((file.file_name.ends_with(".c") || file.file_name.ends_with(".cpp")) && file.affected) {
+                const bool is_c_file{ file.file_name.ends_with(".c") };
+                const int literal_length_of_extension = string(is_c_file ? ".c" : ".cpp").length();
 
-                if (stemmed_cpp_file.compare("main") != 0 && !fs::exists("headers/" + stemmed_cpp_file + ".hpp")) {
-                    cout << "SKIP " << ("headers/" + stemmed_cpp_file + ".hpp") << " (No corresponding file found!)" << endl;
+                const string stemmed_file = file.file_name.substr(
+                    literal_length_of_src,
+                    file.file_name.length() - (literal_length_of_src + literal_length_of_extension)
+                );
+                const string header_extension{ is_c_file ? ".h" : ".hpp" };
+
+                if (stemmed_file.compare("main") != 0 && !fs::exists("headers/" + stemmed_file + header_extension)) {
+                    cout << "SKIP " << ("headers/" + stemmed_file + header_extension) << " (No corresponding implementation file found!)" << endl;
                 } else {
                     file.compilation_start_timestamp = workspace::modification_identifier::get_current_fileclock_timestamp();
 
-                    const int result = gnu_toolchain::compile_file(project, file.file_name, stemmed_cpp_file, compile_as_dependency);
+                    const int result = gnu_toolchain::compile_file(project, file.file_name, stemmed_file, compile_as_dependency);
 
                     file.compilation_end_timestamp = workspace::modification_identifier::get_current_fileclock_timestamp();
                     file.was_successful = (result == 0);

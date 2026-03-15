@@ -104,6 +104,16 @@ namespace {
         return files_with_timestamps;
     }
 
+    bool is_c_directory(const string& normalised_path) {
+        if (normalised_path.starts_with("src/c/") || normalised_path.starts_with("tests/unit_tests/c/")) {
+            return true;
+        } else if (normalised_path == "src/c" || normalised_path == "tests/unit_tests/c") {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     void generate_makefile(const workspace::project_config::Project& project, const string& path, const bool compile_as_dependency = false) {
         string files{ path + "/*.cpp " };
         const string SEPARATOR{ fs::path::preferred_separator };
@@ -112,14 +122,16 @@ namespace {
             const string normalised_path{ workspace::util::get_platform_formatted_filename(dir_entry->path().string()) };
 
             if (fs::is_directory(*dir_entry)) {
+                const string file_extension{ is_c_directory(normalised_path) ? ".c" : ".cpp" };
+
                 const int files_count = std::count_if(
                     fs::directory_iterator(dir_entry->path()),
                     {}, 
-                    [](auto& file){ return file.is_regular_file(); }
+                    [&file_extension](auto& entry){ return entry.is_regular_file() && entry.path().string().ends_with(file_extension) ; }
                 );
 
                 if (files_count != 0) {
-                    files += normalised_path + SEPARATOR + "*.cpp ";
+                    files += normalised_path + SEPARATOR + "*" + file_extension + " ";
                 }
             }
         }
@@ -183,7 +195,7 @@ namespace {
 
                         cpp_pov[current_file] = {};
                     } else {
-                        if (!file.ends_with(".cpp") && !file.starts_with("tests")) {
+                        if (!file.ends_with(".c") && !file.ends_with(".cpp") && !file.starts_with("tests")) {
                             cpp_pov[current_file].push_back(file);
                         }
                     }
@@ -247,7 +259,7 @@ namespace {
             source_file.file_name = workspace::util::get_platform_formatted_filename(file_path);
             
             if ((file_last_modified_timestamp > source_file.last_modified_timestamp)
-                || (source_file.file_name.ends_with(".cpp")
+                || ((source_file.file_name.ends_with(".c") || source_file.file_name.ends_with(".cpp"))
                     && (!source_file.was_successful || file_last_modified_timestamp > source_file.compilation_end_timestamp))
             ) {
                 source_file.affected = true;

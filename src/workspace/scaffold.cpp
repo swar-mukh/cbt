@@ -290,11 +290,13 @@ namespace workspace::scaffold {
         std::vector<string> cpp_files{};
 
         const auto literal_length_of_src{ string("src/").length() };
-        const auto literal_length_of_source_file_extension{ string(".cpp").length() };
         const auto literal_length_of_binary_file_extension{ string(".o").length() };
 
         for (auto const& source_file: annotated_files) {
-            if (source_file.file_name.ends_with(".cpp")) {
+            const bool is_c_file{ source_file.file_name.ends_with(".c") };
+            const auto literal_length_of_source_file_extension{ string(is_c_file ? ".c" : ".cpp").length() };
+
+            if (source_file.file_name.ends_with(".c") || source_file.file_name.ends_with(".cpp")) {
                 cpp_files.push_back(source_file.file_name.substr(literal_length_of_src, source_file.file_name.length() - literal_length_of_src - literal_length_of_source_file_extension));
             }
         }
