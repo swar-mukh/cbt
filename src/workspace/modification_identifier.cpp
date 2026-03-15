@@ -104,16 +104,6 @@ namespace {
         return files_with_timestamps;
     }
 
-    bool is_c_directory(const string& normalised_path) {
-        if (normalised_path.starts_with("src/c/") || normalised_path.starts_with("tests/unit_tests/c/")) {
-            return true;
-        } else if (normalised_path == "src/c" || normalised_path == "tests/unit_tests/c") {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
     void generate_makefile(const workspace::project_config::Project& project, const string& path, const bool compile_as_dependency = false) {
         string files{ path + "/*.cpp " };
         const string SEPARATOR{ fs::path::preferred_separator };
@@ -122,12 +112,12 @@ namespace {
             const string normalised_path{ workspace::util::get_platform_formatted_filename(dir_entry->path().string()) };
 
             if (fs::is_directory(*dir_entry)) {
-                const string file_extension{ is_c_directory(normalised_path) ? ".c" : ".cpp" };
+                const string file_extension{ (normalised_path.starts_with("src/c/") || normalised_path == "src/c") ? ".c" : ".cpp" };
 
                 const int files_count = std::count_if(
                     fs::directory_iterator(dir_entry->path()),
                     {}, 
-                    [&file_extension](auto& entry){ return entry.is_regular_file() && entry.path().string().ends_with(file_extension) ; }
+                    [&file_extension](auto& entry){ return entry.is_regular_file() && entry.path().string().ends_with(file_extension); }
                 );
 
                 if (files_count != 0) {
@@ -366,7 +356,13 @@ namespace workspace::modification_identifier {
             const fs::path file_path{ file };
 
             const fs::path scoped_directory_of_file = fs::relative(fs::path{ file }.parent_path(), "tests/unit_tests");
-            const fs::path corresponding_source_file = fs::path("src" / scoped_directory_of_file / fs::path(file).filename());
+            const fs::path corresponding_source_file = fs::path(
+                "src"
+                / scoped_directory_of_file
+                / fs::path(file)
+                    .filename()
+                    .replace_extension(file.starts_with("tests/unit_tests/c/") ? "c" : "cpp")
+            );
             const fs::path corresponding_binary = fs::path("build/test_binaries/unit_tests" / scoped_directory_of_file / fs::path(file).stem().replace_extension(EXTENSION));
 
             if (!fs::exists(corresponding_binary)
