@@ -357,6 +357,8 @@ namespace commands {
         cout << "[COMMAND] " << gnu_toolchain::get_test_execution_command(project, EXTENSION) << endl << endl;
 
         for (auto const& [file, dependencies]: tree) {
+            const bool is_c_file{ file.starts_with("tests/unit_tests/c/") };
+
             std::vector<string> files_to_link{ file };
             const fs::path scoped_directory_of_file{ fs::relative(fs::path{ file }.parent_path(), "tests/unit_tests") };
             const fs::path build_directory_under_check{ "build/test_binaries/unit_tests" / scoped_directory_of_file };
@@ -365,14 +367,15 @@ namespace commands {
                 workspace::scaffold::create_directory(string("."), build_directory_under_check.string(), true, false);
             }
 
-            const fs::path corresponding_header_file{ fs::path("headers" / scoped_directory_of_file / fs::path(file).stem().replace_extension(".hpp")) };
+            const string header_extension{ is_c_file ? ".h" : ".hpp" };
+            const fs::path corresponding_header_file{ fs::path("headers" / scoped_directory_of_file / fs::path(file).stem().replace_extension(header_extension)) };
 
             for (auto const& dependency: dependencies) {
                 if (!fs::equivalent(corresponding_header_file, dependency) && !fs::equivalent(dependency, harness)) {
                     const bool is_own_dependency{ dependency.starts_with("headers") };
 
                     const fs::path corresponding_implementation_file{ (is_own_dependency
-                        ? fs::path("src/" + dependency.substr(literal_length_of_headers))
+                        ? fs::path("src/" + dependency.substr(literal_length_of_headers)).replace_extension(is_c_file ? "c" : "cpp")
                         : fs::path([&dependency](){
                                 const string symlink{ fs::read_symlink(dependency.substr(0, dependency.rfind("/"))).string() };
 
@@ -388,7 +391,7 @@ namespace commands {
 
                                 return shortened_symlink + "/src/" + dependency.substr(dependency.find(dependency_name) + dependency_name.length() + 1);
                             }())
-                        ).replace_extension("cpp")
+                        ).replace_extension(is_c_file ? "c" : "cpp")
                     };
 
                     if (fs::exists(corresponding_implementation_file)) {
