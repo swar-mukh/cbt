@@ -513,19 +513,19 @@ namespace assets::scaffold_texts {
     #include <time.h>
 
     static void helper() {
-        printf("Calling from C\n");
+        printf("This statement and the following time calculation are happening inside C file.\n");
     }
 
     int add(int a, int b) {
-        helper();
-        
         return a + b;
     }
 
     void show_time(time_t t) {
         char buf[26];
         struct tm *tm_info = localtime(&t);
-
+        
+        helper();
+        
         if (tm_info) {
             strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", tm_info);
             printf("Received time: %s\n", buf);
