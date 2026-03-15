@@ -194,6 +194,26 @@ namespace {
                 }
             }
 
+            for (const auto& [file, dependencies]: cpp_pov) {
+                if ((file.starts_with("src/c/")) && !file.ends_with(".c")) {
+                    throw std::runtime_error("'src/c/' directory can only host C implementation files having '.c' extension (while resolving '" + file + "')");
+                } else if (!file.starts_with("src/c/") && !file.ends_with(".cpp")) {
+                    throw std::runtime_error("C++ implementation files must have '.cpp' extension (while resolving '" + file + "')");
+                } else if (file.starts_with("tests/unit_tests/") && !file.ends_with(".cpp")) {
+                    throw std::runtime_error("Test files must be C++ files and have '.cpp' extension (while resolving '" + file + "')");
+                }
+
+                for (const string& dependency: dependencies) {
+                    if (file.starts_with("src/c/") && !dependency.ends_with(".h")) {
+                        throw std::runtime_error("C implementation files can only include C header files having '.h' extension (while including '" + dependency + "' for '" + file + "')");
+                    } else if (dependency.starts_with("headers/c/") && !dependency.ends_with(".h")) {
+                        throw std::runtime_error("'headers/c/' directory can only host C header files having '.h' extension (while including '" + dependency + "' for '" + file + "')");
+                    } else if (!dependency.starts_with("headers/c/") && !dependency.ends_with(".hpp")) {
+                        throw std::runtime_error("C++ header files must have '.hpp' extension (while including '" + dependency + "' for '" + file + "')");
+                    }
+                }
+            }
+
             return cpp_pov;
         } else {
             throw std::runtime_error("Makefile '.internals/tmp/makefile' missing!");
