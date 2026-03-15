@@ -104,6 +104,14 @@ namespace {
         return files_with_timestamps;
     }
 
+    const bool is_c_directory(const string& normalised_path) {
+        #if defined(_WIN32) || defined(_WIN64)
+        return normalised_path.starts_with("src\\c\\") || normalised_path == "src\\c";
+        #else
+        return normalised_path.starts_with("src/c/") || normalised_path == "src/c";
+        #endif
+    }
+
     void generate_makefile(const workspace::project_config::Project& project, const string& path, const bool compile_as_dependency = false) {
         string files{ path + "/*.cpp " };
         const string SEPARATOR{ fs::path::preferred_separator };
@@ -112,7 +120,7 @@ namespace {
             const string normalised_path{ workspace::util::get_platform_formatted_filename(dir_entry->path().string()) };
 
             if (fs::is_directory(*dir_entry)) {
-                const string file_extension{ (normalised_path.starts_with("src/c/") || normalised_path == "src/c") ? ".c" : ".cpp" };
+                const string file_extension{ is_c_directory(normalised_path) ? ".c" : ".cpp" };
 
                 const int files_count = std::count_if(
                     fs::directory_iterator(dir_entry->path()),
@@ -181,11 +189,21 @@ namespace {
                     const string file = match->str();
 
                     if (current_file.empty()) {
+                        #if defined(_WIN32) || defined(_WIN64)
+                        current_file = std::regex_replace(file, std::regex("\\\\"), "/");
+                        #else
                         current_file = file;
+                        #endif
 
                         cpp_pov[current_file] = {};
                     } else {
                         if (!file.ends_with(".c") && !file.ends_with(".cpp") && !file.starts_with("tests")) {
+                            #if defined(_WIN32) || defined(_WIN64)
+                            if (file == "\\") {
+                                continue;
+                            }
+                            #endif
+
                             cpp_pov[current_file].push_back(file);
                         }
                     }
