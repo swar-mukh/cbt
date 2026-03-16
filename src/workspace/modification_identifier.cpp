@@ -104,6 +104,14 @@ namespace {
         return files_with_timestamps;
     }
 
+    const bool is_c_directory(const string& normalised_path) {
+        #if defined(_WIN32) || defined(_WIN64)
+        return normalised_path.starts_with("src\\c\\") || normalised_path == "src\\c";
+        #else
+        return normalised_path.starts_with("src/c/") || normalised_path == "src/c";
+        #endif
+    }
+
     void generate_makefile(const workspace::project_config::Project& project, const string& path, const bool compile_as_dependency = false) {
         string files{ path + "/*.cpp " };
         const string SEPARATOR{ fs::path::preferred_separator };
@@ -112,14 +120,16 @@ namespace {
             const string normalised_path{ workspace::util::get_platform_formatted_filename(dir_entry->path().string()) };
 
             if (fs::is_directory(*dir_entry)) {
+                const string file_extension{ is_c_directory(normalised_path) ? ".c" : ".cpp" };
+
                 const int files_count = std::count_if(
                     fs::directory_iterator(dir_entry->path()),
                     {}, 
-                    [](auto& file){ return file.is_regular_file(); }
+                    [&file_extension](auto& entry){ return entry.is_regular_file() && entry.path().string().ends_with(file_extension); }
                 );
 
                 if (files_count != 0) {
-                    files += normalised_path + SEPARATOR + "*.cpp ";
+                    files += normalised_path + SEPARATOR + "*" + file_extension + " ";
                 }
             }
         }
@@ -179,11 +189,21 @@ namespace {
                     const string file = match->str();
 
                     if (current_file.empty()) {
+                        #if defined(_WIN32) || defined(_WIN64)
+                        current_file = std::regex_replace(file, std::regex("\\\\"), "/");
+                        #else
                         current_file = file;
+                        #endif
 
                         cpp_pov[current_file] = {};
                     } else {
-                        if (!file.ends_with(".cpp") && !file.starts_with("tests")) {
+                        if (!file.ends_with(".c") && !file.ends_with(".cpp") && !file.starts_with("tests")) {
+                            #if defined(_WIN32) || defined(_WIN64)
+                            if (file == "\\") {
+                                continue;
+                            }
+                            #endif
+
                             cpp_pov[current_file].push_back(file);
                         }
                     }
@@ -191,6 +211,26 @@ namespace {
 
                 if (!keep_continuing) {
                     current_file.clear();
+                }
+            }
+
+            for (const auto& [file, dependencies]: cpp_pov) {
+                if ((file.starts_with("src/c/")) && !file.ends_with(".c")) {
+                    throw std::runtime_error("'src/c/' directory can only host C implementation files having '.c' extension (while resolving '" + file + "')");
+                } else if (!file.starts_with("src/c/") && !file.ends_with(".cpp")) {
+                    throw std::runtime_error("C++ implementation files must have '.cpp' extension (while resolving '" + file + "')");
+                } else if (file.starts_with("tests/unit_tests/") && !file.ends_with(".cpp")) {
+                    throw std::runtime_error("Test files must be C++ files and have '.cpp' extension (while resolving '" + file + "')");
+                }
+
+                for (const string& dependency: dependencies) {
+                    if (file.starts_with("src/c/") && !dependency.ends_with(".h")) {
+                        throw std::runtime_error("C implementation files can only include C header files having '.h' extension (while including '" + dependency + "' for '" + file + "')");
+                    } else if (dependency.starts_with("headers/c/") && !dependency.ends_with(".h")) {
+                        throw std::runtime_error("'headers/c/' directory can only host C header files having '.h' extension (while including '" + dependency + "' for '" + file + "')");
+                    } else if (!dependency.starts_with("headers/c/") && !dependency.ends_with(".hpp")) {
+                        throw std::runtime_error("C++ header files must have '.hpp' extension (while including '" + dependency + "' for '" + file + "')");
+                    }
                 }
             }
 
@@ -227,7 +267,7 @@ namespace {
             source_file.file_name = workspace::util::get_platform_formatted_filename(file_path);
             
             if ((file_last_modified_timestamp > source_file.last_modified_timestamp)
-                || (source_file.file_name.ends_with(".cpp")
+                || ((source_file.file_name.ends_with(".c") || source_file.file_name.ends_with(".cpp"))
                     && (!source_file.was_successful || file_last_modified_timestamp > source_file.compilation_end_timestamp))
             ) {
                 source_file.affected = true;
@@ -334,7 +374,13 @@ namespace workspace::modification_identifier {
             const fs::path file_path{ file };
 
             const fs::path scoped_directory_of_file = fs::relative(fs::path{ file }.parent_path(), "tests/unit_tests");
-            const fs::path corresponding_source_file = fs::path("src" / scoped_directory_of_file / fs::path(file).filename());
+            const fs::path corresponding_source_file = fs::path(
+                "src"
+                / scoped_directory_of_file
+                / fs::path(file)
+                    .filename()
+                    .replace_extension(file.starts_with("tests/unit_tests/c/") ? "c" : "cpp")
+            );
             const fs::path corresponding_binary = fs::path("build/test_binaries/unit_tests" / scoped_directory_of_file / fs::path(file).stem().replace_extension(EXTENSION));
 
             if (!fs::exists(corresponding_binary)

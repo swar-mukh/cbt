@@ -59,8 +59,10 @@ Options:
 create-application <name>       - Scaffold a new application
 create-library <name>           - Scaffold a new library
 
-create-file <file_name>         - Generate respective C++ files under 'headers/', 'src/' and 'tests/' directories
+create-file <file_name>         - Generate respective C++ files under 'headers/', 'src/' and 'tests/unit_tests/' directories
 create-file <path/to/file_name> - Same as above, but will create necessary sub-directories if required
+
+create-c-file <file_name>       - Generate respective C files under 'headers/c', 'src/c' and 'tests/unit_tests/c' directories (will create necessary sub-directories if required)
 
 resolve-dependencies            - Sync dependencies through 'project.cfg'
 

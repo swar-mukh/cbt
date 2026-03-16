@@ -7,7 +7,7 @@ namespace commands {
     void create_application(const std::string& project_name);
     void create_library(const std::string& project_name);
     
-    void create_file(const std::string& file_name);
+    void create_file(const std::string& file_name, const bool requires_c_linkage = false);
 
     void resolve_dependencies();
 

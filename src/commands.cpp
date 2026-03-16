@@ -60,6 +60,8 @@ namespace {
             create_file(project, "environments/production.env");
             create_file(project, "environments/test.env");
             create_directory(project_name, "headers");
+            create_directory(project_name, "headers/c");
+            create_file(project, "headers/c/linkage_demo.h");
             create_directory(project_name, "headers/cbt_tools");
             create_file(project, "headers/cbt_tools/env_manager.hpp");
             create_file(project, "headers/cbt_tools/test_harness.hpp");
@@ -67,6 +69,8 @@ namespace {
             create_file(project, "headers/forward_declarations.hpp");
             create_file(project, "headers/sample.hpp");
             create_directory(project_name, "src");
+            create_directory(project_name, "src/c");
+            create_file(project, "src/c/linkage_demo.c");
             create_directory(project_name, "src/cbt_tools");
             create_file(project, "src/cbt_tools/env_manager.cpp");
             create_file(project, "src/cbt_tools/utils.cpp");
@@ -80,6 +84,8 @@ namespace {
             create_file(project, "src/sample.cpp");
             create_directory(project_name, "tests");
             create_directory(project_name, "tests/unit_tests");
+            create_directory(project_name, "tests/unit_tests/c");
+            create_file(project, "tests/unit_tests/c/linkage_demo.cpp");
             create_file(project, "tests/unit_tests/sample.cpp");
             create_file(project, "README.md");
             
@@ -144,8 +150,8 @@ namespace commands {
         create_project(project_name, ProjectType::LIBRARY);
     }
     
-    void create_file(const string& file_name) {
-        const auto [is_valid, reason_if_any] = workspace::util::is_valid_file_name(file_name);
+    void create_file(const string& file_name, const bool requires_c_linkage) {
+        const auto [is_valid, reason_if_any] = workspace::util::is_valid_file_name(file_name, requires_c_linkage);
 
         if (!is_valid) {
             cout << reason_if_any << endl;
@@ -153,14 +159,23 @@ namespace commands {
         }
 
         const Project project = convert_cfg_to_model(); 
-        const bool create_only_header_file{ file_name.starts_with("headers/") };
+
+        const bool create_only_header_file{ file_name.starts_with(requires_c_linkage ? "headers/c/" : "headers/") };
+
+        const string header_file_extension{ requires_c_linkage ? ".h" : ".hpp" };
 
         if (create_only_header_file) {
-            workspace::scaffold::create_file(project, file_name + ".hpp", true, true);
+            workspace::scaffold::create_file(project, file_name + header_file_extension, true, true);
         } else {
-            workspace::scaffold::create_file(project, string("headers/") + file_name + ".hpp", true, true);
-            workspace::scaffold::create_file(project, string("src/") + file_name + ".cpp", true, true);
-            workspace::scaffold::create_file(project, string("tests/unit_tests/") + file_name + ".cpp", true, true);
+            const string implementation_file_extension{ requires_c_linkage ? ".c" : ".cpp" };
+            
+            const string header_prefix{ requires_c_linkage ? "headers/c/" : "headers/" };
+            const string src_prefix{ requires_c_linkage ? "src/c/" : "src/" };
+            const string test_prefix{ requires_c_linkage ? "tests/unit_tests/c/" : "tests/unit_tests/" };
+
+            workspace::scaffold::create_file(project, header_prefix + file_name + header_file_extension, true, true);
+            workspace::scaffold::create_file(project, src_prefix + file_name + implementation_file_extension, true, true);
+            workspace::scaffold::create_file(project, test_prefix + file_name + ".cpp", true, true);
         }
     }
 
@@ -183,13 +198,12 @@ namespace commands {
 
         const int literal_length_of_headers = string("headers/").length();
         const int literal_length_of_src = string("src/").length();
-        const int literal_length_of_extension = string(".cpp").length();
 
         workspace::modification_identifier::SourceFiles annotated_files = workspace::modification_identifier::list_all_files_annotated(project, compile_as_dependency);
         int number_of_cpp_files_to_compile{ 0 };
 
         for (auto const& file: annotated_files) {
-            if (file.file_name.ends_with(".cpp") && file.affected) {
+            if ((file.file_name.ends_with(".c") || file.file_name.ends_with(".cpp")) && file.affected) {
                 ++number_of_cpp_files_to_compile;
             }
         }
@@ -217,15 +231,22 @@ namespace commands {
         int files_succesfully_compiled_count{ 0 };
 
         for (auto& file: annotated_files) {
-            if (file.file_name.ends_with(".cpp") && file.affected) {
-                const string stemmed_cpp_file = file.file_name.substr(literal_length_of_src, file.file_name.length() - (literal_length_of_src + literal_length_of_extension));
+            if ((file.file_name.ends_with(".c") || file.file_name.ends_with(".cpp")) && file.affected) {
+                const bool is_c_file{ file.file_name.ends_with(".c") };
+                const int literal_length_of_extension = string(is_c_file ? ".c" : ".cpp").length();
 
-                if (stemmed_cpp_file.compare("main") != 0 && !fs::exists("headers/" + stemmed_cpp_file + ".hpp")) {
-                    cout << "SKIP " << ("headers/" + stemmed_cpp_file + ".hpp") << " (No corresponding file found!)" << endl;
+                const string stemmed_file = file.file_name.substr(
+                    literal_length_of_src,
+                    file.file_name.length() - (literal_length_of_src + literal_length_of_extension)
+                );
+                const string header_extension{ is_c_file ? ".h" : ".hpp" };
+
+                if (stemmed_file.compare("main") != 0 && !fs::exists("headers/" + stemmed_file + header_extension)) {
+                    cout << "SKIP " << ("headers/" + stemmed_file + header_extension) << " (No corresponding implementation file found!)" << endl;
                 } else {
                     file.compilation_start_timestamp = workspace::modification_identifier::get_current_fileclock_timestamp();
 
-                    const int result = gnu_toolchain::compile_file(project, file.file_name, stemmed_cpp_file, compile_as_dependency);
+                    const int result = gnu_toolchain::compile_file(project, file.file_name, stemmed_file, compile_as_dependency);
 
                     file.compilation_end_timestamp = workspace::modification_identifier::get_current_fileclock_timestamp();
                     file.was_successful = (result == 0);
@@ -336,6 +357,8 @@ namespace commands {
         cout << "[COMMAND] " << gnu_toolchain::get_test_execution_command(project, EXTENSION) << endl << endl;
 
         for (auto const& [file, dependencies]: tree) {
+            const bool is_c_file{ file.starts_with("tests/unit_tests/c/") };
+
             std::vector<string> files_to_link{ file };
             const fs::path scoped_directory_of_file{ fs::relative(fs::path{ file }.parent_path(), "tests/unit_tests") };
             const fs::path build_directory_under_check{ "build/test_binaries/unit_tests" / scoped_directory_of_file };
@@ -344,14 +367,15 @@ namespace commands {
                 workspace::scaffold::create_directory(string("."), build_directory_under_check.string(), true, false);
             }
 
-            const fs::path corresponding_header_file{ fs::path("headers" / scoped_directory_of_file / fs::path(file).stem().replace_extension(".hpp")) };
+            const string header_extension{ is_c_file ? ".h" : ".hpp" };
+            const fs::path corresponding_header_file{ fs::path("headers" / scoped_directory_of_file / fs::path(file).stem().replace_extension(header_extension)) };
 
             for (auto const& dependency: dependencies) {
                 if (!fs::equivalent(corresponding_header_file, dependency) && !fs::equivalent(dependency, harness)) {
                     const bool is_own_dependency{ dependency.starts_with("headers") };
 
                     const fs::path corresponding_implementation_file{ (is_own_dependency
-                        ? fs::path("src/" + dependency.substr(literal_length_of_headers))
+                        ? fs::path("src/" + dependency.substr(literal_length_of_headers)).replace_extension(is_c_file ? "c" : "cpp")
                         : fs::path([&dependency](){
                                 const string symlink{ fs::read_symlink(dependency.substr(0, dependency.rfind("/"))).string() };
 
@@ -367,7 +391,7 @@ namespace commands {
 
                                 return shortened_symlink + "/src/" + dependency.substr(dependency.find(dependency_name) + dependency_name.length() + 1);
                             }())
-                        ).replace_extension("cpp")
+                        ).replace_extension(is_c_file ? "c" : "cpp")
                     };
 
                     if (fs::exists(corresponding_implementation_file)) {
@@ -444,8 +468,10 @@ namespace commands {
             << "create-application <name>       - Scaffold a new application" << endl
             << "create-library <name>           - Scaffold a new library" << endl
             << endl
-            << "create-file <file_name>         - Generate respective C++ files under 'headers/', 'src/' and 'tests/' directories" << endl
+            << "create-file <file_name>         - Generate respective C++ files under 'headers/', 'src/' and 'tests/unit_tests/' directories" << endl
             << "create-file <path/to/file_name> - Same as above, but will create necessary sub-directories if required" << endl
+            << endl
+            << "create-c-file <file_name>       - Generate respective C files under 'headers/c', 'src/c' and 'tests/unit_tests/c' directories (will create necessary sub-directories if required)" << endl
             << endl
             << "resolve-dependencies            - Sync dependencies through 'project.cfg'" << endl
             << endl

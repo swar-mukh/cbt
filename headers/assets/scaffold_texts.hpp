@@ -369,6 +369,26 @@ namespace assets::scaffold_texts {
     #endif
     )";
     
+    const string SAMPLE_H = R"(
+    #ifndef @GUARD_EXTERN
+    #define @GUARD_EXTERN
+
+    #include <time.h>
+
+    #ifdef __cplusplus
+    extern "C" {
+    #endif
+
+    int add(int a, int b);
+    void show_time(time_t t);
+
+    #ifdef __cplusplus
+    }
+    #endif
+
+    #endif
+    )";
+
     const string SAMPLE_HPP = R"(
     #ifndef @GUARD
     #define @GUARD
@@ -432,6 +452,7 @@ namespace assets::scaffold_texts {
     )";
 
     const string MAIN_CPP = R"(
+    #include <ctime>
     #include <iostream>
     #include <map>
     #include <vector>
@@ -440,6 +461,7 @@ namespace assets::scaffold_texts {
     #include "cbt_tools/utils.hpp"
 
     #include "sample.hpp"
+    #include "c/linkage_demo.h"
 
     int main(const int argc, char *argv[], char *envp[]) {
         std::vector<std::string> args(argv, argv + argc);
@@ -475,9 +497,41 @@ namespace assets::scaffold_texts {
         company.hire(sample::Person{ .first_name{ "F1" }, .last_name{ "L1" }, .sex{ sample::Sex::MALE } });
         company.hire(sample::Person{ .first_name{ "F2" }, .last_name{ "L2" }, .sex{ sample::Sex::FEMALE } });
 
-        std::cout << company;
+        std::cout << company << "\n";
+
+        std::time_t now{ std::time(nullptr) };
+        show_time(now);
 
         return EXIT_SUCCESS;
+    }
+    )";
+
+    const string SAMPLE_C = R"(
+    #include "@FILE_NAME"
+
+    #include <stdio.h>
+    #include <time.h>
+
+    static void helper() {
+        printf("This statement and the following time calculation are happening inside C file.\n");
+    }
+
+    int add(int a, int b) {
+        return a + b;
+    }
+
+    void show_time(time_t t) {
+        char buf[26];
+        struct tm *tm_info = localtime(&t);
+        
+        helper();
+        
+        if (tm_info) {
+            strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", tm_info);
+            printf("Received time: %s\n", buf);
+        } else {
+            printf("Received invalid time value\n");
+        }
     }
     )";
 
@@ -569,6 +623,78 @@ namespace assets::scaffold_texts {
             return out;
         }
     }@END_SCOPE
+    )";
+
+    const string SAMPLE_TEST_C = R"(
+    #include "cbt_tools/test_harness.hpp"
+
+    #include <cassert>
+    #include <functional>
+    #include <iostream>
+    #include <string>
+
+    #include "@RELATIVE_SRC_FILE_NAME"
+
+    // If no context is required, replace the below struct with just `struct Context {};`
+    // and refactor such occurrences accordingly
+    struct Context {
+        int a;
+        std::string api_endpoint;
+    };
+
+    class ScopedTestSuite: public cbt_tools::test_harness::TestSuite<Context> {
+    public:
+        explicit ScopedTestSuite(const Context& ctx): cbt_tools::test_harness::TestSuite<Context>(ctx) {}
+
+    private:
+        void setup() override {
+            // Add necessary code here
+        }
+        void before_each() override {
+            // Add necessary code here
+            ctx.a = 1;
+        }
+        void after_each() override {
+            // Add necessary code here
+            ctx.a = 0;
+        }
+        void teardown() override {
+            // Add necessary code here
+        }
+    };
+
+    Context define_context() {
+        // Define your context here
+
+        return Context{
+            .a{ 0 },
+            .api_endpoint{ "https://api.env.domain.tld" }
+        };
+    }
+
+    void define_test_cases(ScopedTestSuite& test_suite) {
+        // Add all your test cases in this function
+       
+        test_suite.add_test_case("Sum of 5 and 6 is 11", []([[maybe_unused]] const Context& ctx) {
+            assert((add(5, 6) == 11));
+        });
+        
+        test_suite.add_test_case("Sum of 5 and 6 is not 12", []([[maybe_unused]] const Context& ctx) {
+            assert((add(5, 6) != 12));
+        });
+    }
+
+    int main() {
+        ScopedTestSuite test_suite{ define_context() };
+
+        std::cout << std::endl << std::setw(8) << "EXECUTE " << __FILE__ << std::endl << std::endl;
+
+        define_test_cases(test_suite);
+
+        test_suite.run();
+
+        return EXIT_SUCCESS;
+    }
     )";
 
     const string SAMPLE_TEST_CPP = R"(

@@ -17,6 +17,9 @@ void parse_commands_and_execute(std::vector<std::string>& arguments) {
             } else if (arguments[1].compare("create-file") == 0) {
                 workspace::scaffold::exit_if_command_not_invoked_from_within_workspace();
                 commands::create_file(arguments[2]);
+            } else if (arguments[1].compare("create-c-file") == 0) {
+                workspace::scaffold::exit_if_command_not_invoked_from_within_workspace();
+                commands::create_file(arguments[2], true);
             } else {
                 commands::show_usage();
             }
