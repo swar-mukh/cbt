@@ -85,7 +85,7 @@ namespace workspace::project_config {
                 .safety_flags{ "-Wall -Wextra -pedantic" },
                 .compile_time_flags{ "-Os -s" },
                 .build_flags{ "-O3 -s" },
-                .test_flags{ "-g -Og -s" }
+                .test_flags{ "-g -Og" }
             },
             .dependencies{
                 { .name{ "cbt_tools" }, .version{ "2024-08-31" }, .url{ "https://github.com/swar-mukh/cbt_tools" } }
