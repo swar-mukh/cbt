@@ -222,12 +222,12 @@ namespace {
 }
 
 namespace workspace::dependencies_manager {
-    void resolve_dependencies(const SurfaceDependencies& dependencies) {
+    void resolve_dependencies(const Project& project) {
         Projects locally_stored_dependencies = list_all_dependencies_available_locally();
 
         std::map<SurfaceDependency, int, SurfaceDependencyComparator> dependency_frequency;
 
-        linearise(dependencies, dependency_frequency, locally_stored_dependencies);
+        linearise(project.dependencies, dependency_frequency, locally_stored_dependencies);
 
         const SurfaceDependencies resolved_dependencies{ resolve_versions(dependency_frequency) };
 
@@ -237,7 +237,11 @@ namespace workspace::dependencies_manager {
         const int compiled_dependencies_count{ compile_uncompiled_dependencies(resolved_dependencies) };
 
         if (compiled_dependencies_count == 0) {
-            std::cout << "[INFO] All dependencies are up-to-date!\n";
+            if (project.dependencies.empty() && resolved_dependencies.empty()) {
+                std::cout << "[INFO] No dependencies found.\n";
+            } else {
+                std::cout << "[INFO] All dependencies are up-to-date!\n";
+            }
         } else {
             update_lockfile(resolved_dependencies);
 

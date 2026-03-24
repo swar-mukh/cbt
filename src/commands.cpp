@@ -184,7 +184,7 @@ namespace commands {
 
         workspace::scaffold::create_working_tree_as_necessary();
 
-        workspace::dependencies_manager::resolve_dependencies(project.dependencies);
+        workspace::dependencies_manager::resolve_dependencies(project);
     }
 
     void compile_project(const bool compile_as_dependency) {
