@@ -247,7 +247,7 @@ namespace workspace::project_config {
         }
     }
 
-    string convert_model_to_cfg(const Project& project, const bool add_disclaimer_text) {
+    string convert_model_to_cfg(const Project& project, const bool add_disclaimer_text, const bool uncomment_dependencies) {
         const string disclaimer_text{ std::string("; Since a rudimentary INI parser is used, ensure that the actual `key` and")
             + "\n; `value` pairs follow the same `key` and `value` format in this file which was"
             + "\n; provided while creation of the project. Also, ensure that each pair is"
@@ -283,7 +283,7 @@ namespace workspace::project_config {
         string dependencies_text{ "; add your `dependencies` in the format mentioned below" };
 
         for (const SurfaceDependency &dependency: project.dependencies) {
-            dependencies_text += std::string("\n; dependencies[]=") + dependency_to_string(dependency, false);
+            dependencies_text += std::string("\n") + (uncomment_dependencies ? "" : "; ") + "dependencies[]=" + dependency_to_string(dependency, false);
         }
 
         return (add_disclaimer_text ? (disclaimer_text + "\n\n") : "") 
