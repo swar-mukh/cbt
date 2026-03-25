@@ -7,7 +7,7 @@
 #include "workspace/project_config.hpp"
 
 namespace workspace::dependencies_manager {
-    void resolve_dependencies(const workspace::project_config::SurfaceDependencies& dependencies);
+    void resolve_dependencies(const workspace::project_config::Project& project);
 }
 
 #endif

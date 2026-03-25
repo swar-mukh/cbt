@@ -76,6 +76,8 @@ namespace {
 
                 if (project.name != dependency.name || project.version != dependency.version) {
                     error = "Project name/version mismatch with that provided in dependency declaration (while resolving '" + versioned_name + "')";
+                } else if (project.project_type != workspace::project_config::ProjectType::LIBRARY) {
+                    error = "Project is not a library (while resolving '" + versioned_name + "')";
                 } else {
                     fs::rename(extracted_directory, dependency_path);
                 }
@@ -217,15 +219,39 @@ namespace {
         
         file_to_write.close();
     }
+
+    void update_project_cfg(const Project& project, const SurfaceDependencies& resolved_dependencies) {
+        Project updated_project{ project };
+        bool has_update{ false };
+
+        for (const auto& resolved_dependency: resolved_dependencies) {
+            for (const auto& dependency: updated_project.dependencies) {
+                if (resolved_dependency.name == dependency.name) {
+                    if (resolved_dependency.version != dependency.version) {
+                        has_update = true;
+
+                        updated_project.dependencies.erase(dependency);
+                        updated_project.dependencies.insert(resolved_dependency);
+                    }
+                }
+            }
+        }
+
+        if (has_update) {
+            std::ofstream file_to_write("project.cfg");
+            file_to_write << convert_model_to_cfg(updated_project, true, true);
+            file_to_write.close();
+        }
+    }
 }
 
 namespace workspace::dependencies_manager {
-    void resolve_dependencies(const SurfaceDependencies& dependencies) {
+    void resolve_dependencies(const Project& project) {
         Projects locally_stored_dependencies = list_all_dependencies_available_locally();
 
         std::map<SurfaceDependency, int, SurfaceDependencyComparator> dependency_frequency;
 
-        linearise(dependencies, dependency_frequency, locally_stored_dependencies);
+        linearise(project.dependencies, dependency_frequency, locally_stored_dependencies);
 
         const SurfaceDependencies resolved_dependencies{ resolve_versions(dependency_frequency) };
 
@@ -235,9 +261,14 @@ namespace workspace::dependencies_manager {
         const int compiled_dependencies_count{ compile_uncompiled_dependencies(resolved_dependencies) };
 
         if (compiled_dependencies_count == 0) {
-            std::cout << "[INFO] All dependencies are up-to-date!\n";
+            if (project.dependencies.empty() && resolved_dependencies.empty()) {
+                std::cout << "[INFO] No dependencies found.\n";
+            } else {
+                std::cout << "[INFO] All dependencies are up-to-date!\n";
+            }
         } else {
             update_lockfile(resolved_dependencies);
+            update_project_cfg(project, resolved_dependencies);
 
             std::cout << "[INFO] Compiled " << compiled_dependencies_count << " new dependencies.\n";
         }
