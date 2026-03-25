@@ -227,9 +227,7 @@ namespace {
         for (const auto& resolved_dependency: resolved_dependencies) {
             for (const auto& dependency: updated_project.dependencies) {
                 if (resolved_dependency.name == dependency.name) {
-                    std::cout << "UPC: " << resolved_dependency.name << " ";
                     if (resolved_dependency.version != dependency.version) {
-                        std::cout << resolved_dependency.version << ", " << dependency.version << "\n";
                         has_update = true;
 
                         updated_project.dependencies.erase(dependency);
