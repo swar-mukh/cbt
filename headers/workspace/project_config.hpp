@@ -39,11 +39,15 @@ namespace workspace::project_config {
         using is_transparent = void;
 
         bool operator()(const SurfaceDependency& lhs, const SurfaceDependency& rhs) const {
-            if (lhs.name == rhs.name) {
-                return lhs.version > rhs.version;
+            if (lhs.name != rhs.name) {
+                return lhs.name < rhs.name;
             }
 
-            return lhs.name < rhs.name;
+            if ((!lhs.url.empty() && !rhs.url.empty()) && lhs.url != rhs.url) {
+                return lhs.url < rhs.url;
+            }
+
+            return lhs.version > rhs.version;
         }
 
         bool operator()(const SurfaceDependency& lhs, const std::string& rhs) const {
