@@ -88,7 +88,8 @@ namespace workspace::project_config {
                 .test_flags{ "-g -Og" }
             },
             .dependencies{
-                { .name{ "cbt_tools" }, .version{ "2024-08-31" }, .url{ "https://github.com/swar-mukh/cbt_tools" } }
+                { .name{ "cbt_tools" }, .version{ "2024-08-31" }, .url{ "https://github.com/swar-mukh/cbt_tools" } },
+                { .name{ "some_lib" }, .version{ "2025-01-01" }, .url{ "https://gitlab.com/some-user/some_lib" } }
             }
         };
     }
