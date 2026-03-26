@@ -125,7 +125,7 @@ namespace workspace::util {
             return std::make_tuple(false, "File name cannot start with 'src/' or 'tests/' or 'tests/unit_tests/'");
         } else if (lowercased_file_name.starts_with("c/")) {
             return std::make_tuple(false, requires_c_linkage ? "File name cannot start with 'c/'" : "'c' directory reserved only for files requiring C linkage'");
-        } else if (lowercased_file_name.ends_with("headers") || lowercased_file_name.ends_with("headers") || lowercased_file_name.ends_with("main")) {
+        } else if (lowercased_file_name.ends_with("header") || lowercased_file_name.ends_with("headers") || lowercased_file_name.ends_with("main")) {
             return std::make_tuple(false, "File cannot be named as 'header' or 'headers' or 'main'");
         }
         
