@@ -108,10 +108,9 @@ namespace {
             }
             
             if (fs::is_directory(*dir_entry)) {
-                const int files_count = std::count_if(
+                const int files_count = std::ranges::count_if(
                     fs::directory_iterator(dir_entry->path()),
-                    {}, 
-                    [](auto& file){ return file.is_regular_file(); }
+                    [](const auto& file){ return file.is_regular_file(); }
                 );
 
                 if (files_count != 0) {
@@ -122,11 +121,13 @@ namespace {
     }
 
     bool are_dependencies_unresolved(const SurfaceDependencies& dependencies) {
-        for (const auto& dependency: dependencies) {
-            if (!fs::exists("build/dependencies/" + dependency.name)) {
-                cout << "Dependency '" << dependency.name << "' not resolved! Run 'cbt resolve-dependencies' first." << endl;
-                return true;
-            }
+        const auto it = std::ranges::find_if_not(dependencies,
+            [](const auto& dependency){ return fs::exists("build/dependencies/" + dependency.name); }
+        );
+
+        if (it != dependencies.end()) {
+            cout << "Dependency '" << it->name << "' not resolved! Run 'cbt resolve-dependencies' first." << endl;
+            return true;
         }
 
         return false;
@@ -200,13 +201,10 @@ namespace commands {
         const int literal_length_of_src = string("src/").length();
 
         workspace::modification_identifier::SourceFiles annotated_files = workspace::modification_identifier::list_all_files_annotated(project, compile_as_dependency);
-        int number_of_cpp_files_to_compile{ 0 };
-
-        for (auto const& file: annotated_files) {
-            if ((file.file_name.ends_with(".c") || file.file_name.ends_with(".cpp")) && file.affected) {
-                ++number_of_cpp_files_to_compile;
-            }
-        }
+        const int number_of_cpp_files_to_compile = std::ranges::count_if(
+            annotated_files,
+            [](const auto& file){ return (file.file_name.ends_with(".c") || file.file_name.ends_with(".cpp")) && file.affected; }
+        );
 
         if (number_of_cpp_files_to_compile == 0) {
             cout << "[INFO] Nothing to compile: all files are up-to-date!" << endl;

@@ -2,6 +2,7 @@
 
 #include <filesystem>
 #include <fstream>
+#include <numeric>
 #include <stdexcept>
 #include <set>
 #include <string>
@@ -257,22 +258,32 @@ namespace workspace::project_config {
         const string base_text{ std::string("name=") + project.name 
             + "\ndescription=" + project.description
             + "\nversion=" + project.version };
+
+        const string authors_text{
+            std::accumulate(
+                project.authors.begin(),
+                project.authors.end(),
+                std::string("; `authors` is always an array even if there is only one entity. At least one")
+                    + "\n; author is required.",
+                [](const string& acc, const auto& author) { 
+                    return acc + "\nauthors[]=" + author.second + AUTHOR_DELIMITER + author.first;
+                } 
+            )
+        };
+
+        const string platforms_text{
+            std::accumulate(
+                project.platforms.begin(),
+                project.platforms.end(),
+                string("; `platforms` is always an array even if there is only one supported platform,")
+                    + "\n; and values can be any of 'bsd', 'linux', 'macos', 'unix', `windows`. At least"
+                    + "\n; one platform is required.",
+                [](const string& acc, const Platform& platform) { 
+                    return acc + "\nplatforms[]=" + platform_to_string(platform);
+                } 
+            )
+        };
         
-        string authors_text{ std::string("; `authors` is always an array even if there is only one entity. At least one")
-            + "\n; author is required." };
-
-        for (const auto& [email_id, name]: project.authors) {
-            authors_text += std::string("\nauthors[]=") + name + AUTHOR_DELIMITER + email_id;
-        }
-
-        string platforms_text{ std::string("; `platforms` is always an array even if there is only one supported platform,")
-            + "\n; and values can be any of 'bsd', 'linux', 'macos', 'unix', `windows`. At least"
-            + "\n; one platform is required." };
-        
-        for (const Platform &platform: project.platforms) {
-            platforms_text += std::string("\nplatforms[]=") + platform_to_string(platform);
-        }
-
         const string config_text{ std::string("; `config` contains all the set of attributes required to compile, test and")
             + "\n; build the project."
             + "\nconfig{cpp_standard}=" + project.config.cpp_standard
@@ -281,11 +292,16 @@ namespace workspace::project_config {
             + "\nconfig{build_flags}=" + project.config.build_flags
             + "\nconfig{test_flags}=" + project.config.test_flags };
         
-        string dependencies_text{ "; add your `dependencies` in the format mentioned below" };
-
-        for (const SurfaceDependency &dependency: project.dependencies) {
-            dependencies_text += std::string("\n") + (uncomment_dependencies ? "" : "; ") + "dependencies[]=" + dependency_to_string(dependency, false);
-        }
+        const string dependencies_text{
+            std::accumulate(
+                project.dependencies.begin(),
+                project.dependencies.end(),
+                string("; add your `dependencies` in the format mentioned below"),
+                [uncomment_dependencies](const string& acc, const SurfaceDependency& dependency) { 
+                    return acc + "\n" + (uncomment_dependencies ? "" : "; ") + "dependencies[]=" + dependency_to_string(dependency, false);
+                } 
+            )
+        };
 
         return (add_disclaimer_text ? (disclaimer_text + "\n\n") : "") 
             + base_text
