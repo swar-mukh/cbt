@@ -105,7 +105,7 @@ namespace workspace::project_config {
 
     using Projects = std::set<Project, ProjectComparator>;
 
-    Project init(const string& name, const ProjectType& project_type);
+    Project init(const string& project_name, const ProjectType& project_type);
 
     string platform_to_string(const Platform& platform);
     Platform string_to_platform(const string& platform);
