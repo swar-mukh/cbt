@@ -424,17 +424,7 @@ namespace commands {
     }
 
     void show_info() {
-        const string GCC_VERSION = std::to_string(__GNUC__) + "." + std::to_string(__GNUC_MINOR__) + "." + std::to_string(__GNUC_PATCHLEVEL__);
-
-        #ifdef __APPLE__
-        const string PLATFORM = "Apple MacOS";
-        #elif __linux__
-        const string PLATFORM = "Linux";
-        #elif __unix__
-        const string PLATFORM = "Unix";
-        #elif defined(_WIN32) || defined(_WIN64)
-        const string PLATFORM = "Microsoft Windows";
-        #endif
+        gnu_toolchain::CompilerInfo compiler = gnu_toolchain::get_compiler_info();
 
         cout
             << "cbt: C++ Build Tool" << endl
@@ -443,8 +433,8 @@ namespace commands {
             << "Release       - 2026.02.06" << endl
             << endl
             << "C++ Standard  - " << __cplusplus << endl
-            << "GCC Version   - " << GCC_VERSION << endl
-            << "Platform      - " << PLATFORM << endl;
+            << "Compiler      - " << compiler.name << " (version "<< compiler.version << ")" << endl
+            << "Platform      - " << compiler.platform << endl;
     }
 
     void show_help() {

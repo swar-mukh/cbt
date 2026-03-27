@@ -83,4 +83,48 @@ namespace gnu_toolchain {
     int execute_test_binary(const string& test_binary) {
         return execute(test_binary);
     }
+
+    CompilerInfo get_compiler_info() {
+        CompilerInfo compiler;
+
+        #if defined(__clang__)
+        #ifdef __apple_build_version__
+        compiler.name = "Apple Clang";
+        #else
+        compiler.name = "LLVM Clang";
+        #endif
+        compiler.version = std::to_string(__clang_major__) + "." + std::to_string(__clang_minor__) + "." + std::to_string(__clang_patchlevel__);
+        #elif defined(_MSC_VER)
+        compiler.name = "MSVC";
+        compiler.version = std::to_string(_MSC_VER / 100) + "." + std::to_string(_MSC_VER);
+        #ifdef _MSV_FULL_VER
+        compiler.version += "." + std::to_string(_MSC_FULL_VER / 100000);
+        #endif
+        #elif defined(__MINGW32__) || defined(__MINGW64__)
+        compiler.name = "MinGW-w64";
+        compiler.version = __MINGW64_VERSION_STR;
+        #elif defined(__GNUC__) && !defined(__clang__)
+        compiler.name = "GCC";
+        compiler.version = __VERSION__;
+        #else
+        compiler.name = "<Undetected>";
+        compiler.version = "<undetected-version>"
+        #endif
+
+        #ifdef __APPLE__
+        compiler.platform = "Apple MacOS";
+        #elif __linux__
+        compiler.platform = "Linux";
+        #elif __FreeBSD__
+        compiler.platform = "FreeBSD";
+        #elif __unix__
+        compiler.platform = "Unix";
+        #elif defined(_WIN32) || defined(_WIN64)
+        compiler.platform = "Microsoft Windows";
+        #else
+        compiler.platform = "<Undetected>";
+        #endif
+
+        return compiler;
+    }
 }

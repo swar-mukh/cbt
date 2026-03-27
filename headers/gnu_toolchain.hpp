@@ -26,6 +26,14 @@ namespace gnu_toolchain {
     string get_test_execution_command(const workspace::project_config::Project& project, const string& extension);
     int create_test_binary(const workspace::project_config::Project& project, const std::vector<string>& files_to_link, const string& test_binary);
     int execute_test_binary(const string& test_binary);
+
+    struct CompilerInfo {
+        string name;
+        string version;
+        string platform;
+    };
+
+    CompilerInfo get_compiler_info();
 }
 
 #endif
