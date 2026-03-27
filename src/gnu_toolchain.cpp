@@ -42,7 +42,7 @@ namespace {
                 fold_plain);
     }
 
-    int execute(std::string cmd) {
+    int execute(const std::string& cmd) {
         return system(cmd.c_str());
     }
 }

@@ -104,7 +104,7 @@ namespace {
         return files_with_timestamps;
     }
 
-    const bool is_c_directory(const string& normalised_path) {
+    bool is_c_directory(const string& normalised_path) {
         #if defined(_WIN32) || defined(_WIN64)
         return normalised_path.starts_with("src\\c\\") || normalised_path == "src\\c";
         #else
