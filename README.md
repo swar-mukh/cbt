@@ -36,6 +36,9 @@ One reason why proliferation of JavaScript has been so prominent is due to `npm`
 - First-class (and **type-safe**) support for `env` file(s)
 - **Decentralised** dependency management via `cbt resolve-dependencies`
 - Unobtrusive and transparent `cbt_tools` offered to bring quality-of-life improvements as well as enable flexible customisation(s) as per project requirements
+- Interface with `C` files through dedicated `headers/c/` and `src/c` directory allowing you to code in `C` (when absolutely required) and seamlessly invoke from `C++` file
+- First-class support for containerisation technologies (like `Docker` and `Podman`) allowing you to develop, test and ship applications/libraries from day one 
+- Leverage `cppcheck` to perform static analysis through a simple `cppcheck{}` interface available in `project.cfg`
 
 ## Usage
 
@@ -70,6 +73,8 @@ compile-project                 - Compile all files and generate respective bina
 build-project                   - (For applications only) Perform linking and generate final executable under 'build/'
 run-unit-tests                  - Run all test cases under 'tests/unit_tests/' directory
 
+perform-static-analysis         - Invoke `cppcheck` with respective parameters from 'project.cfg'
+
 clear-build                     - Delete all object files under 'build/' directory
 
 info                            - Show information regarding cbt
@@ -91,6 +96,7 @@ For development through containerisation technologies (e.g. `docker` or `podman`
 5. If on Windows, MinGW can be downloaded from [WinLibs](https://winlibs.com/).
 6. On a Mac, `g++` is actually a tiny wrapper over `clang`. This shouldn't be a problem as such, but if you want to develop exclusively through `g++`, then download the binary (through Homebrew or MacPorts, etc.) and alias `g++` to the appropriate downloaded binary, i.e. `alias g++=g++-<version>`.
 7. Ensure `curl` and `tar` are available.
+8. `cbt` relies on `cppcheck` to perform static analysis. Head over to the official [website](http://cppcheck.net/) and follow the instructions on how to download. If on Windows 10/11, `cppcheck` can be downloaded using `winget` by issuing `winget install cppcheck` (probable download location: `C:\Program Files\Cppcheck`) and adding it manually to your PATH.
 
 ### Steps
 
@@ -175,5 +181,5 @@ If you are developing using `docker` or `podman`, use the following workflow:
 | 11 | Add native support for reading environment values from `env` file(s) | `✅ Complete` ||
 | 12 | Optimise compilation and building by inspecting dependency graph | `✅ Complete` | _<ul><li>Should we go all in with C++ modules instead? (**Update: Postponed for now**)</li><li>How to mix-n-match traditional HPP/CPP files with module files in the same project? (**Update: Postponed for now**)</li></ul>_ |
 | 13 | Support scaffold for daemons (*nix) and services (Windows)  | `💤 TBD` | _Refer to [this](https://github.com/swar-mukh/cbt/discussions/2) discussion_|
-| 14 | Add support for `lint`ing  | `💤 TBD` | _`cppcheck` seems to be a good fit for integration_ |
+| 14 | Add support for `lint`ing (especially static analysis) | `✅ Complete` | _`cppcheck` seems to be a good fit for integration_ |
 | 15 | Add support for working with containerisation technologies  | `✅ Complete` ||

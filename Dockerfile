@@ -9,7 +9,7 @@ RUN ./script.sh init compile build \
 ENV PATH="/opt/cbt:${PATH}"
 
 FROM alpine:3.18 AS deployment
-RUN apk add --no-cache libstdc++ libgcc
+RUN apk add --no-cache libstdc++ libgcc cppcheck
 WORKDIR /app
 RUN mkdir environments
 COPY --from=builder /cbt/environments/.env.template environments/

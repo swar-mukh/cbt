@@ -423,6 +423,31 @@ namespace commands {
         }
     }
 
+    void perform_static_analysis() {
+        const Project project = convert_cfg_to_model();
+
+        const string cmd{ string("cppcheck")
+            + (" --std=" + project.config.cpp_standard)
+            + " --language=c++"
+            + " --enable=all"
+            + " --quiet"
+            + (project.cppcheck.bug_hunting.has_value() && project.cppcheck.bug_hunting.value() ? " --bug-hunting" : "")
+            + (" --error-exitcode=" + std::to_string(project.cppcheck.error_exit_code))
+            + (project.cppcheck.inconclusive.has_value() && project.cppcheck.inconclusive.value() ? " --inconclusive" : "")
+            + (project.cppcheck.inline_suppression.has_value() && project.cppcheck.inline_suppression.value() ? " --inline-suppr" : "")
+            + (" --platform=" + project.cppcheck.platform)
+            + (project.cppcheck.safety.has_value() && project.cppcheck.safety.value() ? " --safety" : "")
+            + (project.cppcheck.template_.has_value() ? (" --template=\"" + project.cppcheck.template_.value() + "\"") : "")
+            + (project.cppcheck.verbose.has_value() && project.cppcheck.verbose.value() ? " --verbose" : "")
+            + " -I headers/"
+            + " src/"
+        };
+
+        cout << "[EXECUTE] " << cmd << "\n\n";
+
+        [[maybe_unused]] const int result = system(cmd.c_str());
+    }
+    
     void show_info() {
         gnu_toolchain::CompilerInfo compiler = gnu_toolchain::get_compiler_info();
 
@@ -466,6 +491,8 @@ namespace commands {
             << "compile-project                 - Compile all files and generate respective binaries under 'build/binaries/'" << endl
             << "build-project                   - (For applications only) Perform linking and generate final executable under 'build/'" << endl
             << "run-unit-tests                  - Run all test cases under 'tests/unit_tests/' directory" << endl
+            << endl
+            << "perform-static-analysis         - Invoke `cppcheck` with respective parameters from 'project.cfg'"  << endl
             << endl
             << "clear-build                     - Delete all object files under 'build/' directory"  << endl
             << endl

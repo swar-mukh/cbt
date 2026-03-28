@@ -39,6 +39,9 @@ void parse_commands_and_execute(std::vector<std::string>& arguments) {
             } else if (arguments[1].compare("run-unit-tests") == 0) {
                 workspace::scaffold::exit_if_command_not_invoked_from_within_workspace();
                 commands::run_unit_tests();
+            } else if (arguments[1].compare("perform-static-analysis") == 0) {
+                workspace::scaffold::exit_if_command_not_invoked_from_within_workspace();
+                commands::perform_static_analysis();
             } else if (arguments[1].compare("info") == 0) {
                 commands::show_info();
             } else if (arguments[1].compare("help") == 0) {

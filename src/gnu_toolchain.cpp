@@ -20,11 +20,11 @@ namespace {
         return directory + SEPARATOR + "*.o";
     }
 
-    auto fold_for_binaries = [](const std::string& acc, const std::string item) {
+    auto fold_for_binaries = [](const std::string& acc, const std::string& item) {
         return std::move(acc) + ' ' + glob_directory_for_binaries(item);
     };
 
-    auto fold_plain = [](const std::string& acc, const std::string item) {
+    auto fold_plain = [](const std::string& acc, const std::string& item) {
         return std::move(acc) + ' ' + item;
     };
 
