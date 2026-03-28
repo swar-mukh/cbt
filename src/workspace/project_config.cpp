@@ -25,6 +25,14 @@ namespace {
         "config{compile_time_flags}",
         "config{build_flags}",
         "config{test_flags}",
+        "cppcheck{bug_hunting}",
+        "cppcheck{error_exit_code}",
+        "cppcheck{inconclusive}",
+        "cppcheck{inline_suppression}",
+        "cppcheck{platform}",
+        "cppcheck{safety}",
+        "cppcheck{template}",
+        "cppcheck{verbose}",
         "dependencies[]"
     };
     const std::set<std::string> UNSUPPORTED_CPP_STANDARDS{ "c++98", "c++03", "c++11", "c++14" };
@@ -58,6 +66,14 @@ namespace {
         if (project.config.cpp_standard.empty()) {
             throw std::runtime_error("Missing entry 'config{cpp_standard}' (in 'project.cfg')");
         }
+
+        if (project.cppcheck.error_exit_code != 0 && project.cppcheck.error_exit_code != 1) {
+            throw std::runtime_error("Missing entry 'cppcheck{error_exit_code}' (in 'project.cfg')");
+        }
+
+        if (project.cppcheck.platform.empty()) {
+            throw std::runtime_error("Missing entry 'cppcheck{platform}' (in 'project.cfg')");
+        }
     }
 }
 
@@ -87,6 +103,16 @@ namespace workspace::project_config {
                 .compile_time_flags{ "-Os -s" },
                 .build_flags{ "-O3 -s" },
                 .test_flags{ "-g -Og" }
+            },
+            .cppcheck {
+                .bug_hunting{ false },
+                .error_exit_code{ 1 },
+                .inconclusive{ true },
+                .inline_suppression{ false },
+                .platform{ "native" },
+                .safety{ true },
+                .template_{ "[{severity}] {file}:[{line}:{column}]\\n{code}\\n({id}) {message}\\n" },
+                .verbose{ false }
             },
             .dependencies{
                 { .name{ "cbt_tools" }, .version{ "2024-08-31" }, .url{ "https://github.com/swar-mukh/cbt_tools" } },
@@ -234,6 +260,46 @@ namespace workspace::project_config {
                     project.config.build_flags = value;
                 } else if (key.compare("config{test_flags}") == 0) {
                     project.config.test_flags = value;
+                } else if (key == "cppcheck{bug_hunting}") {
+                    if (value != "true" && value != "false") {
+                        throw std::runtime_error("Expected either true or false for attribute '" + key + "' " + ERROR_LOCATION);
+                    }
+
+                    project.cppcheck.bug_hunting = value == "true" ? true : false;
+                } else if (key == "cppcheck{error_exit_code}") {
+                    if (value != "0" && value != "1") {
+                        throw std::runtime_error("Expected either 0 or 1 for attribute '" + key + "' " + ERROR_LOCATION);
+                    }
+                    
+                    project.cppcheck.error_exit_code = value == "0" ? 0 : 1;
+                } else if (key == "cppcheck{inconclusive}") {
+                    if (value != "true" && value != "false") {
+                        throw std::runtime_error("Expected either true or false for attribute '" + key + "' " + ERROR_LOCATION);
+                    }
+
+                    project.cppcheck.inconclusive = value == "true" ? true : false;
+                } else if (key == "cppcheck{inline_suppression}") {
+                    if (value != "true" && value != "false") {
+                        throw std::runtime_error("Expected either true or false for attribute '" + key + "' " + ERROR_LOCATION);
+                    }
+
+                    project.cppcheck.inline_suppression = value == "true" ? true : false;
+                } else if (key == "cppcheck{platform}") {
+                    project.cppcheck.platform = value;
+                } else if (key == "cppcheck{safety}") {
+                    if (value != "true" && value != "false") {
+                        throw std::runtime_error("Expected either true or false for attribute '" + key + "' " + ERROR_LOCATION);
+                    }
+
+                    project.cppcheck.safety = value == "true" ? true : false;
+                } else if (key == "cppcheck{template}") {
+                    project.cppcheck.template_ = value;
+                } else if (key == "cppcheck{verbose}") {
+                    if (value != "true" && value != "false") {
+                        throw std::runtime_error("Expected either true or false for attribute '" + key + "' " + ERROR_LOCATION);
+                    }
+
+                    project.cppcheck.verbose = value == "true" ? true : false;
                 } else if (key.compare("dependencies[]") == 0) {
                     project.dependencies.insert(parse_dependency(value));
                 } else {
@@ -292,6 +358,17 @@ namespace workspace::project_config {
             + "\nconfig{build_flags}=" + project.config.build_flags
             + "\nconfig{test_flags}=" + project.config.test_flags };
         
+        const string cppcheck_text{ std::string("; invokes `cppcheck` with following arguments when `cbt perform-static-anaysis` is run")
+            + "\n" + (!project.cppcheck.bug_hunting.has_value() ? "; " : "") + "cppcheck{bug_hunting}=" + (project.cppcheck.bug_hunting.value() ? "true" : "false") + " ; optional boolean field"
+            + "\ncppcheck{error_exit_code}=" + std::to_string(project.cppcheck.error_exit_code)
+            + "\n" + (!project.cppcheck.inconclusive.has_value() ? "; " : "") + "cppcheck{inconclusive}=" + (project.cppcheck.inconclusive.value() ? "true" : "false") + " ; optional boolean field"
+            + "\n" + (!project.cppcheck.inline_suppression.has_value() ? "; " : "") + "cppcheck{inline_suppression}=" + (project.cppcheck.inline_suppression.value() ? "true" : "false") + " ; optional boolean field"
+            + "\ncppcheck{platform}=" + project.cppcheck.platform
+            + "\n" + (!project.cppcheck.safety.has_value() ? "; " : "") + "cppcheck{safety}=" + (project.cppcheck.safety.value() ? "true" : "false") + " ; optional boolean field (remove/comment if unsupported by cppcheck)"
+            + "\n" + (!project.cppcheck.template_.has_value() ? "; " : "") + "cppcheck{template}=" + project.cppcheck.template_.value_or("") + " ; optional string field"
+            + "\n" + (!project.cppcheck.verbose.has_value() ? "; " : "") + "cppcheck{verbose}=" + (project.cppcheck.verbose.value() ? "true" : "false") + " ; optional boolean field"
+        };
+
         const string dependencies_text{
             std::accumulate(
                 project.dependencies.begin(),
@@ -313,6 +390,8 @@ namespace workspace::project_config {
             + platforms_text
             + "\n\n"
             + config_text
+            + "\n\n"
+            + cppcheck_text
             + "\n\n"
             + dependencies_text
             + "\n";

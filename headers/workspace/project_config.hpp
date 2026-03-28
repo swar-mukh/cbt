@@ -2,6 +2,7 @@
 #define WORKSPACE_PROJECT_CONFIG
 
 #include <map>
+#include <optional>
 #include <set>
 #include <string>
 
@@ -27,6 +28,17 @@ namespace workspace::project_config {
         string compile_time_flags;
         string build_flags;
         string test_flags;
+    };
+
+    struct Cppcheck {
+        std::optional<bool> bug_hunting;
+        int error_exit_code;
+        std::optional<bool> inconclusive;
+        std::optional<bool> inline_suppression;
+        string platform;
+        std::optional<bool> safety;
+        std::optional<string> template_;
+        std::optional<bool> verbose;
     };
 
     struct SurfaceDependency {
@@ -71,6 +83,8 @@ namespace workspace::project_config {
         std::map<string, string> authors;
         std::set<Platform> platforms;
         Config config;
+
+        Cppcheck cppcheck;
 
         SurfaceDependencies dependencies;
     };

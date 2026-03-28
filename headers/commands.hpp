@@ -17,6 +17,8 @@ namespace commands {
     void build_project();
 
     void run_unit_tests();
+
+    void perform_static_analysis();
     
     void show_info();
     void show_help();
