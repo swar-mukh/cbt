@@ -50,7 +50,7 @@ namespace {
         lines.erase(lines.begin());
         lines.pop_back();
 
-        for (auto& nline: lines) {
+        for (const auto& nline: lines) {
             final_string += (nline.size() > 4 ? nline.substr(4) : nline) + "\n";
         }
 

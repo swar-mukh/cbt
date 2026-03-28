@@ -299,7 +299,7 @@ namespace {
             SourceFile hpp_file{ get_or_construct_source_file(header_file, timestamps_history) };
             bucket.insert(hpp_file);
 
-            for (auto& dependant: dependants) {
+            for (const auto& dependant: dependants) {
                 SourceFile cpp_file{ get_or_construct_source_file(dependant, timestamps_history) };
 
                 if (hpp_file.affected) {
