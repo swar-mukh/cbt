@@ -846,7 +846,7 @@ namespace assets::scaffold_texts {
     RUN apk add --no-cache bash g++ musl-dev curl tar cppcheck
     SHELL ["/bin/bash", "-o", "pipefail", "-c"]
     WORKDIR /internal
-    RUN curl -L https://github.com/swar-mukh/cbt/archive/refs/tags/cbt-2026.02.06.tar.gz | tar xz --strip-components=1 \
+    RUN curl -L https://github.com/swar-mukh/cbt/archive/refs/tags/cbt-2026.03.29.tar.gz | tar xz --strip-components=1 \
         && ./script.sh init compile build \
         && mkdir /opt/cbt \
         && mv build/cbt /opt/cbt/.

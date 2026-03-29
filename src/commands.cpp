@@ -455,7 +455,7 @@ namespace commands {
             << "cbt: C++ Build Tool" << endl
             << endl
             << "Author        - Swarnava Mukherjee" << endl
-            << "Release       - 2026.02.06" << endl
+            << "Release       - 2026-03-29" << endl
             << endl
             << "C++ Standard  - " << __cplusplus << endl
             << "Compiler      - " << compiler.name << " (version "<< compiler.version << ")" << endl
