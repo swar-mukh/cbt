@@ -1,14 +1,17 @@
 #include "commands.hpp"
 
 #include <algorithm>
+#include <atomic>
 #include <cstdlib>
 #include <filesystem>
 #include <iostream>
 #include <set>
 #include <string>
+#include <syncstream>
 #include <vector>
 
 #include "gnu_toolchain.hpp"
+#include "orchestrator.hpp"
 #include "workspace/dependencies_manager.hpp"
 #include "workspace/modification_identifier.hpp"
 #include "workspace/project_config.hpp"
@@ -200,18 +203,21 @@ namespace commands {
         const int literal_length_of_headers = string("headers/").length();
         const int literal_length_of_src = string("src/").length();
 
-        workspace::modification_identifier::SourceFiles annotated_files = workspace::modification_identifier::list_all_files_annotated(project, compile_as_dependency);
-        const int number_of_cpp_files_to_compile = std::ranges::count_if(
-            annotated_files,
-            [](const auto& file){ return (file.file_name.ends_with(".c") || file.file_name.ends_with(".cpp")) && file.affected; }
-        );
+        const workspace::modification_identifier::SourceFiles annotated_files = workspace::modification_identifier::list_all_files_annotated(project, compile_as_dependency);
+        std::vector<const workspace::modification_identifier::SourceFile*> files;
 
-        if (number_of_cpp_files_to_compile == 0) {
+        for (const auto& file: annotated_files) {
+            if ((file.file_name.ends_with(".c") || file.file_name.ends_with(".cpp")) && file.affected) {
+                files.emplace_back(&file);
+            }
+        }
+
+        if (files.empty()) {
             cout << "[INFO] Nothing to compile: all files are up-to-date!" << endl;
             return;
         }
 
-        cout << "[INFO] Number of file(s) to compile: " << number_of_cpp_files_to_compile << endl << endl;
+        cout << "[INFO] Number of file(s) to compile: " << files.size() << endl << endl;
 
         for (auto const& dir_entry: fs::recursive_directory_iterator("headers")) {
             if (fs::is_directory(dir_entry)) {
@@ -226,39 +232,39 @@ namespace commands {
 
         cout << "[COMMAND] " << gnu_toolchain::get_compilation_command(project, compile_as_dependency) << endl << endl;
 
-        int files_succesfully_compiled_count{ 0 };
+        std::atomic<int> files_succesfully_compiled_count{0};
 
-        for (auto& file: annotated_files) {
-            if ((file.file_name.ends_with(".c") || file.file_name.ends_with(".cpp")) && file.affected) {
-                const bool is_c_file{ file.file_name.ends_with(".c") };
-                const int literal_length_of_extension = string(is_c_file ? ".c" : ".cpp").length();
+        const std::function<void(const workspace::modification_identifier::SourceFile*)> executor = [&](const workspace::modification_identifier::SourceFile* pfile){
+            const workspace::modification_identifier::SourceFile& file = *pfile;
 
-                const string stemmed_file = file.file_name.substr(
-                    literal_length_of_src,
-                    file.file_name.length() - (literal_length_of_src + literal_length_of_extension)
-                );
-                const string header_extension{ is_c_file ? ".h" : ".hpp" };
+            const bool is_c_file{ file.file_name.ends_with(".c") };
+            const int literal_length_of_extension = string(is_c_file ? ".c" : ".cpp").length();
 
-                if (stemmed_file.compare("main") != 0 && !fs::exists("headers/" + stemmed_file + header_extension)) {
-                    cout << "SKIP " << ("headers/" + stemmed_file + header_extension) << " (No corresponding implementation file found!)" << endl;
-                } else {
-                    file.compilation_start_timestamp = workspace::modification_identifier::get_current_fileclock_timestamp();
+            const string stemmed_file = file.file_name.substr(
+                literal_length_of_src,
+                file.file_name.length() - (literal_length_of_src + literal_length_of_extension)
+            );
+            const string header_extension{ is_c_file ? ".h" : ".hpp" };
 
-                    const int result = gnu_toolchain::compile_file(project, file.file_name, stemmed_file, compile_as_dependency);
+            if (stemmed_file.compare("main") != 0 && !fs::exists("headers/" + stemmed_file + header_extension)) {
+                std::osyncstream(cout) << "[SKIP] " << ("headers/" + stemmed_file + header_extension) << " (No corresponding implementation file found!)" << endl;
+            } else {
+                file.compilation_start_timestamp = workspace::modification_identifier::get_current_fileclock_timestamp();
 
-                    file.compilation_end_timestamp = workspace::modification_identifier::get_current_fileclock_timestamp();
-                    file.was_successful = (result == 0);
+                const int result = gnu_toolchain::compile_file(project, file.file_name, stemmed_file, compile_as_dependency);
 
-                    cout << "[COMPILE]" << std::left << std::setw(6) << (file.was_successful ? "[OK]" : "[NOK]") << file.file_name <<  endl;
+                file.compilation_end_timestamp = workspace::modification_identifier::get_current_fileclock_timestamp();
+                file.was_successful = (result == 0);
 
-                    if (file.was_successful) {
-                        ++files_succesfully_compiled_count;
-                    }
+                if (file.was_successful) {
+                    files_succesfully_compiled_count++;
                 }
             }
-        }
+        };
 
-        cout << endl << "[INFO] File(s) successfully compiled: " << files_succesfully_compiled_count << " out of " << number_of_cpp_files_to_compile << endl;
+        orchestrator::orchestrate_compilation(files, executor);
+
+        cout << endl << "[INFO] File(s) successfully compiled: " << files_succesfully_compiled_count.load() << " out of " << files.size() << endl;
 
         workspace::scaffold::purge_old_binaries("build/binaries/", annotated_files);
         workspace::modification_identifier::persist_annotations(annotated_files);
