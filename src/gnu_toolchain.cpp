@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "workspace/project_config.hpp"
+#include "workspace/util.hpp"
 
 namespace {
     using namespace gnu_toolchain;
@@ -114,11 +115,19 @@ namespace gnu_toolchain {
     }
 
     int create_test_binary(const workspace::project_config::Project& project, const std::vector<string>& files_to_link, const string& test_binary) {
-        return execute(COMPILER + " -std=" + project.config.cpp_standard + " " + project.config.safety_flags + " " + project.config.test_flags + " " + INCLUDE_PATHS + " " + join(files_to_link, FoldType::PLAIN) + " -o " + test_binary);
+        const auto [output, status] = execute_buffered(COMPILER + " -std=" + project.config.cpp_standard + " " + project.config.safety_flags + " " + project.config.test_flags + " " + INCLUDE_PATHS + " " + join(files_to_link, FoldType::PLAIN) + " -o " + test_binary);
+        
+        std::osyncstream(std::cout) << "[COMPILE] " << workspace::util::get_platform_formatted_filename(test_binary) << "\n" << output << std::flush;
+
+        return status;
     }
 
     int execute_test_binary(const string& test_binary) {
-        return execute(test_binary);
+        const auto [output, status] = execute_buffered(test_binary);
+
+        std::osyncstream(std::cout) << "\n[EXECUTE] " << test_binary << "\n" << output << std::flush;
+
+        return status;
     }
 
     CompilerInfo get_compiler_info() {

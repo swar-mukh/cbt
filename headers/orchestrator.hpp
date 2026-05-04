@@ -72,7 +72,7 @@ namespace {
 
 namespace orchestrator {
     template<typename T, typename Callable>
-    void orchestrate_compilation(std::vector<T>& items, Callable&& lambda) {
+    void orchestrate_task(std::vector<T>& items, Callable&& lambda) {
         if (items.size() >= CORES) {
             run_with_thread_pool(items, std::forward<Callable>(lambda));
         } else {

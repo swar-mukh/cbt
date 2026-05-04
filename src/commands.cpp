@@ -8,6 +8,7 @@
 #include <set>
 #include <string>
 #include <syncstream>
+#include <tuple>
 #include <vector>
 
 #include "gnu_toolchain.hpp"
@@ -262,7 +263,7 @@ namespace commands {
             }
         };
 
-        orchestrator::orchestrate_compilation(files, executor);
+        orchestrator::orchestrate_task(files, executor);
 
         cout << endl << "[INFO] File(s) successfully compiled: " << files_succesfully_compiled_count.load() << " out of " << files.size() << endl;
 
@@ -354,7 +355,9 @@ namespace commands {
 
         const fs::path harness{ "headers/cbt_tools/test_harness.hpp" };
 
+        std::vector<std::tuple<std::vector<std::string>, std::string>> binaries_to_create{};
         std::vector<fs::path> binaries_to_execute{};
+        
         const size_t literal_length_of_headers{ std::string("headers/").length() };
         const size_t literal_length_of_dependencies{ std::string(".internals/dh_symlinks/").length() };
 
@@ -415,18 +418,28 @@ namespace commands {
             }
 
             const fs::path test_binary{ fs::path("build/test_binaries/unit_tests" / scoped_directory_of_file / fs::path(file).stem().replace_extension(EXTENSION)) };
-            const int result = gnu_toolchain::create_test_binary(project, files_to_link, test_binary.string());
-            
-            cout << "[COMPILE]" << std::left << std::setw(6) << (result == 0 ? "[OK]" : "[NOK]") << workspace::util::get_platform_formatted_filename(test_binary) << endl;
+            binaries_to_create.push_back(std::make_tuple(files_to_link, test_binary.string()));
+        }
 
-            if (result == 0) {
-                binaries_to_execute.push_back(test_binary);
+        orchestrator::orchestrate_task(
+            binaries_to_create,
+            [&project, &binaries_to_execute](const std::tuple<std::vector<std::string>, std::string>& binary) {
+                const auto [files_to_link, test_binary] = binary;
+
+                const int result = gnu_toolchain::create_test_binary(project, files_to_link, test_binary);
+
+                if (result == 0) {
+                    binaries_to_execute.push_back(test_binary);
+                }
             }
-        }
-        
-        for (auto const& test_binary: binaries_to_execute) {
-            [[maybe_unused]] const int result = gnu_toolchain::execute_test_binary(workspace::util::get_platform_formatted_filename(test_binary));
-        }
+        );
+
+        orchestrator::orchestrate_task(
+            binaries_to_execute,
+            [](const fs::path& test_binary) {
+                [[maybe_unused]] const int result = gnu_toolchain::execute_test_binary(workspace::util::get_platform_formatted_filename(test_binary));
+            }
+        );
     }
 
     void perform_static_analysis() {
