@@ -3,17 +3,10 @@
 
 #include <atomic>
 #include <condition_variable>
-#include <cstdio>
 #include <iostream>
-#include <filesystem>
-#include <functional>
 #include <future>
-#include <memory>
 #include <mutex>
 #include <queue>
-#include <stdexcept>
-#include <string>
-#include <syncstream>
 #include <thread>
 
 namespace {
