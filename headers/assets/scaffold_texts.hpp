@@ -239,15 +239,37 @@ namespace assets::scaffold_texts {
     #ifndef CBT_TOOLS_TEST_HARNESS
     #define CBT_TOOLS_TEST_HARNESS
 
+    #include <exception>
     #include <functional>
     #include <iomanip>
     #include <iostream>
     #include <string>
+    #include <syncstream>
     #include <tuple>
     #include <vector>
 
+    #define safe_assert(expr) \
+        do {                  \
+            if (!(expr)) {    \
+                throw cbt_tools::test_harness::AssertionException("Assertion `" #expr "` failed at line: " + std::to_string(__LINE__)); \
+            }                 \
+        } while (0)
+
     namespace cbt_tools::test_harness {
         // Note: Edit this parent class *only if* the harness provided is not upto your requirements
+
+        class AssertionException: public std::exception {
+            std::string message;
+
+            public:
+            explicit AssertionException(const std::string& msg)
+                : message(std::move(msg)) {}
+
+            const char* what() const noexcept override {
+                return message.c_str();
+            }
+        };
+
         template<typename __CtxStruct>
         class TestSuite {
             using TestCaseFn = std::function<void(const __CtxStruct&)>;
@@ -265,10 +287,18 @@ namespace assets::scaffold_texts {
                 for (const auto& test_case: test_cases) {
                     before_each();
 
-                    const auto [title, test_fn] = test_case;
-                            
-                    std::cout << std::right << std::setw(8) << "RUN " << title << std::endl;
-                    test_fn(ctx);
+                    const auto& [title, test_fn] = test_case;
+                    
+                    try {
+                        std::osyncstream(std::cout) << std::setw(10) << "[RUN] " << title << std::endl;
+                        test_fn(ctx);
+                    } catch(const AssertionException& e) {
+                        std::osyncstream(std::cout) << std::setw(10) << "[FAIL] " << e.what() << std::endl;
+                    } catch (const std::exception& e) {
+                        std::osyncstream(std::cout) << std::setw(10) << "[ERROR] " << "Exception: " << e.what() << std::endl;
+                    } catch (...) {
+                        std::osyncstream(std::cout) << std::setw(10) << "[ERROR] " << "Unknown non-standard exception." << std::endl;
+                    }
 
                     after_each();
                 }
@@ -628,11 +658,6 @@ namespace assets::scaffold_texts {
     const string SAMPLE_TEST_C = R"(
     #include "cbt_tools/test_harness.hpp"
 
-    #include <cassert>
-    #include <functional>
-    #include <iostream>
-    #include <string>
-
     #include "@RELATIVE_SRC_FILE_NAME"
 
     // If no context is required, replace the below struct with just `struct Context {};`
@@ -676,18 +701,16 @@ namespace assets::scaffold_texts {
         // Add all your test cases in this function
        
         test_suite.add_test_case("Sum of 5 and 6 is 11", []([[maybe_unused]] const Context& ctx) {
-            assert((add(5, 6) == 11));
+            safe_assert((add(5, 6) == 11));
         });
         
         test_suite.add_test_case("Sum of 5 and 6 is not 12", []([[maybe_unused]] const Context& ctx) {
-            assert((add(5, 6) != 12));
+            safe_assert((add(5, 6) != 12));
         });
     }
 
     int main() {
         ScopedTestSuite test_suite{ define_context() };
-
-        std::cout << std::endl << std::setw(8) << "EXECUTE " << __FILE__ << std::endl << std::endl;
 
         define_test_cases(test_suite);
 
@@ -699,11 +722,6 @@ namespace assets::scaffold_texts {
 
     const string SAMPLE_TEST_CPP = R"(
     #include "cbt_tools/test_harness.hpp"
-
-    #include <cassert>
-    #include <functional>
-    #include <iostream>
-    #include <string>
 
     #include "@RELATIVE_SRC_FILE_NAME"
 
@@ -750,11 +768,11 @@ namespace assets::scaffold_texts {
         using namespace @NAMESPACE;
         
         test_suite.add_test_case("Sum of 5 and 6 is 11", []([[maybe_unused]] const Context& ctx) {
-            assert((sum(5, 6) == 11));
+            safe_assert((sum(5, 6) == 11));
         });
         
         test_suite.add_test_case("Sum of 5 and 6 is not 12", []([[maybe_unused]] const Context& ctx) {
-            assert((sum(5, 6) != 12));
+            safe_assert((sum(5, 6) != 12));
         });
 
         test_suite.add_test_case("Company foundation strength is 1", []([[maybe_unused]] const Context& ctx) {
@@ -765,7 +783,7 @@ namespace assets::scaffold_texts {
                 .sex{ Sex::MALE }
             });
 
-            assert((company.strength() == 1));
+            safe_assert((company.strength() == 1));
         });
 
         test_suite.add_test_case("Company's strength is 3 upon hiring of 2 candidates", []([[maybe_unused]] const Context& ctx) {
@@ -779,14 +797,12 @@ namespace assets::scaffold_texts {
             company.hire(Person{ .first_name{ "F1" }, .last_name{ "L1" }, .sex{ Sex::MALE } });
             company.hire(Person{ .first_name{ "F2" }, .last_name{ "L2" }, .sex{ Sex::FEMALE } });
 
-            assert((company.strength() == 3));
+            safe_assert((company.strength() == 3));
         });
     }
 
     int main() {
         ScopedTestSuite test_suite{ define_context() };
-
-        std::cout << std::endl << std::setw(8) << "EXECUTE " << __FILE__ << std::endl << std::endl;
 
         define_test_cases(test_suite);
 

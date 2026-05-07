@@ -4,9 +4,12 @@
 #include <cstdlib>
 #include <iostream>
 #include <string>
+#include <syncstream>
+#include <tuple>
 #include <vector>
 
 #include "workspace/project_config.hpp"
+#include "workspace/util.hpp"
 
 namespace {
     using namespace gnu_toolchain;
@@ -45,6 +48,37 @@ namespace {
     int execute(const std::string& cmd) {
         return system(cmd.c_str());
     }
+
+    std::tuple<std::string, int> execute_buffered(const std::string& cmd) {
+        std::string output;
+        std::array<char, 128> buffer;
+
+        #if defined(_WIN32) || defined(_WIN64)
+        auto pipe = _popen(cmd.c_str(), "r");
+        #else
+        auto pipe = popen(cmd.c_str(), "r");
+        #endif
+
+        if (!pipe) {
+            throw std::runtime_error("Could not open pipe for buffering execution output");
+        }
+
+        while (fgets(buffer.data(), buffer.size(), pipe) != nullptr) {
+            output.append(buffer.data());
+        }
+
+        #if defined(_WIN32) || defined(_WIN64)
+        const int status = _pclose(pipe);
+        #else
+        int status = pclose(pipe);
+        
+        if (WIFEXITED(status)) {
+            status = WEXITSTATUS(status);
+        }
+        #endif
+        
+        return std::make_tuple(output, status);
+    } 
 }
 
 namespace gnu_toolchain {
@@ -59,7 +93,11 @@ namespace gnu_toolchain {
     }
 
     int compile_file(const workspace::project_config::Project& project, const string& input_file, const string& output_file, const bool compile_as_dependency) {
-        return execute(COMPILER + " -std=" + project.config.cpp_standard + " " + project.config.safety_flags + " " + project.config.compile_time_flags + " " + (compile_as_dependency ? INCLUDE_PATHS_FOR_DEPENDENCIES : INCLUDE_PATHS) + " -c " + input_file + " -o build/binaries/" + output_file + ".o");
+        const auto [output, status] = execute_buffered(COMPILER + " -std=" + project.config.cpp_standard + " " + project.config.safety_flags + " " + project.config.compile_time_flags + " " + (compile_as_dependency ? INCLUDE_PATHS_FOR_DEPENDENCIES : INCLUDE_PATHS) + " -c " + input_file + " -o build/binaries/" + output_file + ".o");
+
+        std::osyncstream(std::cout) << "[COMPILE] " << input_file << "\n" << output << std::flush;
+
+        return status;
     }
 
     int perform_linking(const workspace::project_config::Project& project, const std::vector<string>& directories_containing_binaries, const string& executable_file, const bool echo) {
@@ -77,11 +115,19 @@ namespace gnu_toolchain {
     }
 
     int create_test_binary(const workspace::project_config::Project& project, const std::vector<string>& files_to_link, const string& test_binary) {
-        return execute(COMPILER + " -std=" + project.config.cpp_standard + " " + project.config.safety_flags + " " + project.config.test_flags + " " + INCLUDE_PATHS + " " + join(files_to_link, FoldType::PLAIN) + " -o " + test_binary);
+        const auto [output, status] = execute_buffered(COMPILER + " -std=" + project.config.cpp_standard + " " + project.config.safety_flags + " " + project.config.test_flags + " " + INCLUDE_PATHS + " " + join(files_to_link, FoldType::PLAIN) + " -o " + test_binary);
+        
+        std::osyncstream(std::cout) << "[COMPILE] " << workspace::util::get_platform_formatted_filename(test_binary) << "\n" << output << std::flush;
+
+        return status;
     }
 
     int execute_test_binary(const string& test_binary) {
-        return execute(test_binary);
+        const auto [output, status] = execute_buffered(test_binary);
+
+        std::osyncstream(std::cout) << "\n[EXECUTE] " << test_binary << "\n" << output << std::flush;
+
+        return status;
     }
 
     CompilerInfo get_compiler_info() {

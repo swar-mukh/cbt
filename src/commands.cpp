@@ -1,14 +1,18 @@
 #include "commands.hpp"
 
 #include <algorithm>
+#include <atomic>
 #include <cstdlib>
 #include <filesystem>
 #include <iostream>
 #include <set>
 #include <string>
+#include <syncstream>
+#include <tuple>
 #include <vector>
 
 #include "gnu_toolchain.hpp"
+#include "orchestrator.hpp"
 #include "workspace/dependencies_manager.hpp"
 #include "workspace/modification_identifier.hpp"
 #include "workspace/project_config.hpp"
@@ -200,18 +204,21 @@ namespace commands {
         const int literal_length_of_headers = string("headers/").length();
         const int literal_length_of_src = string("src/").length();
 
-        workspace::modification_identifier::SourceFiles annotated_files = workspace::modification_identifier::list_all_files_annotated(project, compile_as_dependency);
-        const int number_of_cpp_files_to_compile = std::ranges::count_if(
-            annotated_files,
-            [](const auto& file){ return (file.file_name.ends_with(".c") || file.file_name.ends_with(".cpp")) && file.affected; }
-        );
+        const workspace::modification_identifier::SourceFiles annotated_files = workspace::modification_identifier::list_all_files_annotated(project, compile_as_dependency);
+        std::vector<const workspace::modification_identifier::SourceFile*> files;
 
-        if (number_of_cpp_files_to_compile == 0) {
+        for (const auto& file: annotated_files) {
+            if ((file.file_name.ends_with(".c") || file.file_name.ends_with(".cpp")) && file.affected) {
+                files.emplace_back(&file);
+            }
+        }
+
+        if (files.empty()) {
             cout << "[INFO] Nothing to compile: all files are up-to-date!" << endl;
             return;
         }
 
-        cout << "[INFO] Number of file(s) to compile: " << number_of_cpp_files_to_compile << endl << endl;
+        cout << "[INFO] Number of file(s) to compile: " << files.size() << endl << endl;
 
         for (auto const& dir_entry: fs::recursive_directory_iterator("headers")) {
             if (fs::is_directory(dir_entry)) {
@@ -226,39 +233,39 @@ namespace commands {
 
         cout << "[COMMAND] " << gnu_toolchain::get_compilation_command(project, compile_as_dependency) << endl << endl;
 
-        int files_succesfully_compiled_count{ 0 };
+        std::atomic<int> files_succesfully_compiled_count{0};
 
-        for (auto& file: annotated_files) {
-            if ((file.file_name.ends_with(".c") || file.file_name.ends_with(".cpp")) && file.affected) {
-                const bool is_c_file{ file.file_name.ends_with(".c") };
-                const int literal_length_of_extension = string(is_c_file ? ".c" : ".cpp").length();
+        const std::function<void(const workspace::modification_identifier::SourceFile*)> executor = [&](const workspace::modification_identifier::SourceFile* pfile){
+            const workspace::modification_identifier::SourceFile& file = *pfile;
 
-                const string stemmed_file = file.file_name.substr(
-                    literal_length_of_src,
-                    file.file_name.length() - (literal_length_of_src + literal_length_of_extension)
-                );
-                const string header_extension{ is_c_file ? ".h" : ".hpp" };
+            const bool is_c_file{ file.file_name.ends_with(".c") };
+            const int literal_length_of_extension = string(is_c_file ? ".c" : ".cpp").length();
 
-                if (stemmed_file.compare("main") != 0 && !fs::exists("headers/" + stemmed_file + header_extension)) {
-                    cout << "SKIP " << ("headers/" + stemmed_file + header_extension) << " (No corresponding implementation file found!)" << endl;
-                } else {
-                    file.compilation_start_timestamp = workspace::modification_identifier::get_current_fileclock_timestamp();
+            const string stemmed_file = file.file_name.substr(
+                literal_length_of_src,
+                file.file_name.length() - (literal_length_of_src + literal_length_of_extension)
+            );
+            const string header_extension{ is_c_file ? ".h" : ".hpp" };
 
-                    const int result = gnu_toolchain::compile_file(project, file.file_name, stemmed_file, compile_as_dependency);
+            if (stemmed_file.compare("main") != 0 && !fs::exists("headers/" + stemmed_file + header_extension)) {
+                std::osyncstream(cout) << "[SKIP] " << ("headers/" + stemmed_file + header_extension) << " (No corresponding implementation file found!)" << endl;
+            } else {
+                file.compilation_start_timestamp = workspace::modification_identifier::get_current_fileclock_timestamp();
 
-                    file.compilation_end_timestamp = workspace::modification_identifier::get_current_fileclock_timestamp();
-                    file.was_successful = (result == 0);
+                const int result = gnu_toolchain::compile_file(project, file.file_name, stemmed_file, compile_as_dependency);
 
-                    cout << "[COMPILE]" << std::left << std::setw(6) << (file.was_successful ? "[OK]" : "[NOK]") << file.file_name <<  endl;
+                file.compilation_end_timestamp = workspace::modification_identifier::get_current_fileclock_timestamp();
+                file.was_successful = (result == 0);
 
-                    if (file.was_successful) {
-                        ++files_succesfully_compiled_count;
-                    }
+                if (file.was_successful) {
+                    files_succesfully_compiled_count++;
                 }
             }
-        }
+        };
 
-        cout << endl << "[INFO] File(s) successfully compiled: " << files_succesfully_compiled_count << " out of " << number_of_cpp_files_to_compile << endl;
+        orchestrator::orchestrate_task(files, executor);
+
+        cout << endl << "[INFO] File(s) successfully compiled: " << files_succesfully_compiled_count.load() << " out of " << files.size() << endl;
 
         workspace::scaffold::purge_old_binaries("build/binaries/", annotated_files);
         workspace::modification_identifier::persist_annotations(annotated_files);
@@ -348,7 +355,9 @@ namespace commands {
 
         const fs::path harness{ "headers/cbt_tools/test_harness.hpp" };
 
+        std::vector<std::tuple<std::vector<std::string>, std::string>> binaries_to_create{};
         std::vector<fs::path> binaries_to_execute{};
+        
         const size_t literal_length_of_headers{ std::string("headers/").length() };
         const size_t literal_length_of_dependencies{ std::string(".internals/dh_symlinks/").length() };
 
@@ -409,18 +418,28 @@ namespace commands {
             }
 
             const fs::path test_binary{ fs::path("build/test_binaries/unit_tests" / scoped_directory_of_file / fs::path(file).stem().replace_extension(EXTENSION)) };
-            const int result = gnu_toolchain::create_test_binary(project, files_to_link, test_binary.string());
-            
-            cout << "[COMPILE]" << std::left << std::setw(6) << (result == 0 ? "[OK]" : "[NOK]") << workspace::util::get_platform_formatted_filename(test_binary) << endl;
+            binaries_to_create.push_back(std::make_tuple(files_to_link, test_binary.string()));
+        }
 
-            if (result == 0) {
-                binaries_to_execute.push_back(test_binary);
+        orchestrator::orchestrate_task(
+            binaries_to_create,
+            [&project, &binaries_to_execute](const std::tuple<std::vector<std::string>, std::string>& binary) {
+                const auto [files_to_link, test_binary] = binary;
+
+                const int result = gnu_toolchain::create_test_binary(project, files_to_link, test_binary);
+
+                if (result == 0) {
+                    binaries_to_execute.push_back(test_binary);
+                }
             }
-        }
-        
-        for (auto const& test_binary: binaries_to_execute) {
-            [[maybe_unused]] const int result = gnu_toolchain::execute_test_binary(workspace::util::get_platform_formatted_filename(test_binary));
-        }
+        );
+
+        orchestrator::orchestrate_task(
+            binaries_to_execute,
+            [](const fs::path& test_binary) {
+                [[maybe_unused]] const int result = gnu_toolchain::execute_test_binary(workspace::util::get_platform_formatted_filename(test_binary));
+            }
+        );
     }
 
     void perform_static_analysis() {
