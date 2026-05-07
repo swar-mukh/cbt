@@ -3,7 +3,6 @@
 
 #include <atomic>
 #include <condition_variable>
-#include <iostream>
 #include <future>
 #include <mutex>
 #include <queue>
