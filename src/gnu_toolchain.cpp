@@ -60,7 +60,7 @@ namespace {
         #endif
 
         if (!pipe) {
-            throw std::runtime_error("popen() failed!");
+            throw std::runtime_error("Could not open pipe for buffering execution output");
         }
 
         while (fgets(buffer.data(), buffer.size(), pipe) != nullptr) {
