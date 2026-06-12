@@ -39,9 +39,7 @@ namespace {
 
         for (const auto& project: fs::directory_iterator(fs::path("dependencies"))) {
             if (fs::is_directory(project)) {
-                if (fs::is_directory(project)) {
-                    projects.insert(get_project_information(project));
-                }
+                projects.insert(get_project_information(project));
             }
         }
 
