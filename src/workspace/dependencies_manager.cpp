@@ -1,5 +1,6 @@
 #include "workspace/dependencies_manager.hpp"
 
+#include <algorithm>
 #include <cstdlib>
 #include <chrono>
 #include <filesystem>
@@ -39,9 +40,7 @@ namespace {
 
         for (const auto& project: fs::directory_iterator(fs::path("dependencies"))) {
             if (fs::is_directory(project)) {
-                if (fs::is_directory(project)) {
-                    projects.insert(get_project_information(project));
-                }
+                projects.insert(get_project_information(project));
             }
         }
 
@@ -243,34 +242,80 @@ namespace {
             file_to_write.close();
         }
     }
+
+    void undo_dependency_resolution(const Projects& locally_stored_dependencies) {
+        for (const auto& entry: fs::directory_iterator(fs::path(".internals/tmp"))) {
+            if (entry.is_regular_file()) {
+                if (entry.path().filename().string().ends_with(".tar.gz")) {
+                    fs::remove(entry);
+                }
+            } else if (entry.is_directory()) {
+                if (entry.path().filename().string().ends_with("__extracted")) {
+                    fs::remove_all(entry);
+                }
+            }
+        }
+
+        const std::vector<fs::path> directories{
+            fs::path(".internals/dh_symlinks"),
+            fs::path("build/dependencies"),
+            fs::path("dependencies")
+        };
+
+        for (const auto& directory: directories) {
+            for (const auto& entry: fs::directory_iterator(directory)) {
+                const std::string file_name{ entry.path().filename().string() };
+
+                const bool is_stale_item_present{ std::ranges::any_of(
+                    locally_stored_dependencies,
+                    [file_name](const Project& project) {
+                        return file_name == (project.name + "@" + project.version);
+                    }
+                )};
+            
+                if (!is_stale_item_present) {
+                    if (entry.is_directory()) {
+                        fs::remove_all(entry);
+                    } else if (entry.is_symlink()) {
+                        fs::remove(entry);
+                    }
+                }
+            }
+        }
+    }
 }
 
 namespace workspace::dependencies_manager {
     void resolve_dependencies(const Project& project) {
         Projects locally_stored_dependencies = list_all_dependencies_available_locally();
 
-        std::map<SurfaceDependency, int, SurfaceDependencyComparator> dependency_frequency;
+        try {
+            std::map<SurfaceDependency, int, SurfaceDependencyComparator> dependency_frequency;
 
-        linearise(project.dependencies, dependency_frequency, locally_stored_dependencies);
+            linearise(project.dependencies, dependency_frequency, locally_stored_dependencies);
 
-        const SurfaceDependencies resolved_dependencies{ resolve_versions(dependency_frequency) };
+            const SurfaceDependencies resolved_dependencies{ resolve_versions(dependency_frequency) };
 
-        remove_unnecessary_dependencies(resolved_dependencies, locally_stored_dependencies);
-        create_header_symlinks(resolved_dependencies);
+            remove_unnecessary_dependencies(resolved_dependencies, locally_stored_dependencies);
+            create_header_symlinks(resolved_dependencies);
 
-        const int compiled_dependencies_count{ compile_uncompiled_dependencies(resolved_dependencies) };
+            const int compiled_dependencies_count{ compile_uncompiled_dependencies(resolved_dependencies) };
 
-        if (compiled_dependencies_count == 0) {
-            if (project.dependencies.empty() && resolved_dependencies.empty()) {
-                std::cout << "[INFO] No dependencies found.\n";
+            if (compiled_dependencies_count == 0) {
+                if (project.dependencies.empty() && resolved_dependencies.empty()) {
+                    std::cout << "[INFO] No dependencies found.\n";
+                } else {
+                    std::cout << "[INFO] All dependencies are up-to-date!\n";
+                }
             } else {
-                std::cout << "[INFO] All dependencies are up-to-date!\n";
-            }
-        } else {
-            update_lockfile(resolved_dependencies);
-            update_project_cfg(project, resolved_dependencies);
+                update_lockfile(resolved_dependencies);
+                update_project_cfg(project, resolved_dependencies);
 
-            std::cout << "[INFO] Compiled " << compiled_dependencies_count << " new dependencies.\n";
+                std::cout << "[INFO] Compiled " << compiled_dependencies_count << " new dependencies.\n";
+            }
+        } catch(const std::exception& e) {
+            undo_dependency_resolution(locally_stored_dependencies);
+            throw;
         }
     }
 }
