@@ -1,6 +1,7 @@
 #ifndef WORKSPACE_PROJECT_CONFIG
 #define WORKSPACE_PROJECT_CONFIG
 
+#include <filesystem>
 #include <map>
 #include <optional>
 #include <set>
@@ -130,7 +131,7 @@ namespace workspace::project_config {
     std::string dependency_to_string(const SurfaceDependency& dependency, const bool exclude_url = true);
     SurfaceDependency parse_dependency(const string& value);
 
-    Project convert_cfg_to_model();
+    Project convert_cfg_to_model(const std::optional<std::filesystem::path> path = std::nullopt);
     string convert_model_to_cfg(const Project& project, const bool add_disclaimer_text = true, const bool uncomment_dependencies = false);
 }
 

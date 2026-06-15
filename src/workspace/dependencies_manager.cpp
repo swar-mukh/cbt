@@ -28,7 +28,7 @@ namespace {
 
         fs::current_path(current_path / dependency);
 
-        Project project = convert_cfg_to_model();
+        Project project = convert_cfg_to_model(std::make_optional(dependency));
 
         fs::current_path(current_path);
 

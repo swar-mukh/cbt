@@ -3,6 +3,7 @@
 #include <filesystem>
 #include <fstream>
 #include <numeric>
+#include <optional>
 #include <stdexcept>
 #include <set>
 #include <string>
@@ -12,6 +13,8 @@
 
 namespace {
     using namespace workspace::project_config;
+
+    namespace fs = std::filesystem;
 
     const std::set<std::string> VALID_ATTRIBUTES{
         "name",
@@ -42,44 +45,44 @@ namespace {
         return VALID_ATTRIBUTES.contains(attribute);
     }
 
-    void validate_required_fields(const Project& project) {
+    void validate_required_fields(const Project& project, const std::optional<fs::path> path) {
+        const string ERROR_LOCATION{ " (in '" + (path.has_value() ? (path.value().string() + "/") : "") + "project.cfg')" };
+
         if (project.name.empty()) {
-            throw std::runtime_error("Missing entry 'name' (in 'project.cfg')");
+            throw std::runtime_error("Missing entry 'name'" + ERROR_LOCATION);
         }
 
         if (project.description.empty()) {
-            throw std::runtime_error("Missing entry 'description' (in 'project.cfg')");
+            throw std::runtime_error("Missing entry 'description'" + ERROR_LOCATION);
         }
 
         if (project.version.empty()) {
-            throw std::runtime_error("Missing entry 'version' (in 'project.cfg')");
+            throw std::runtime_error("Missing entry 'version'" + ERROR_LOCATION);
         }
 
         if (project.authors.size() == 0) {
-            throw std::runtime_error("At least one author is required (in 'project.cfg')");
+            throw std::runtime_error("At least one author is required" + ERROR_LOCATION);
         }
 
         if (project.platforms.size() == 0) {
-            throw std::runtime_error("At least one platform is required (in 'project.cfg')");
+            throw std::runtime_error("At least one platform is required" + ERROR_LOCATION);
         }
 
         if (project.config.cpp_standard.empty()) {
-            throw std::runtime_error("Missing entry 'config{cpp_standard}' (in 'project.cfg')");
+            throw std::runtime_error("Missing entry 'config{cpp_standard}'" + ERROR_LOCATION);
         }
 
         if (project.cppcheck.error_exit_code != 0 && project.cppcheck.error_exit_code != 1) {
-            throw std::runtime_error("Missing entry 'cppcheck{error_exit_code}' (in 'project.cfg')");
+            throw std::runtime_error("Missing entry 'cppcheck{error_exit_code}'" + ERROR_LOCATION);
         }
 
         if (project.cppcheck.platform.empty()) {
-            throw std::runtime_error("Missing entry 'cppcheck{platform}' (in 'project.cfg')");
+            throw std::runtime_error("Missing entry 'cppcheck{platform}'" + ERROR_LOCATION);
         }
     }
 }
 
 namespace workspace::project_config {
-    namespace fs = std::filesystem;
-
     using std::string;
 
     const string AUTHOR_DELIMITER{ ":" };
@@ -182,8 +185,9 @@ namespace workspace::project_config {
         };
     }
 
-    Project convert_cfg_to_model() {
+    Project convert_cfg_to_model(const std::optional<fs::path> path) {
         const string config_file_name{ "project.cfg" };
+        const string user_debuggable_visual_path{ "'" + (path.has_value() ? (path.value().string() + "/") : "") + config_file_name + "'" };
 
         if (fs::exists(config_file_name)) {
             std::ifstream config_file(config_file_name);
@@ -208,21 +212,21 @@ namespace workspace::project_config {
                 
                 const auto [key, value] = workspace::util::get_key_value_pair_from_line(line, DELIMITER);
 
-                const string ERROR_LOCATION{ "(in 'project.cfg' at line " + std::to_string(line_number) + ")" };
+                const string ERROR_LOCATION{ " (in " + user_debuggable_visual_path + " at line " + std::to_string(line_number) + ")" };
 
                 if (key.empty()) {
-                    throw std::runtime_error("Invalid empty attribute " + ERROR_LOCATION);
+                    throw std::runtime_error("Invalid empty attribute" + ERROR_LOCATION);
                 } else if (!is_valid_attribute(key)) {
-                    throw std::runtime_error("Unrecognised attribute '" + key + "' " + ERROR_LOCATION);
+                    throw std::runtime_error("Unrecognised attribute '" + key + "'" + ERROR_LOCATION);
                 } else if (value.empty()) {
-                    throw std::runtime_error("Missing entry '" + key + "' " + ERROR_LOCATION);
+                    throw std::runtime_error("Missing entry '" + key + "'" + ERROR_LOCATION);
                 }
             
                 if (key.compare("name") == 0) {
                     const auto [is_valid, reason_if_any] = workspace::util::is_valid_project_name(value);
 
                     if (!is_valid) {
-                        throw std::runtime_error(reason_if_any);
+                        throw std::runtime_error(reason_if_any + ERROR_LOCATION);
                     }
 
                     project.name = value;
@@ -236,7 +240,7 @@ namespace workspace::project_config {
                     const auto [name, email_id] = workspace::util::get_key_value_pair_from_line(value, AUTHOR_DELIMITER);
                     
                     if (project.authors.contains(email_id)) {
-                        throw std::runtime_error("Multiple authors cannot have the same E-mail ID (while resolving '" + email_id + "') " + ERROR_LOCATION);
+                        throw std::runtime_error("Multiple authors cannot have the same E-mail ID (while resolving '" + email_id + "')" + ERROR_LOCATION);
                     } else {
                         project.authors[email_id] = name;
                     }
@@ -246,11 +250,11 @@ namespace workspace::project_config {
                     const std::string cpp_standard{ workspace::util::change_case(value, workspace::util::TextCase::LOWER_CASE) };
                     
                     if(UNSUPPORTED_CPP_STANDARDS.contains(cpp_standard)) {
-                        throw std::runtime_error("Minimum supported C++ standard by cbt is 'C++17' " + ERROR_LOCATION);
+                        throw std::runtime_error("Minimum supported C++ standard by cbt is 'C++17'" + ERROR_LOCATION);
                     } else if (SUPPORTED_CPP_STANDARDS.contains(cpp_standard)) {
                         project.config.cpp_standard = cpp_standard;
                     } else {
-                        throw std::runtime_error("Invalid C++ standard '" + value + "' " + ERROR_LOCATION);
+                        throw std::runtime_error("Invalid C++ standard '" + value + "'" + ERROR_LOCATION);
                     }
                 } else if (key.compare("config{safety_flags}") == 0) {
                     project.config.safety_flags = value;
@@ -262,25 +266,25 @@ namespace workspace::project_config {
                     project.config.test_flags = value;
                 } else if (key == "cppcheck{bug_hunting}") {
                     if (value != "true" && value != "false") {
-                        throw std::runtime_error("Expected either true or false for attribute '" + key + "' " + ERROR_LOCATION);
+                        throw std::runtime_error("Expected either true or false for attribute '" + key + "'" + ERROR_LOCATION);
                     }
 
                     project.cppcheck.bug_hunting = value == "true" ? true : false;
                 } else if (key == "cppcheck{error_exit_code}") {
                     if (value != "0" && value != "1") {
-                        throw std::runtime_error("Expected either 0 or 1 for attribute '" + key + "' " + ERROR_LOCATION);
+                        throw std::runtime_error("Expected either 0 or 1 for attribute '" + key + "'" + ERROR_LOCATION);
                     }
                     
                     project.cppcheck.error_exit_code = value == "0" ? 0 : 1;
                 } else if (key == "cppcheck{inconclusive}") {
                     if (value != "true" && value != "false") {
-                        throw std::runtime_error("Expected either true or false for attribute '" + key + "' " + ERROR_LOCATION);
+                        throw std::runtime_error("Expected either true or false for attribute '" + key + "'" + ERROR_LOCATION);
                     }
 
                     project.cppcheck.inconclusive = value == "true" ? true : false;
                 } else if (key == "cppcheck{inline_suppression}") {
                     if (value != "true" && value != "false") {
-                        throw std::runtime_error("Expected either true or false for attribute '" + key + "' " + ERROR_LOCATION);
+                        throw std::runtime_error("Expected either true or false for attribute '" + key + "'" + ERROR_LOCATION);
                     }
 
                     project.cppcheck.inline_suppression = value == "true" ? true : false;
@@ -288,7 +292,7 @@ namespace workspace::project_config {
                     project.cppcheck.platform = value;
                 } else if (key == "cppcheck{safety}") {
                     if (value != "true" && value != "false") {
-                        throw std::runtime_error("Expected either true or false for attribute '" + key + "' " + ERROR_LOCATION);
+                        throw std::runtime_error("Expected either true or false for attribute '" + key + "'" + ERROR_LOCATION);
                     }
 
                     project.cppcheck.safety = value == "true" ? true : false;
@@ -296,7 +300,7 @@ namespace workspace::project_config {
                     project.cppcheck.template_ = value;
                 } else if (key == "cppcheck{verbose}") {
                     if (value != "true" && value != "false") {
-                        throw std::runtime_error("Expected either true or false for attribute '" + key + "' " + ERROR_LOCATION);
+                        throw std::runtime_error("Expected either true or false for attribute '" + key + "'" + ERROR_LOCATION);
                     }
 
                     project.cppcheck.verbose = value == "true" ? true : false;
@@ -307,11 +311,11 @@ namespace workspace::project_config {
                 }
             }
 
-            validate_required_fields(project);
+            validate_required_fields(project, path);
 
             return project;
         } else {
-            throw std::runtime_error("'project.cfg' missing!");
+            throw std::runtime_error(user_debuggable_visual_path + " missing!");
         }
     }
 
