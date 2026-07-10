@@ -1,5 +1,6 @@
 #include "workspace/project_config.hpp"
 
+#include <algorithm>
 #include <filesystem>
 #include <fstream>
 #include <numeric>
@@ -311,7 +312,14 @@ namespace workspace::project_config {
                         throw std::runtime_error("Malformed url for attribute '" + key + "'" + ERROR_LOCATION);
                     }
 
-                    project.dependencies.insert(dependency);
+                    if (std::ranges::any_of(
+                        project.dependencies,
+                        [&dependency](const SurfaceDependency& dep) { return dep.name == dependency.name; }
+                    )) {
+                        throw std::runtime_error("Non-unique dependency alias '" + dependency.name + "' found for attribute '" + key + "'" + ERROR_LOCATION);
+                    } else {
+                        project.dependencies.insert(dependency);
+                    }
                 } else {
                     throw std::runtime_error("Invalid configuration at line " + std::to_string(line_number) + " for key '" + key + "'");
                 }
