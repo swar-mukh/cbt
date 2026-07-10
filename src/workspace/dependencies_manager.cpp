@@ -64,10 +64,11 @@ namespace {
                  project = get_project_information(dependency_directory);
 
                 if (project.name != dependency.name || project.version != dependency.version) {
-                    error = "Project name/version mismatch with that provided in dependency declaration (while resolving '" + versioned_name + "')";
+                    error = "Project name/version mismatch with that provided in dependency declaration (while locally resolving '" + versioned_name + "')";
                 } else if (project.project_type != workspace::project_config::ProjectType::LIBRARY) {
                     error = "Project is not a library (while resolving '" + versioned_name + "')";
                 } else {
+                    std::cout << "[COPY] " << dependency_directory << "\n\n";
                     fs::copy(dependency_directory, dependency_path, fs::copy_options::recursive);
                 }
             } else {
