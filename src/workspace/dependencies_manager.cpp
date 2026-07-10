@@ -49,48 +49,68 @@ namespace {
 
     Project fetch(const SurfaceDependency& dependency) {
         const std::string versioned_name{ dependency_to_string(dependency) };
-
-        const std::string downloaded_file_prefix{ ".internals/tmp/" + versioned_name };
-
-        const std::string downloaded_file{ downloaded_file_prefix + ".tar.gz" };
-        const std::string extracted_directory{ downloaded_file_prefix + "__extracted" };
         const std::string dependency_path{ "dependencies/" + versioned_name };
 
-        const std::string download_command{ "curl -L " + dependency.url + " -o " + downloaded_file };
-        const std::string extract_command{ "tar -xzf " + downloaded_file + " -C " + extracted_directory + " --strip-components=1"};
+        const bool filesystem_resolution{ dependency.url.starts_with("file://") };
 
         std::string error;
-
         Project project;
 
-        std::cout << "[EXECUTE] " << download_command << "\n\n";
+        if (filesystem_resolution) {
+            const size_t LITERAL_LENGTH_OF_FILE_PROTOCOL{ std::string("file://").length() };
+            const fs::path dependency_directory{ dependency.url.substr(LITERAL_LENGTH_OF_FILE_PROTOCOL) };
 
-        if (system(download_command.c_str()) == 0) {
-            std::cout << "\n[EXECUTE] " << extract_command << "\n\n";
-
-            fs::create_directory(extracted_directory);
-            
-            if (system(extract_command.c_str()) == 0) {
-                project = get_project_information(extracted_directory);
+            if (fs::exists(dependency_directory) && fs::is_directory(dependency_directory)) {
+                 project = get_project_information(dependency_directory);
 
                 if (project.name != dependency.name || project.version != dependency.version) {
                     error = "Project name/version mismatch with that provided in dependency declaration (while resolving '" + versioned_name + "')";
                 } else if (project.project_type != workspace::project_config::ProjectType::LIBRARY) {
                     error = "Project is not a library (while resolving '" + versioned_name + "')";
                 } else {
-                    fs::rename(extracted_directory, dependency_path);
+                    fs::copy(dependency_directory, dependency_path, fs::copy_options::recursive);
                 }
             } else {
-                error = "Could not extract '" + versioned_name + "'";
+                error = "Could not resolve local dependency '" + versioned_name + "' from path '" + dependency_directory.string() + "'";
             }
         } else {
-            error = "Could not fetch '" + versioned_name + "' from '" + dependency.url + "'";
-        }
-        
-        fs::remove(downloaded_file);
+            const std::string downloaded_file_prefix{ ".internals/tmp/" + versioned_name };
 
-        if (fs::exists(extracted_directory)) {
-            fs::remove_all(extracted_directory);
+            const std::string downloaded_file{ downloaded_file_prefix + ".tar.gz" };
+            const std::string extracted_directory{ downloaded_file_prefix + "__extracted" };
+
+            const std::string download_command{ "curl -L " + dependency.url + " -o " + downloaded_file };
+            const std::string extract_command{ "tar -xzf " + downloaded_file + " -C " + extracted_directory + " --strip-components=1"};
+
+            std::cout << "[EXECUTE] " << download_command << "\n\n";
+
+            if (system(download_command.c_str()) == 0) {
+                std::cout << "\n[EXECUTE] " << extract_command << "\n\n";
+
+                fs::create_directory(extracted_directory);
+                
+                if (system(extract_command.c_str()) == 0) {
+                    project = get_project_information(extracted_directory);
+
+                    if (project.name != dependency.name || project.version != dependency.version) {
+                        error = "Project name/version mismatch with that provided in dependency declaration (while resolving '" + versioned_name + "')";
+                    } else if (project.project_type != workspace::project_config::ProjectType::LIBRARY) {
+                        error = "Project is not a library (while resolving '" + versioned_name + "')";
+                    } else {
+                        fs::rename(extracted_directory, dependency_path);
+                    }
+                } else {
+                    error = "Could not extract '" + versioned_name + "'";
+                }
+            } else {
+                error = "Could not fetch '" + versioned_name + "' from '" + dependency.url + "'";
+            }
+            
+            fs::remove(downloaded_file);
+
+            if (fs::exists(extracted_directory)) {
+                fs::remove_all(extracted_directory);
+            }
         }
 
         if (error != "") {

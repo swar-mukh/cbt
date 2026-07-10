@@ -305,7 +305,13 @@ namespace workspace::project_config {
 
                     project.cppcheck.verbose = value == "true" ? true : false;
                 } else if (key.compare("dependencies[]") == 0) {
-                    project.dependencies.insert(parse_dependency(value));
+                    const SurfaceDependency dependency{ parse_dependency(value) };
+
+                    if (!dependency.url.starts_with("http://") && !dependency.url.starts_with("https://") && !dependency.url.starts_with("file://")) {
+                        throw std::runtime_error("Malformed url for attribute '" + key + "'" + ERROR_LOCATION);
+                    }
+
+                    project.dependencies.insert(dependency);
                 } else {
                     throw std::runtime_error("Invalid configuration at line " + std::to_string(line_number) + " for key '" + key + "'");
                 }
