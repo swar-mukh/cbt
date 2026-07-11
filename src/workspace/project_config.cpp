@@ -119,8 +119,8 @@ namespace workspace::project_config {
                 .verbose{ false }
             },
             .dependencies{
-                { .name{ "cbt_tools" }, .version{ "2024-08-31" }, .url{ "https://github.com/swar-mukh/cbt_tools" } },
-                { .name{ "some_lib" }, .version{ "2025-01-01" }, .url{ "https://gitlab.com/some-user/some_lib" } }
+                { .alias{ "cbt_tools" }, .version{ "2024-08-31" }, .url{ "https://github.com/swar-mukh/cbt_tools" } },
+                { .alias{ "some_lib" }, .version{ "2025-01-01" }, .url{ "https://gitlab.com/some-user/some_lib" } }
             }
         };
     }
@@ -172,15 +172,15 @@ namespace workspace::project_config {
     }
 
     string dependency_to_string(const SurfaceDependency& dependency, const bool exclude_url) {
-        return dependency.name + "@" + dependency.version + (exclude_url ? "" : (":" + dependency.url));
+        return dependency.alias + "@" + dependency.version + (exclude_url ? "" : (":" + dependency.url));
     }
 
     SurfaceDependency parse_dependency(const string& value) {
-        const auto [name, rest] = workspace::util::get_key_value_pair_from_line(value, "@");
+        const auto [alias, rest] = workspace::util::get_key_value_pair_from_line(value, "@");
         const auto [version, url] =  workspace::util::get_key_value_pair_from_line(rest, AUTHOR_DELIMITER);
 
         return SurfaceDependency{
-            .name{ name },
+            .alias{ alias },
             .version{ version },
             .url{ url }
         };
@@ -314,9 +314,9 @@ namespace workspace::project_config {
 
                     if (std::ranges::any_of(
                         project.dependencies,
-                        [&dependency](const SurfaceDependency& dep) { return dep.name == dependency.name; }
+                        [&dependency](const SurfaceDependency& dep) { return dep.alias == dependency.alias; }
                     )) {
-                        throw std::runtime_error("Non-unique dependency alias '" + dependency.name + "' found for attribute '" + key + "'" + ERROR_LOCATION);
+                        throw std::runtime_error("Non-unique dependency alias '" + dependency.alias + "' found for attribute '" + key + "'" + ERROR_LOCATION);
                     } else {
                         project.dependencies.insert(dependency);
                     }

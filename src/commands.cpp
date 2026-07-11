@@ -126,11 +126,11 @@ namespace {
 
     bool are_dependencies_unresolved(const SurfaceDependencies& dependencies) {
         const auto it = std::ranges::find_if_not(dependencies,
-            [](const auto& dependency){ return fs::exists("build/dependencies/" + dependency.name); }
+            [](const auto& dependency){ return fs::exists("build/dependencies/" + dependency.alias); }
         );
 
         if (it != dependencies.end()) {
-            cout << "Dependency '" << it->name << "' not resolved! Run 'cbt resolve-dependencies' first." << endl;
+            cout << "Dependency '" << it->alias << "' not resolved! Run 'cbt resolve-dependencies' first." << endl;
             return true;
         }
 

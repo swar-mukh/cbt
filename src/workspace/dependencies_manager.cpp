@@ -63,8 +63,8 @@ namespace {
             if (fs::exists(dependency_directory) && fs::is_directory(dependency_directory)) {
                  project = get_project_information(dependency_directory);
 
-                if (project.name != dependency.name || project.version != dependency.version) {
-                    error = "Project name/version mismatch with that provided in dependency declaration (while locally resolving '" + versioned_name + "')";
+                if (project.version != dependency.version) {
+                    error = "Project version mismatch with that provided in dependency declaration (while locally resolving '" + versioned_name + "')";
                 } else if (project.project_type != workspace::project_config::ProjectType::LIBRARY) {
                     error = "Project is not a library (while resolving '" + versioned_name + "')";
                 } else {
@@ -93,8 +93,8 @@ namespace {
                 if (system(extract_command.c_str()) == 0) {
                     project = get_project_information(extracted_directory);
 
-                    if (project.name != dependency.name || project.version != dependency.version) {
-                        error = "Project name/version mismatch with that provided in dependency declaration (while resolving '" + versioned_name + "')";
+                    if (project.version != dependency.version) {
+                        error = "Project version mismatch with that provided in dependency declaration (while resolving '" + versioned_name + "')";
                     } else if (project.project_type != workspace::project_config::ProjectType::LIBRARY) {
                         error = "Project is not a library (while resolving '" + versioned_name + "')";
                     } else {
@@ -147,10 +147,10 @@ namespace {
         SurfaceDependencies resolved_dependencies;
 
         for (const auto& [dependency, count]: dependency_frequency) {
-            const auto entry{ bucket.find(dependency.name) };
+            const auto entry{ bucket.find(dependency.alias) };
 
             if (entry == bucket.end()) {
-                bucket[dependency.name] = dependency;
+                bucket[dependency.alias] = dependency;
             } else {
                 const auto existing_parsed_date{ workspace::util::parse_date(entry->second.version) };
                 const auto candidate_parsed_date{ workspace::util::parse_date(dependency.version) };
@@ -181,18 +181,18 @@ namespace {
         const fs::path symlink_path{ project_root / ".internals/dh_symlinks" };
 
         for (const auto& dependency: resolved_dependencies) {
-            if (fs::exists(symlink_path / dependency.name) || fs::is_symlink(symlink_path / dependency.name)) {
-                fs::remove(symlink_path / dependency.name);
+            if (fs::exists(symlink_path / dependency.alias) || fs::is_symlink(symlink_path / dependency.alias)) {
+                fs::remove(symlink_path / dependency.alias);
             }
             
             #if defined(_WIN32) || defined(_WIN64)
             std::wstring cmd = L"mklink /J \"" +
-                (symlink_path / dependency.name).make_preferred().wstring() + L"\\\" \"" +
+                (symlink_path / dependency.alias).make_preferred().wstring() + L"\\\" \"" +
                 (project_root / L"dependencies" / dependency_to_string(dependency) / L"headers").make_preferred().wstring() + L"\"";
                 
             system(std::string(cmd.begin(), cmd.end()).c_str());
             #else
-            fs::create_directory_symlink(project_root / "dependencies" / dependency_to_string(dependency) / "headers", symlink_path / dependency.name);
+            fs::create_directory_symlink(project_root / "dependencies" / dependency_to_string(dependency) / "headers", symlink_path / dependency.alias);
             #endif
         }
     }
@@ -202,12 +202,12 @@ namespace {
         int compiled_dependencies_count{ 0 };
 
         for (const auto& dependency: resolved_dependencies) {
-            if (!fs::exists(project_root / "build/dependencies" / dependency.name)) {
+            if (!fs::exists(project_root / "build/dependencies" / dependency.alias)) {
                 const std::string versioned_name{ dependency_to_string(dependency) };
 
                 fs::path dependency_root{ project_root / "dependencies" / versioned_name };
                 fs::path dependency_build_root{ dependency_root / "build/binaries" };
-                fs::path lifted_build_root{ project_root / "build/dependencies" / dependency.name };
+                fs::path lifted_build_root{ project_root / "build/dependencies" / dependency.alias };
                 
                 fs::current_path(dependency_root);
 
@@ -246,7 +246,7 @@ namespace {
 
         for (const auto& resolved_dependency: resolved_dependencies) {
             for (const auto& dependency: updated_project.dependencies) {
-                if (resolved_dependency.name == dependency.name) {
+                if (resolved_dependency.alias == dependency.alias) {
                     if (resolved_dependency.version != dependency.version) {
                         has_update = true;
 

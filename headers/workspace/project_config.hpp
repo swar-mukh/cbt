@@ -43,7 +43,7 @@ namespace workspace::project_config {
     };
 
     struct SurfaceDependency {
-        string name;
+        string alias;
         string version;
         string url;
     };
@@ -52,8 +52,8 @@ namespace workspace::project_config {
         using is_transparent = void;
 
         bool operator()(const SurfaceDependency& lhs, const SurfaceDependency& rhs) const {
-            if (lhs.name != rhs.name) {
-                return lhs.name < rhs.name;
+            if (lhs.alias != rhs.alias) {
+                return lhs.alias < rhs.alias;
             }
 
             if ((!lhs.url.empty() && !rhs.url.empty()) && lhs.url != rhs.url) {
@@ -64,11 +64,11 @@ namespace workspace::project_config {
         }
 
         bool operator()(const SurfaceDependency& lhs, const std::string& rhs) const {
-            return lhs.name < rhs;
+            return lhs.alias < rhs;
         }
 
         bool operator()(const std::string& lhs, const SurfaceDependency& rhs) const {
-            return lhs < rhs.name;
+            return lhs < rhs.alias;
         }
     };
 
@@ -102,19 +102,19 @@ namespace workspace::project_config {
         }
 
         bool operator()(const Project& lhs, const SurfaceDependency& rhs) const {
-            if (lhs.name == rhs.name) {
+            if (lhs.name == rhs.alias) {
                 return lhs.version > rhs.version;
             }
 
-            return lhs.name < rhs.name;
+            return lhs.name < rhs.alias;
         }
 
         bool operator()(const SurfaceDependency& lhs, const Project& rhs) const {
-            if (lhs.name == rhs.name) {
+            if (lhs.alias == rhs.name) {
                 return lhs.version > rhs.version;
             }
 
-            return lhs.name < rhs.name;
+            return lhs.alias < rhs.name;
         }
     };
 
