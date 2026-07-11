@@ -8,6 +8,7 @@
 #include <stdexcept>
 #include <set>
 #include <string>
+#include <variant>
 
 #include "workspace/scaffold.hpp"
 #include "workspace/util.hpp"
@@ -175,9 +176,24 @@ namespace workspace::project_config {
         return dependency.alias + "@" + dependency.version + (exclude_url ? "" : (":" + dependency.url));
     }
 
-    SurfaceDependency parse_dependency(const string& value) {
+    std::variant<SurfaceDependency, std::string> parse_dependency(const string& value) {
         const auto [alias, rest] = workspace::util::get_key_value_pair_from_line(value, "@");
+
+        if (alias.empty()) {
+            return "Empty dependency alias";
+        }
+
         const auto [version, url] =  workspace::util::get_key_value_pair_from_line(rest, AUTHOR_DELIMITER);
+
+        if (version.empty()) {
+            return "Empty dependency version";
+        }
+
+        if (url.empty()) {
+            return "Empty dependency url";
+        } else if (!url.starts_with("http://") && !url.starts_with("https://") && !url.starts_with("file://")) {
+            return "Malformed url";
+        }
 
         return SurfaceDependency{
             .alias{ alias },
@@ -306,11 +322,13 @@ namespace workspace::project_config {
 
                     project.cppcheck.verbose = value == "true" ? true : false;
                 } else if (key.compare("dependencies[]") == 0) {
-                    const SurfaceDependency dependency{ parse_dependency(value) };
+                    const auto result{ parse_dependency(value) };
 
-                    if (!dependency.url.starts_with("http://") && !dependency.url.starts_with("https://") && !dependency.url.starts_with("file://")) {
-                        throw std::runtime_error("Malformed url for attribute '" + key + "'" + ERROR_LOCATION);
+                    if (std::holds_alternative<std::string>(result)) {
+                        throw std::runtime_error(std::get<std::string>(result) + " for attribute '" + key + "'" + ERROR_LOCATION);
                     }
+
+                    const SurfaceDependency& dependency{ std::get<SurfaceDependency>(result) };
 
                     if (std::ranges::any_of(
                         project.dependencies,
