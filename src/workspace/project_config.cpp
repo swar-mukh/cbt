@@ -195,6 +195,21 @@ namespace workspace::project_config {
             return "Malformed url";
         }
 
+        if (url.starts_with("file://")) {
+            const size_t LITERAL_LENGTH_OF_FILE_PROTOCOL{ std::string("file://").length() };
+            const fs::path directory_being_pointed_at{ url.substr(LITERAL_LENGTH_OF_FILE_PROTOCOL) };
+
+            if (fs::is_symlink(directory_being_pointed_at)) {
+                return "Symbolic link disallowed for local dependency resolution";
+            } else if (!fs::exists(directory_being_pointed_at)) {
+                return "Non-existent local dependency";
+            } else if (!fs::is_directory(directory_being_pointed_at)) {
+                return "Local dependency not a directory";
+            } else if (fs::equivalent(directory_being_pointed_at, fs::current_path())) {
+                return "Self-referencing dependency disallowed";
+            }
+        }
+
         return SurfaceDependency{
             .alias{ alias },
             .version{ version },
