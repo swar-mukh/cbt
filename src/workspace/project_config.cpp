@@ -1,5 +1,6 @@
 #include "workspace/project_config.hpp"
 
+#include <algorithm>
 #include <filesystem>
 #include <fstream>
 #include <numeric>
@@ -7,6 +8,7 @@
 #include <stdexcept>
 #include <set>
 #include <string>
+#include <variant>
 
 #include "workspace/scaffold.hpp"
 #include "workspace/util.hpp"
@@ -118,8 +120,8 @@ namespace workspace::project_config {
                 .verbose{ false }
             },
             .dependencies{
-                { .name{ "cbt_tools" }, .version{ "2024-08-31" }, .url{ "https://github.com/swar-mukh/cbt_tools" } },
-                { .name{ "some_lib" }, .version{ "2025-01-01" }, .url{ "https://gitlab.com/some-user/some_lib" } }
+                { .alias{ "cbt_tools" }, .version{ "2024-08-31" }, .url{ "https://github.com/swar-mukh/cbt_tools" } },
+                { .alias{ "some_lib" }, .version{ "2025-01-01" }, .url{ "https://gitlab.com/some-user/some_lib" } }
             }
         };
     }
@@ -171,15 +173,45 @@ namespace workspace::project_config {
     }
 
     string dependency_to_string(const SurfaceDependency& dependency, const bool exclude_url) {
-        return dependency.name + "@" + dependency.version + (exclude_url ? "" : (":" + dependency.url));
+        return dependency.alias + "@" + dependency.version + (exclude_url ? "" : (":" + dependency.url));
     }
 
-    SurfaceDependency parse_dependency(const string& value) {
-        const auto [name, rest] = workspace::util::get_key_value_pair_from_line(value, "@");
+    std::variant<SurfaceDependency, std::string> parse_dependency(const string& value) {
+        const auto [alias, rest] = workspace::util::get_key_value_pair_from_line(value, "@");
+
+        if (alias.empty()) {
+            return "Empty dependency alias";
+        }
+
         const auto [version, url] =  workspace::util::get_key_value_pair_from_line(rest, AUTHOR_DELIMITER);
 
+        if (version.empty()) {
+            return "Empty dependency version";
+        }
+
+        if (url.empty()) {
+            return "Empty dependency url";
+        } else if (!url.starts_with("http://") && !url.starts_with("https://") && !url.starts_with("file://")) {
+            return "Malformed url";
+        }
+
+        if (url.starts_with("file://")) {
+            const size_t LITERAL_LENGTH_OF_FILE_PROTOCOL{ std::string("file://").length() };
+            const fs::path directory_being_pointed_at{ url.substr(LITERAL_LENGTH_OF_FILE_PROTOCOL) };
+
+            if (fs::is_symlink(directory_being_pointed_at)) {
+                return "Symbolic link disallowed for local dependency resolution";
+            } else if (!fs::exists(directory_being_pointed_at)) {
+                return "Non-existent local dependency";
+            } else if (!fs::is_directory(directory_being_pointed_at)) {
+                return "Local dependency not a directory";
+            } else if (fs::equivalent(directory_being_pointed_at, fs::current_path())) {
+                return "Self-referencing dependency disallowed";
+            }
+        }
+
         return SurfaceDependency{
-            .name{ name },
+            .alias{ alias },
             .version{ version },
             .url{ url }
         };
@@ -305,7 +337,22 @@ namespace workspace::project_config {
 
                     project.cppcheck.verbose = value == "true" ? true : false;
                 } else if (key.compare("dependencies[]") == 0) {
-                    project.dependencies.insert(parse_dependency(value));
+                    const auto result{ parse_dependency(value) };
+
+                    if (std::holds_alternative<std::string>(result)) {
+                        throw std::runtime_error(std::get<std::string>(result) + " for attribute '" + key + "'" + ERROR_LOCATION);
+                    }
+
+                    const SurfaceDependency& dependency{ std::get<SurfaceDependency>(result) };
+
+                    if (std::ranges::any_of(
+                        project.dependencies,
+                        [&dependency](const SurfaceDependency& dep) { return dep.alias == dependency.alias; }
+                    )) {
+                        throw std::runtime_error("Non-unique dependency alias '" + dependency.alias + "' found for attribute '" + key + "'" + ERROR_LOCATION);
+                    } else {
+                        project.dependencies.insert(dependency);
+                    }
                 } else {
                     throw std::runtime_error("Invalid configuration at line " + std::to_string(line_number) + " for key '" + key + "'");
                 }
