@@ -184,8 +184,12 @@ namespace commands {
         }
     }
 
-    void resolve_dependencies() {
+    void resolve_dependencies(const bool afresh) {
         const Project project = convert_cfg_to_model();
+
+        if (afresh) {
+            workspace::scaffold::remove_all_dependencies();
+        }
 
         workspace::scaffold::create_working_tree_as_necessary();
 
@@ -506,6 +510,7 @@ namespace commands {
             << "create-c-file <file_name>       - Generate respective C files under 'headers/c', 'src/c' and 'tests/unit_tests/c' directories (will create necessary sub-directories if required)" << endl
             << endl
             << "resolve-dependencies            - Sync dependencies through 'project.cfg'" << endl
+            << "resolve-dependencies-afresh     - Remove existing dependencies and re-sync through 'project.cfg'" << endl
             << endl
             << "compile-project                 - Compile all files and generate respective binaries under 'build/binaries/'" << endl
             << "build-project                   - (For applications only) Perform linking and generate final executable under 'build/'" << endl

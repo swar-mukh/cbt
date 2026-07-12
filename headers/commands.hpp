@@ -9,7 +9,7 @@ namespace commands {
     
     void create_file(const std::string& file_name, const bool requires_c_linkage = false);
 
-    void resolve_dependencies();
+    void resolve_dependencies(const bool afresh = false);
 
     void compile_project(const bool compile_as_dependency = false);
     void clear_build();

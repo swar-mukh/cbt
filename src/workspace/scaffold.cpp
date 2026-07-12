@@ -347,6 +347,24 @@ namespace workspace::scaffold {
         }
     }
 
+    void remove_all_dependencies() {
+        if (fs::exists(".internals/dh_symlinks")) {
+            fs::remove_all(".internals/dh_symlinks");
+        }
+
+        if (fs::exists("build/dependencies")) {
+            fs::remove_all("build/dependencies");
+        }
+
+        if (fs::exists("dependencies")) {
+            fs::remove_all("dependencies");
+        }
+
+        if (fs::exists("dependencies.lock")) {
+            fs::remove("dependencies.lock");
+        }
+    }
+
     void exit_if_command_not_invoked_from_within_workspace() {
         if ((!fs::exists("project.cfg") || !fs::is_regular_file("project.cfg"))
             || (!fs::exists("headers/") || !fs::is_directory("headers"))

@@ -19,6 +19,7 @@ namespace workspace::scaffold {
 
     void remove_dependency(const string& dependency, const string& version);
     void make_dependency_pristine(const string& dependency);
+    void remove_all_dependencies();
 
     void exit_if_command_not_invoked_from_within_workspace();
 }

@@ -27,6 +27,9 @@ void parse_commands_and_execute(std::vector<std::string>& arguments) {
             if (arguments[1].compare("resolve-dependencies") == 0) {
                 workspace::scaffold::exit_if_command_not_invoked_from_within_workspace();
                 commands::resolve_dependencies();
+            } else if (arguments[1].compare("resolve-dependencies-afresh") == 0) {
+                workspace::scaffold::exit_if_command_not_invoked_from_within_workspace();
+                commands::resolve_dependencies(true);
             } else if (arguments[1].compare("compile-project") == 0) {
                 workspace::scaffold::exit_if_command_not_invoked_from_within_workspace();
                 commands::compile_project();

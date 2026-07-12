@@ -61,7 +61,7 @@ namespace {
             const fs::path dependency_directory{ dependency.url.substr(LITERAL_LENGTH_OF_FILE_PROTOCOL) };
 
             if (fs::exists(dependency_directory) && fs::is_directory(dependency_directory)) {
-                 project = get_project_information(dependency_directory);
+                project = get_project_information(dependency_directory);
 
                 if (project.version != dependency.version) {
                     error = "Project version mismatch with that provided in dependency declaration (while locally resolving '" + versioned_name + "')";

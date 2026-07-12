@@ -68,6 +68,7 @@ create-file <path/to/file_name> - Same as above, but will create necessary sub-d
 create-c-file <file_name>       - Generate respective C files under 'headers/c', 'src/c' and 'tests/unit_tests/c' directories (will create necessary sub-directories if required)
 
 resolve-dependencies            - Sync dependencies through 'project.cfg'
+resolve-dependencies-afresh     - Remove existing dependencies and re-sync through 'project.cfg'
 
 compile-project                 - Compile all files and generate respective binaries under 'build/binaries/'
 build-project                   - (For applications only) Perform linking and generate final executable under 'build/'
