@@ -11,26 +11,38 @@
 #include <string>
 #include <tuple>
 
-namespace workspace::util {
-    using std::string;
+namespace {
+    std::tuple<bool, std::string> does_name_contain_special_characters(const std::string& text, const bool is_it_for_project) {
+        int i{ 0 };
 
-    string change_case(string text, const TextCase casing) {
-        std::function<int(int)> fn = [casing](char c) {
-            return casing == TextCase::LOWER_CASE ? std::tolower(c) : std::toupper(c);
-        };
+        for (const char ch: text) {
+            const auto uch = static_cast<unsigned char>(ch);
 
-        std::transform(
-            text.begin(), 
-            text.end(), 
-            text.begin(),
-            fn
-        );
+            if (i == 0 && (uch >= '0' && uch <='9')) {
+                return std::make_tuple(true, std::string(is_it_for_project ? "Project" : "File") + " name cannot begin with a digit");
+            } else if (std::isspace(uch) || std::isblank(uch)) {
+                return std::make_tuple(true, std::string(is_it_for_project ? "Project" : "File") + " name cannot contain space or blank characters");
+            } else if (is_it_for_project) {
+                // disallow '/'; if necessary, traverse into the path and invoke
+                if (std::ispunct(uch) && !std::isalnum(uch) && uch != '_') {
+                    return std::make_tuple(true, "Project name cannot contain punctuation symbols except '_'");
+                } 
+            } else {
+                if (std::ispunct(uch) && !std::isalnum(uch) && uch != '_' && uch != '/') {
+                    return std::make_tuple(true, "File name cannot contain punctuation symbols except '_' and '/'");
+                } else if (i > 0 && text[i-1] == '/' && (uch >= '0' && uch <='9')) {
+                    return std::make_tuple(true, "File/Directory name cannot start with a digit");
+                }
+            }
 
-        return text;
+            ++i;
+        }
+
+        return std::make_tuple(false, "");
     }
 
-    string trim(const string& text) {
-        string sequence{ text };
+    std::string trim(const std::string& text) {
+        std::string sequence{ text };
 
         const auto first_not_space = std::find_if_not(
             sequence.begin(),
@@ -50,34 +62,24 @@ namespace workspace::util {
 
         return sequence;
     }
+}
 
-    std::tuple<bool, string> does_name_contain_special_characters(const string& text, const bool is_it_for_project) {
-        int i{ 0 };
+namespace workspace::util {
+    using std::string;
 
-        for (const char ch: text) {
-            const auto uch = static_cast<unsigned char>(ch);
+    string change_case(string text, const TextCase casing) {
+        std::function<int(int)> fn = [casing](char c) {
+            return casing == TextCase::LOWER_CASE ? std::tolower(c) : std::toupper(c);
+        };
 
-            if (i == 0 && (uch >= '0' && uch <='9')) {
-                return std::make_tuple(true, string(is_it_for_project ? "Project" : "File") + " name cannot begin with a digit");
-            } else if (std::isspace(uch) || std::isblank(uch)) {
-                return std::make_tuple(true, string(is_it_for_project ? "Project" : "File") + " name cannot contain space or blank characters");
-            } else if (is_it_for_project) {
-                // disallow '/'; if necessary, traverse into the path and invoke
-                if (std::ispunct(uch) && !std::isalnum(uch) && uch != '_') {
-                    return std::make_tuple(true, "Project name cannot contain punctuation symbols except '_'");
-                } 
-            } else {
-                if (std::ispunct(uch) && !std::isalnum(uch) && uch != '_' && uch != '/') {
-                    return std::make_tuple(true, "File name cannot contain punctuation symbols except '_' and '/'");
-                } else if (i > 0 && text[i-1] == '/' && (uch >= '0' && uch <='9')) {
-                    return std::make_tuple(true, "File/Directory name cannot start with a digit");
-                }
-            }
+        std::transform(
+            text.begin(), 
+            text.end(), 
+            text.begin(),
+            fn
+        );
 
-            ++i;
-        }
-
-        return std::make_tuple(false, "");
+        return text;
     }
 
     std::tuple<bool, string> is_valid_project_name(const string& project_name) {

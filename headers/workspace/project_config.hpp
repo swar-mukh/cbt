@@ -6,7 +6,6 @@
 #include <optional>
 #include <set>
 #include <string>
-#include <variant>
 
 namespace workspace::project_config {
     using std::string;
@@ -123,14 +122,7 @@ namespace workspace::project_config {
 
     Project init(const string& project_name, const ProjectType& project_type);
 
-    string platform_to_string(const Platform& platform);
-    Platform string_to_platform(const string& platform);
-
-    string project_type_to_string(const ProjectType& project_type);
-    ProjectType string_to_project_type(const string& project_type);
-
     std::string dependency_to_string(const SurfaceDependency& dependency, const bool exclude_url = true);
-    std::variant<SurfaceDependency, std::string> parse_dependency(const string& value);
 
     Project convert_cfg_to_model(const std::optional<std::filesystem::path> path = std::nullopt);
     string convert_model_to_cfg(const Project& project, const bool add_disclaimer_text = true, const bool uncomment_dependencies = false);

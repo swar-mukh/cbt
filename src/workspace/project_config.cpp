@@ -18,6 +18,10 @@ namespace {
 
     namespace fs = std::filesystem;
 
+    const std::string AUTHOR_DELIMITER{ ":" };
+    const std::string DELIMITER{ "=" };
+    const std::string LINE_COMMENT{ ";" };
+
     const std::set<std::string> VALID_ATTRIBUTES{
         "name",
         "description",
@@ -82,51 +86,8 @@ namespace {
             throw std::runtime_error("Missing entry 'cppcheck{platform}'" + ERROR_LOCATION);
         }
     }
-}
 
-namespace workspace::project_config {
-    using std::string;
-
-    const string AUTHOR_DELIMITER{ ":" };
-    const string DELIMITER{ "=" };
-    const string LINE_COMMENT{ ";" };
-
-    Project init(const string& project_name, const ProjectType& project_type) {
-        return Project{
-            .name{ project_name },
-            .description{ "Add some description here" },
-            .version{ workspace::util::get_ISO_date() },
-            .project_type{ project_type },
-            .authors{
-                { "sample_lname@domain.tld", "Sample LName" },
-                { "another_mname_lname@domain.tld", "Another MName LName" }
-            },
-            .platforms{ Platform::BSD, Platform::LINUX, Platform::MACOS, Platform::UNIX, Platform::WINDOWS },
-            .config{
-                .cpp_standard{ "c++20" },
-                .safety_flags{ "-Wall -Wextra -pedantic" },
-                .compile_time_flags{ "-Os -s" },
-                .build_flags{ "-O3 -s" },
-                .test_flags{ "-g -Og" }
-            },
-            .cppcheck {
-                .bug_hunting{ false },
-                .error_exit_code{ 1 },
-                .inconclusive{ true },
-                .inline_suppression{ false },
-                .platform{ "native" },
-                .safety{ true },
-                .template_{ "[{severity}] {file}:[{line}:{column}]\\n{code}\\n({id}) {message}\\n" },
-                .verbose{ false }
-            },
-            .dependencies{
-                { .alias{ "cbt_tools" }, .version{ "2024-08-31" }, .url{ "https://github.com/swar-mukh/cbt_tools" } },
-                { .alias{ "some_lib" }, .version{ "2025-01-01" }, .url{ "https://gitlab.com/some-user/some_lib" } }
-            }
-        };
-    }
-
-    string platform_to_string(const Platform& platform) {
+    std::string platform_to_string(const Platform& platform) {
         using enum workspace::project_config::Platform;
         
         switch(platform) {
@@ -139,7 +100,7 @@ namespace workspace::project_config {
         }
     }
 
-    Platform string_to_platform(const string& platform) {
+    Platform string_to_platform(const std::string& platform) {
         using enum workspace::project_config::Platform;
 
         if (platform.compare("bsd") == 0) { return BSD; }
@@ -152,7 +113,7 @@ namespace workspace::project_config {
         };
     }
 
-    string project_type_to_string(const ProjectType& project_type) {
+    std::string project_type_to_string(const ProjectType& project_type) {
         using enum workspace::project_config::ProjectType;
         
         switch(project_type) {
@@ -162,7 +123,7 @@ namespace workspace::project_config {
         }
     }
 
-    ProjectType string_to_project_type(const string& project_type) {
+    ProjectType string_to_project_type(const std::string& project_type) {
         using enum workspace::project_config::ProjectType;
 
         if (project_type.compare("application") == 0) { return APPLICATION; }
@@ -172,11 +133,7 @@ namespace workspace::project_config {
         };
     }
 
-    string dependency_to_string(const SurfaceDependency& dependency, const bool exclude_url) {
-        return dependency.alias + "@" + dependency.version + (exclude_url ? "" : (":" + dependency.url));
-    }
-
-    std::variant<SurfaceDependency, std::string> parse_dependency(const string& value) {
+    std::variant<SurfaceDependency, std::string> parse_dependency(const std::string& value) {
         const auto [alias, rest] = workspace::util::get_key_value_pair_from_line(value, "@");
 
         if (alias.empty()) {
@@ -215,6 +172,49 @@ namespace workspace::project_config {
             .version{ version },
             .url{ url }
         };
+    }
+}
+
+namespace workspace::project_config {
+    using std::string;
+
+    Project init(const string& project_name, const ProjectType& project_type) {
+        return Project{
+            .name{ project_name },
+            .description{ "Add some description here" },
+            .version{ workspace::util::get_ISO_date() },
+            .project_type{ project_type },
+            .authors{
+                { "sample_lname@domain.tld", "Sample LName" },
+                { "another_mname_lname@domain.tld", "Another MName LName" }
+            },
+            .platforms{ Platform::BSD, Platform::LINUX, Platform::MACOS, Platform::UNIX, Platform::WINDOWS },
+            .config{
+                .cpp_standard{ "c++20" },
+                .safety_flags{ "-Wall -Wextra -pedantic" },
+                .compile_time_flags{ "-Os -s" },
+                .build_flags{ "-O3 -s" },
+                .test_flags{ "-g -Og" }
+            },
+            .cppcheck {
+                .bug_hunting{ false },
+                .error_exit_code{ 1 },
+                .inconclusive{ true },
+                .inline_suppression{ false },
+                .platform{ "native" },
+                .safety{ true },
+                .template_{ "[{severity}] {file}:[{line}:{column}]\\n{code}\\n({id}) {message}\\n" },
+                .verbose{ false }
+            },
+            .dependencies{
+                { .alias{ "cbt_tools" }, .version{ "2024-08-31" }, .url{ "https://github.com/swar-mukh/cbt_tools" } },
+                { .alias{ "some_lib" }, .version{ "2025-01-01" }, .url{ "https://gitlab.com/some-user/some_lib" } }
+            }
+        };
+    }
+
+    string dependency_to_string(const SurfaceDependency& dependency, const bool exclude_url) {
+        return dependency.alias + "@" + dependency.version + (exclude_url ? "" : (":" + dependency.url));
     }
 
     Project convert_cfg_to_model(const std::optional<fs::path> path) {
