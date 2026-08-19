@@ -1,5 +1,19 @@
 @echo off
-setlocal
+setlocal enabledelayedexpansion
+
+if "%TOOLCHAIN%"=="" set "TOOLCHAIN=gcc"
+
+if /I "%TOOLCHAIN%"=="gcc" (
+    if "%CXX%"=="" set "COMPILER=g++"
+    if "%CXXFLAGS%"=="" set "CXXFLAGS="
+    if "%LDFLAGS%"=="" set "LDFLAGS="
+) else (
+    if "%CXX%"=="" set "COMPILER=clang++"
+    if "%CXXFLAGS%"=="" set "CXXFLAGS=-stdlib=libc++ -fexperimental-library -D_LIBCPP_ENABLE_EXPERIMENTAL"
+    if "%LDFLAGS%"=="" set "LDFLAGS=-stdlib=libc++ -rtlib=compiler-rt -fuse-ld=lld -lc++ -lc++abi"
+)
+
+if not "%CXX%"=="" set "COMPILER=%CXX%"
 
 set CPP_STANDARD=c++20
 set SAFETY_FLAGS=-Wall -Wextra -pedantic
@@ -8,8 +22,8 @@ set HEADERS_DIR=headers
 set BUILD_DIR=build
 set BINARIES_DIR=%BUILD_DIR%/binaries
 
-set COMPILE_FLAGS=-std=%CPP_STANDARD% %SAFETY_FLAGS% -Os -s -c -I%HEADERS_DIR%/
-set BUILD_FLAGS=-std=%CPP_STANDARD% %SAFETY_FLAGS% -O3 -s
+set COMPILE_FLAGS=-std=%CPP_STANDARD% %SAFETY_FLAGS% %CXXFLAGS% -Os -s -c -I%HEADERS_DIR%/
+set BUILD_FLAGS=-std=%CPP_STANDARD% %SAFETY_FLAGS% %CXXFLAGS% %LDFLAGS% -O3 -s
 
 echo.
 
@@ -48,14 +62,14 @@ exit /b 0
     echo "Phase: compile"
     echo "=============="
     echo.
-    echo "[COMPILE] src/gnu_toolchain.cpp" && g++ %COMPILE_FLAGS% src/gnu_toolchain.cpp -o %BINARIES_DIR%/gnu_toolchain.o
-    echo "[COMPILE] src/workspace/dependencies_manager.cpp" && g++ %COMPILE_FLAGS% src/workspace/dependencies_manager.cpp -o %BINARIES_DIR%/workspace/dependencies_manager.o
-    echo "[COMPILE] src/workspace/modification_identifier.cpp" && g++ %COMPILE_FLAGS% src/workspace/modification_identifier.cpp -o %BINARIES_DIR%/workspace/modification_identifier.o
-    echo "[COMPILE] src/workspace/project_config.cpp" && g++ %COMPILE_FLAGS% src/workspace/project_config.cpp -o %BINARIES_DIR%/workspace/project_config.o
-    echo "[COMPILE] src/workspace/scaffold.cpp" && g++ %COMPILE_FLAGS% src/workspace/scaffold.cpp -o %BINARIES_DIR%/workspace/scaffold.o
-    echo "[COMPILE] src/workspace/util.cpp" && g++ %COMPILE_FLAGS% src/workspace/util.cpp -o %BINARIES_DIR%/workspace/util.o
-    echo "[COMPILE] src/commands.cpp" && g++ %COMPILE_FLAGS% src/commands.cpp -o %BINARIES_DIR%/commands.o
-    echo "[COMPILE] src/main.cpp" && g++ %COMPILE_FLAGS% src/main.cpp -o %BINARIES_DIR%/main.o
+    echo "[COMPILE] src/gnu_toolchain.cpp" && %COMPILER% %COMPILE_FLAGS% src/gnu_toolchain.cpp -o %BINARIES_DIR%/gnu_toolchain.o
+    echo "[COMPILE] src/workspace/dependencies_manager.cpp" && %COMPILER% %COMPILE_FLAGS% src/workspace/dependencies_manager.cpp -o %BINARIES_DIR%/workspace/dependencies_manager.o
+    echo "[COMPILE] src/workspace/modification_identifier.cpp" && %COMPILER% %COMPILE_FLAGS% src/workspace/modification_identifier.cpp -o %BINARIES_DIR%/workspace/modification_identifier.o
+    echo "[COMPILE] src/workspace/project_config.cpp" && %COMPILER% %COMPILE_FLAGS% src/workspace/project_config.cpp -o %BINARIES_DIR%/workspace/project_config.o
+    echo "[COMPILE] src/workspace/scaffold.cpp" && %COMPILER% %COMPILE_FLAGS% src/workspace/scaffold.cpp -o %BINARIES_DIR%/workspace/scaffold.o
+    echo "[COMPILE] src/workspace/util.cpp" && %COMPILER% %COMPILE_FLAGS% src/workspace/util.cpp -o %BINARIES_DIR%/workspace/util.o
+    echo "[COMPILE] src/commands.cpp" && %COMPILER% %COMPILE_FLAGS% src/commands.cpp -o %BINARIES_DIR%/commands.o
+    echo "[COMPILE] src/main.cpp" && %COMPILER% %COMPILE_FLAGS% src/main.cpp -o %BINARIES_DIR%/main.o
     exit /b 0
 
 :build
@@ -63,7 +77,7 @@ exit /b 0
     echo "Phase: build"
     echo "============"
     echo.
-    echo "[BUILD] build/cbt.exe" && g++ %BUILD_FLAGS% %BINARIES_DIR%/*.o %BINARIES_DIR%/workspace/*.o -o build/cbt.exe
+    echo "[BUILD] build/cbt.exe" && %COMPILER% %BUILD_FLAGS% %BINARIES_DIR%/*.o %BINARIES_DIR%/workspace/*.o -o build/cbt.exe
     echo "[HASH] build/cbt.exe" && certutil -hashfile build\cbt.exe SHA256 > build\Windows.sha256.checksum.txt
     exit /b 0
 
