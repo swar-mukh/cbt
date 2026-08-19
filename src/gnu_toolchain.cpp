@@ -1,5 +1,6 @@
 #include "gnu_toolchain.hpp"
 
+#include <array>
 #include <numeric>
 #include <cstdlib>
 #include <iostream>
