@@ -27,6 +27,7 @@ namespace {
         "description",
         "version",
         "type",
+        "toolchain",
         "authors[]",
         "platforms[]",
         "config{cpp_standard}",
@@ -66,6 +67,10 @@ namespace {
             throw std::runtime_error("Missing entry 'version'" + ERROR_LOCATION);
         }
 
+        if (project.toolchain != Toolchain::GCC && project.toolchain != Toolchain::LLVM) {
+            throw std::runtime_error("Missing entry 'toolchain'" + ERROR_LOCATION);
+        }
+
         if (project.authors.size() == 0) {
             throw std::runtime_error("At least one author is required" + ERROR_LOCATION);
         }
@@ -84,6 +89,20 @@ namespace {
 
         if (project.cppcheck.platform.empty()) {
             throw std::runtime_error("Missing entry 'cppcheck{platform}'" + ERROR_LOCATION);
+        }
+    }
+
+    std::string toolchain_to_string(const Toolchain& toolchain) {
+        return toolchain == Toolchain::GCC ? "gcc" : "llvm";
+    }
+
+    Toolchain string_to_toolchain(const std::string& toolchain) {
+        if (toolchain == "gcc") {
+            return Toolchain::GCC;
+        } else if (toolchain == "llvm") {
+            return Toolchain::LLVM;
+        } else {
+            throw std::domain_error("Unsupported toolchain '" + toolchain + "'");
         }
     }
 
@@ -184,6 +203,7 @@ namespace workspace::project_config {
             .description{ "Add some description here" },
             .version{ workspace::util::get_ISO_date() },
             .project_type{ project_type },
+            .toolchain{ Toolchain::GCC },
             .authors{
                 { "sample_lname@domain.tld", "Sample LName" },
                 { "another_mname_lname@domain.tld", "Another MName LName" }
@@ -266,6 +286,8 @@ namespace workspace::project_config {
                     project.description = value;
                 } else if (key.compare("version") == 0) {
                     project.version = value;
+                } else if (key.compare("toolchain") == 0) {
+                    project.toolchain = string_to_toolchain(value);
                 } else if (key.compare("type") == 0) {
                     project.project_type = string_to_project_type(value);
                 } else if (key.compare("authors[]") == 0) {
@@ -375,6 +397,9 @@ namespace workspace::project_config {
         const string base_text{ std::string("name=") + project.name 
             + "\ndescription=" + project.description
             + "\nversion=" + project.version };
+        
+        const string toolchain_text{ std::string("; instructs `cbt` to use appropriate compiler - values are `gcc` or `llvm`")
+            + "\ntoolchain=" + toolchain_to_string(project.toolchain) };
 
         const string authors_text{
             std::accumulate(
@@ -433,6 +458,8 @@ namespace workspace::project_config {
 
         return (add_disclaimer_text ? (disclaimer_text + "\n\n") : "") 
             + base_text
+            + "\n\n"
+            + toolchain_text
             + "\n\n"
             + "type=" + project_type_to_string(project.project_type)
             + "\n\n"

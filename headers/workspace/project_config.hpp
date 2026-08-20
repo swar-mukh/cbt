@@ -23,6 +23,11 @@ namespace workspace::project_config {
         WINDOWS
     };
 
+    enum class Toolchain {
+        GCC,
+        LLVM
+    };
+
     struct Config {
         string cpp_standard;
         string safety_flags;
@@ -80,6 +85,7 @@ namespace workspace::project_config {
         string version;
 
         ProjectType project_type;
+        Toolchain toolchain;
 
         std::map<string, string> authors;
         std::set<Platform> platforms;

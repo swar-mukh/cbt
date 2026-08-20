@@ -10,7 +10,6 @@
 namespace gnu_toolchain {
     using std::string;
 
-    const string COMPILER{ "g++" };
     const string INCLUDE_PATHS{ "-iquoteheaders -I.internals/dh_symlinks" };
     const string INCLUDE_PATHS_FOR_DEPENDENCIES{ "-iquoteheaders -I../../.internals/dh_symlinks" };
 

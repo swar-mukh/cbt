@@ -19,6 +19,44 @@ namespace {
         BINARIES,
         PLAIN
     };
+
+    enum class Stage {
+        MAKEFILE_GENERATION,
+        COMPILE,
+        LINK,
+        TEST
+    };
+
+    std::string get_compiler_string_prefix(const workspace::project_config::Project& project, const Stage& stage) {
+        std::string prefix;
+
+        if (project.toolchain == workspace::project_config::Toolchain::GCC) {
+            prefix = "g++";
+        } else {
+            prefix = std::string("clang++")
+                + " -stdlib=libc++ -fexperimental-library -D_LIBCPP_ENABLE_EXPERIMENTAL";
+            
+            if (stage == Stage::LINK) {
+                prefix += " -stdlib=libc++ -rtlib=compiler-rt -fuse-ld=lld -lc++ -lc++abi";
+            }
+        }
+
+        prefix += " -std=" + project.config.cpp_standard;
+
+        if (stage == Stage::MAKEFILE_GENERATION) {
+            return prefix;
+        }
+
+        prefix += " " + project.config.safety_flags;
+
+        if (stage == Stage::COMPILE) {
+            return prefix + " " + project.config.compile_time_flags;
+        } else if (stage == Stage::LINK) {
+            return prefix + " " + project.config.build_flags;
+        } else {
+            return prefix + " " + project.config.test_flags;
+        }
+    }
     
     std::string glob_directory_for_binaries(const std::string& directory) {
         return directory + SEPARATOR + "*.o";
@@ -86,15 +124,15 @@ namespace gnu_toolchain {
     using std::string;
 
     int generate_makefile(const workspace::project_config::Project& project, const string& files, const bool compile_as_dependency) {
-        return execute(COMPILER + " -std=" + project.config.cpp_standard + " " + (compile_as_dependency ? INCLUDE_PATHS_FOR_DEPENDENCIES : INCLUDE_PATHS) + " -MM " + files + " >> .internals/tmp/makefile");
+        return execute(get_compiler_string_prefix(project, Stage::MAKEFILE_GENERATION) + " " + (compile_as_dependency ? INCLUDE_PATHS_FOR_DEPENDENCIES : INCLUDE_PATHS) + " -MM " + files + " >> .internals/tmp/makefile");
     }
 
     std::string get_compilation_command(const workspace::project_config::Project& project, const bool compile_as_dependency) {
-        return COMPILER + " -std=" + project.config.cpp_standard + " " + project.config.safety_flags + " " + project.config.compile_time_flags + " " + (compile_as_dependency ? INCLUDE_PATHS_FOR_DEPENDENCIES : INCLUDE_PATHS) + " -c src/<FILE> -o build/binaries/<FILE>.o";
+        return get_compiler_string_prefix(project, Stage::COMPILE) + " " + (compile_as_dependency ? INCLUDE_PATHS_FOR_DEPENDENCIES : INCLUDE_PATHS) + " -c src/<FILE> -o build/binaries/<FILE>.o";
     }
 
     int compile_file(const workspace::project_config::Project& project, const string& input_file, const string& output_file, const bool compile_as_dependency) {
-        const auto [output, status] = execute_buffered(COMPILER + " -std=" + project.config.cpp_standard + " " + project.config.safety_flags + " " + project.config.compile_time_flags + " " + (compile_as_dependency ? INCLUDE_PATHS_FOR_DEPENDENCIES : INCLUDE_PATHS) + " -c " + input_file + " -o build/binaries/" + output_file + ".o");
+        const auto [output, status] = execute_buffered(get_compiler_string_prefix(project, Stage::COMPILE) + " " + (compile_as_dependency ? INCLUDE_PATHS_FOR_DEPENDENCIES : INCLUDE_PATHS) + " -c " + input_file + " -o build/binaries/" + output_file + ".o");
 
         std::osyncstream(std::cout) << "[COMPILE] " << input_file << "\n" << output << std::flush;
 
@@ -102,7 +140,7 @@ namespace gnu_toolchain {
     }
 
     int perform_linking(const workspace::project_config::Project& project, const std::vector<string>& directories_containing_binaries, const string& executable_file, const bool echo) {
-        const string command{ COMPILER + " -std=" + project.config.cpp_standard + " " + project.config.safety_flags + " " + project.config.build_flags + " " + join(directories_containing_binaries, FoldType::BINARIES) + " -o " + executable_file };
+        const string command{ get_compiler_string_prefix(project, Stage::LINK) + " " + join(directories_containing_binaries, FoldType::BINARIES) + " -o " + executable_file };
 
         if (echo) {
             std::cout << "[COMMAND] " << command << std::endl << std::endl;
@@ -112,11 +150,11 @@ namespace gnu_toolchain {
     }
 
     string get_test_execution_command(const workspace::project_config::Project& project, const string& extension) {
-        return COMPILER + " -std=" + project.config.cpp_standard + " " + project.config.safety_flags + " " + project.config.test_flags + " " + INCLUDE_PATHS + " tests/unit_tests/<FILE> -o build/test_binaries/unit_tests/<FILE>" + extension;
+        return get_compiler_string_prefix(project, Stage::TEST) + " " + INCLUDE_PATHS + " tests/unit_tests/<FILE> -o build/test_binaries/unit_tests/<FILE>" + extension;
     }
 
     int create_test_binary(const workspace::project_config::Project& project, const std::vector<string>& files_to_link, const string& test_binary) {
-        const auto [output, status] = execute_buffered(COMPILER + " -std=" + project.config.cpp_standard + " " + project.config.safety_flags + " " + project.config.test_flags + " " + INCLUDE_PATHS + " " + join(files_to_link, FoldType::PLAIN) + " -o " + test_binary);
+        const auto [output, status] = execute_buffered(get_compiler_string_prefix(project, Stage::TEST) + " " + INCLUDE_PATHS + " " + join(files_to_link, FoldType::PLAIN) + " -o " + test_binary);
         
         std::osyncstream(std::cout) << "[COMPILE] " << workspace::util::get_platform_formatted_filename(test_binary) << "\n" << output << std::flush;
 
