@@ -858,9 +858,20 @@ namespace assets::scaffold_texts {
     )";
 
     const string DOCKERFILE = R"(
-    FROM alpine:3.18 AS builder
-    RUN apk add --no-cache bash g++ musl-dev curl tar cppcheck
+    # Options: gcc, llvm; defaults to `gcc` if `--build-arg` isn't passed
+    ARG TOOLCHAIN=gcc
+
+    FROM alpine:3.21 AS builder
+    ARG TOOLCHAIN
+    RUN DEPENDENCIES="bash musl-dev curl tar cppcheck" \
+        && if [ "$TOOLCHAIN" = "gcc" ]; then \
+                DEPENDENCIES="$DEPENDENCIES g++"; \
+            else \
+                DEPENDENCIES="$DEPENDENCIES clang libc++-dev libc++-static llvm-libunwind-dev compiler-rt lld"; \
+            fi \
+        && apk add --no-cache $DEPENDENCIES
     SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+    ENV TOOLCHAIN=${TOOLCHAIN}
     WORKDIR /internal
     RUN curl -L https://github.com/swar-mukh/cbt/archive/refs/tags/cbt-2026.03.29.tar.gz | tar xz --strip-components=1 \
         && ./script.sh init compile build \
@@ -869,12 +880,19 @@ namespace assets::scaffold_texts {
     ENV PATH="/opt/cbt:${PATH}"
     WORKDIR /@PROJECT_NAME
     COPY . .
-    RUN cbt compile-project && cbt build-project
+    RUN @DOCKER_CBT_EXEC_COMMAND
     )";
 
     const string DOCKERFILE_WITH_DEPLOYMENT = R"(
-    FROM alpine:3.18 AS deployment
-    RUN apk add --no-cache libstdc++ libgcc
+    FROM alpine:3.21 AS deployment
+    ARG TOOLCHAIN
+    RUN DEPENDENCIES="cppcheck" \
+        && if [ "$TOOLCHAIN" = "gcc" ]; then \
+                DEPENDENCIES="$DEPENDENCIES libstdc++ libgcc"; \
+            else \
+                DEPENDENCIES="$DEPENDENCIES libc++ libunwind"; \
+            fi \
+        && apk add --no-cache $DEPENDENCIES
     WORKDIR /app
     RUN mkdir environments
     COPY --from=builder /@PROJECT_NAME/environments/.env.template /@PROJECT_NAME/environments/production.env environments/
