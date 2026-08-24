@@ -94,7 +94,7 @@ For development through containerisation technologies (e.g. `docker` or `podman`
 2. There is a hard dependency on the `C++20` standard.
 3. Depending on your toolchain preference i.e. either `gcc` or `llvm`, ensure your toolchain is at least `11.4.0` for `GNU`, or at least `19.1.4` for `LLVM`.
 4. If on Windows, MinGW can be downloaded from [WinLibs](https://winlibs.com/).
-5. On a Mac, the built-in `clang` is officially **not** supported. Download `LLVM 19` explicitly.
+5. On a Mac, the built-in Apple's `clang` is officially **not** supported (read [issue](https://github.com/swar-mukh/cbt/issues/28)). Download upstream/vanilla `LLVM` (at least version `19`) explicitly.
 6. Ensure `curl` and `tar` are available.
 7. `cbt` relies on `cppcheck` to perform static analysis (through `cbt perform-static-analysis` command). Head over to the official [website](http://cppcheck.net/) and follow the instructions on how to download. If on Windows 10/11, `cppcheck` can be downloaded using `winget` by issuing `winget install cppcheck` (probable download location: `C:\Program Files\Cppcheck`) and adding it manually to your `PATH`.
 
