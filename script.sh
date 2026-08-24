@@ -7,7 +7,7 @@ if [ "$TOOLCHAIN" = "gcc" ]; then
 else
     _COMPILER="${CXX:-clang++}"
     _CXXFLAGS="${CXXFLAGS:--stdlib=libc++ -fexperimental-library -D_LIBCPP_ENABLE_EXPERIMENTAL}"
-    _LDFLAGS="${LDFLAGS:--stdlib=libc++ -rtlib=compiler-rt -fuse-ld=lld -lc++ -lc++abi}"
+    _LDFLAGS="${LDFLAGS:--rtlib=compiler-rt -fuse-ld=lld -lc++ -lc++abi}"
 fi
 
 readonly CXXFLAGS="$_CXXFLAGS"

@@ -37,7 +37,7 @@ namespace {
                 + " -stdlib=libc++ -fexperimental-library -D_LIBCPP_ENABLE_EXPERIMENTAL";
             
             if (stage == Stage::LINK) {
-                prefix += " -stdlib=libc++ -rtlib=compiler-rt -fuse-ld=lld -lc++ -lc++abi";
+                prefix += " -rtlib=compiler-rt -fuse-ld=lld -lc++ -lc++abi";
             }
         }
 

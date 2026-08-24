@@ -10,7 +10,7 @@ if /I "%TOOLCHAIN%"=="gcc" (
 ) else (
     if "%CXX%"=="" set "COMPILER=clang++"
     if "%CXXFLAGS%"=="" set "CXXFLAGS=-stdlib=libc++ -fexperimental-library -D_LIBCPP_ENABLE_EXPERIMENTAL"
-    if "%LDFLAGS%"=="" set "LDFLAGS=-stdlib=libc++ -rtlib=compiler-rt -fuse-ld=lld -lc++ -lc++abi"
+    if "%LDFLAGS%"=="" set "LDFLAGS=-rtlib=compiler-rt -fuse-ld=lld -lc++ -lc++abi"
 )
 
 if not "%CXX%"=="" set "COMPILER=%CXX%"
