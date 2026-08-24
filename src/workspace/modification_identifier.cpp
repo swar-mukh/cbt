@@ -14,7 +14,7 @@
 
 #include "workspace/project_config.hpp"
 #include "workspace/util.hpp"
-#include "gnu_toolchain.hpp"
+#include "compiler_toolchain.hpp"
 
 namespace {
     using namespace workspace::modification_identifier;
@@ -138,7 +138,7 @@ namespace {
             fs::remove(MAKEFILE_PATH);
         }
 
-        const int result = gnu_toolchain::generate_makefile(project, files, compile_as_dependency);
+        const int result = compiler_toolchain::generate_makefile(project, files, compile_as_dependency);
 
         if (result != 0) {
             throw std::runtime_error("Could not compile project!");

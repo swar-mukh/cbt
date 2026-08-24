@@ -38,7 +38,7 @@ function compile() {
     echo "Phase: compile"
     echo "=============="
     echo
-    echo "[COMPILE] src/gnu_toolchain.cpp" && $COMPILER $COMPILE_FLAGS src/gnu_toolchain.cpp -o $BINARIES_DIR/gnu_toolchain.o
+    echo "[COMPILE] src/compiler_toolchain.cpp" && $COMPILER $COMPILE_FLAGS src/compiler_toolchain.cpp -o $BINARIES_DIR/compiler_toolchain.o
     echo "[COMPILE] src/workspace/dependencies_manager.cpp" && $COMPILER $COMPILE_FLAGS src/workspace/dependencies_manager.cpp -o $BINARIES_DIR/workspace/dependencies_manager.o
     echo "[COMPILE] src/workspace/modification_identifier.cpp" && $COMPILER $COMPILE_FLAGS src/workspace/modification_identifier.cpp -o $BINARIES_DIR/workspace/modification_identifier.o
     echo "[COMPILE] src/workspace/project_config.cpp" && $COMPILER $COMPILE_FLAGS src/workspace/project_config.cpp -o $BINARIES_DIR/workspace/project_config.o

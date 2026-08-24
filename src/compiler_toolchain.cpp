@@ -1,4 +1,4 @@
-#include "gnu_toolchain.hpp"
+#include "compiler_toolchain.hpp"
 
 #include <array>
 #include <numeric>
@@ -13,7 +13,7 @@
 #include "workspace/util.hpp"
 
 namespace {
-    using namespace gnu_toolchain;
+    using namespace compiler_toolchain;
 
     enum class FoldType {
         BINARIES,
@@ -120,7 +120,7 @@ namespace {
     } 
 }
 
-namespace gnu_toolchain {
+namespace compiler_toolchain {
     using std::string;
 
     int generate_makefile(const workspace::project_config::Project& project, const string& files, const bool compile_as_dependency) {

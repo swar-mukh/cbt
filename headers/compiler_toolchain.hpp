@@ -1,5 +1,5 @@
-#ifndef GNU_TOOLCHAIN
-#define GNU_TOOLCHAIN
+#ifndef COMPILER_TOOLCHAIN
+#define COMPILER_TOOLCHAIN
 
 #include "workspace/project_config.hpp"
 
@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-namespace gnu_toolchain {
+namespace compiler_toolchain {
     using std::string;
 
     const string INCLUDE_PATHS{ "-iquoteheaders -I.internals/dh_symlinks" };
