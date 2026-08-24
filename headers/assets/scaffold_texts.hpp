@@ -47,6 +47,11 @@ namespace assets::scaffold_texts {
        
        # On Windows (via Git Bash)
        > docker run -it --rm -v "/$(pwd):/@PROJECT_NAME" @PROJECT_NAME-dev-platform bash
+
+       # On Windows (via WSL2)
+       # Ensure WSL Integration (Settings > Resources > WSL Integration) is ON,
+       # and the respective distro is selected
+       > docker run -it --rm -v "$(wslpath -w "$PWD"):/@PROJECT_NAME" @PROJECT_NAME-dev-platform bash
        ```
     3. Whatever changes you make to the source code, will now be reflected in the container, allowing you to compile and test from within the container itself
     @DOCKER_APPLICATION_WORKFLOW_CONTINUATION
