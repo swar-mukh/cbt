@@ -23,6 +23,29 @@ namespace {
     
     using namespace workspace::project_config;
 
+    class HostProject {
+    public:
+        explicit HostProject(const Project& project): project(project) {}
+
+        bool is_dependency_toolchain_compatible(const Project& dependency) const {
+            if (project.project_type == ProjectType::APPLICATION) {
+                return dependency.supported_toolchains.contains(project.toolchain);
+            } else {
+                return std::ranges::any_of(
+                    project.supported_toolchains,
+                    [&dependency](const Toolchain& toolchain) { 
+                        return dependency.supported_toolchains.contains(toolchain);
+                    }
+                );
+            }
+        }
+
+    private:
+        Project project;
+    };
+
+    std::optional<HostProject> HOST_PROJECT;
+
     Project get_project_information(const fs::path& dependency) {
         fs::path current_path{ fs::current_path() };
 
@@ -67,6 +90,8 @@ namespace {
                     error = "Project version mismatch with that provided in dependency declaration (while locally resolving '" + versioned_name + "')";
                 } else if (project.project_type != workspace::project_config::ProjectType::LIBRARY) {
                     error = "Project is not a library (while resolving '" + versioned_name + "')";
+                } else if (!HOST_PROJECT->is_dependency_toolchain_compatible(project)) {
+                    error = "Incompatible toolchain (while resolving '" + versioned_name + "')";
                 } else {
                     std::cout << "[COPY] " << dependency_directory << "\n\n";
                     fs::copy(dependency_directory, dependency_path, fs::copy_options::recursive);
@@ -97,6 +122,8 @@ namespace {
                         error = "Project version mismatch with that provided in dependency declaration (while resolving '" + versioned_name + "')";
                     } else if (project.project_type != workspace::project_config::ProjectType::LIBRARY) {
                         error = "Project is not a library (while resolving '" + versioned_name + "')";
+                    } else if (!HOST_PROJECT->is_dependency_toolchain_compatible(project)) {
+                        error = "Incompatible toolchain (while resolving '" + versioned_name + "')";
                     } else {
                         fs::rename(extracted_directory, dependency_path);
                     }
@@ -308,6 +335,8 @@ namespace {
 
 namespace workspace::dependencies_manager {
     void resolve_dependencies(const Project& project) {
+        HOST_PROJECT.emplace(project);
+
         Projects locally_stored_dependencies = list_all_dependencies_available_locally();
 
         try {

@@ -28,6 +28,7 @@ namespace {
         "version",
         "type",
         "toolchain",
+        "supported_toolchains[]",
         "authors[]",
         "platforms[]",
         "config{cpp_standard}",
@@ -69,6 +70,12 @@ namespace {
 
         if (project.toolchain != Toolchain::GCC && project.toolchain != Toolchain::LLVM) {
             throw std::runtime_error("Missing entry 'toolchain'" + ERROR_LOCATION);
+        }
+
+        if (project.project_type == ProjectType::APPLICATION && !project.supported_toolchains.empty()) {
+            throw std::runtime_error("Unrecognised attribute 'supported_toolchains' for an `application` project" + ERROR_LOCATION);
+        } else if (project.project_type == ProjectType::LIBRARY && project.supported_toolchains.empty()) {
+            throw std::runtime_error("At least one supported toolchain is required" + ERROR_LOCATION);
         }
 
         if (project.authors.size() == 0) {
@@ -204,6 +211,10 @@ namespace workspace::project_config {
             .version{ workspace::util::get_ISO_date() },
             .project_type{ project_type },
             .toolchain{ Toolchain::GCC },
+            .supported_toolchains{ project_type == ProjectType::APPLICATION
+                ? std::set<Toolchain>{}
+                : std::set<Toolchain>{ Toolchain::GCC, Toolchain::LLVM }
+            },
             .authors{
                 { "sample_lname@domain.tld", "Sample LName" },
                 { "another_mname_lname@domain.tld", "Another MName LName" }
@@ -288,6 +299,14 @@ namespace workspace::project_config {
                     project.version = value;
                 } else if (key.compare("toolchain") == 0) {
                     project.toolchain = string_to_toolchain(value);
+                } else if (key.compare("supported_toolchains[]") == 0) {
+                    const Toolchain supported_toolchain{ string_to_toolchain(value) };
+
+                    if (project.supported_toolchains.contains(supported_toolchain)) {
+                        throw std::runtime_error("Duplicate supported toolchain found (while resolving '" + value + "')" + ERROR_LOCATION);
+                    } else {
+                        project.supported_toolchains.insert(supported_toolchain);
+                    }
                 } else if (key.compare("type") == 0) {
                     project.project_type = string_to_project_type(value);
                 } else if (key.compare("authors[]") == 0) {
@@ -400,6 +419,22 @@ namespace workspace::project_config {
         
         const string toolchain_text{ std::string("; instructs `cbt` to use appropriate compiler - values are `gcc` or `llvm`")
             + "\ntoolchain=" + toolchain_to_string(project.toolchain) };
+        
+        string supported_toolchains{ "" };
+
+        if (project.project_type == ProjectType::LIBRARY) {
+            supported_toolchains = std::accumulate(
+                project.supported_toolchains.begin(),
+                project.supported_toolchains.end(),
+                std::string("; `supported_toolchains` (for library projects only) indicate whether this library is compatible with the ")
+                    + "; `toolchain` of the host application/library. Incompatible toolchain will outright"
+                    + "; reject this library during dependency resolution by the host application/library."
+                    + "; Values can be any of `gcc` or `llvm`. At least one toolchain is required.",
+                [](const string& acc, const auto& toolchain) { 
+                    return acc + "\nsupported_toolchains[]=" + toolchain_to_string(toolchain);
+                } 
+            );
+        }
 
         const string authors_text{
             std::accumulate(
@@ -459,9 +494,10 @@ namespace workspace::project_config {
         return (add_disclaimer_text ? (disclaimer_text + "\n\n") : "") 
             + base_text
             + "\n\n"
-            + toolchain_text
-            + "\n\n"
             + "type=" + project_type_to_string(project.project_type)
+            + "\n\n"
+            + toolchain_text
+            + (project.project_type == ProjectType::LIBRARY ? ("\n\n" + supported_toolchains) : "")
             + "\n\n"
             + authors_text
             + "\n\n"

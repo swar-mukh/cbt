@@ -85,7 +85,9 @@ namespace workspace::project_config {
         string version;
 
         ProjectType project_type;
+
         Toolchain toolchain;
+        std::set<Toolchain> supported_toolchains;
 
         std::map<string, string> authors;
         std::set<Platform> platforms;
