@@ -136,6 +136,19 @@ namespace {
 
         return false;
     }
+
+    size_t get_file_count(const fs::path& path, const std::set<std::string>& extensions) {
+        return static_cast<size_t>(std::ranges::count_if(
+            fs::recursive_directory_iterator(path),
+            [&extensions](const auto& entry) {
+                if (entry.is_regular_file()) {
+                    return extensions.contains(entry.path().extension());
+                } else {
+                    return false;
+                }
+            }
+        ));
+    }
 }
 
 namespace commands {
@@ -309,12 +322,20 @@ namespace commands {
             return;
         }
 
+        const size_t src_files_count{ get_file_count("src", std::set<std::string>{ ".cpp", ".c" } ) };
+        const size_t binary_files_count{ get_file_count("build/binaries", std::set<std::string>{ ".o" } ) };
+
+        if (binary_files_count < src_files_count) {
+            cout << (src_files_count - binary_files_count) << " file(s) not compiled yet! Run 'cbt compile-project' first." << endl;
+            return;
+        }
+
         std::set<string> non_empty_directories;
         const string SEPARATOR{ fs::path::preferred_separator };
 
         list_directories_containing_binaries(non_empty_directories, "build/binaries");
         list_directories_containing_binaries(non_empty_directories, "build/dependencies");
-        
+
         if (non_empty_directories.empty()) {
             cout << "No binaries present! Run 'cbt compile-project' first." << endl;
             return;
