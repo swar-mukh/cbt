@@ -31,9 +31,9 @@ namespace {
         std::string prefix;
 
         if (project.toolchain == workspace::project_config::Toolchain::GCC) {
-            prefix = "g++";
+            prefix = "g++ -fdiagnostics-color=always";
         } else {
-            prefix = std::string("clang++")
+            prefix = std::string("clang++ -fdiagnostics-color=always")
                 + " -stdlib=libc++ -fexperimental-library -D_LIBCPP_ENABLE_EXPERIMENTAL";
             
             if (stage == Stage::LINK) {
@@ -92,10 +92,12 @@ namespace {
         std::string output;
         std::array<char, 128> buffer;
 
+        const std::string redirected_cmd = cmd + " 2>&1";
+
         #if defined(_WIN32) || defined(_WIN64)
-        auto pipe = _popen(cmd.c_str(), "r");
+        auto pipe = _popen(redirected_cmd.c_str(), "r");
         #else
-        auto pipe = popen(cmd.c_str(), "r");
+        auto pipe = popen(redirected_cmd.c_str(), "r");
         #endif
 
         if (!pipe) {
