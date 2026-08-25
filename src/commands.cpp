@@ -425,14 +425,17 @@ namespace commands {
             binaries_to_create.push_back(std::make_tuple(files_to_link, test_binary.string()));
         }
 
+        std::mutex binaries_mutex;
+
         orchestrator::orchestrate_task(
             binaries_to_create,
-            [&project, &binaries_to_execute](const std::tuple<std::vector<std::string>, std::string>& binary) {
+            [&project, &binaries_to_execute, &binaries_mutex](const std::tuple<std::vector<std::string>, std::string>& binary) {
                 const auto [files_to_link, test_binary] = binary;
 
                 const int result = compiler_toolchain::create_test_binary(project, files_to_link, test_binary);
 
                 if (result == 0) {
+                    std::lock_guard<std::mutex> lock(binaries_mutex);
                     binaries_to_execute.push_back(test_binary);
                 }
             }
