@@ -27,6 +27,55 @@ namespace {
         TEST
     };
 
+    std::tuple<std::string, int> execute_buffered(const std::string& cmd) {
+        std::string output;
+        std::array<char, 128> buffer;
+
+        const std::string redirected_cmd = cmd + " 2>&1";
+
+        #if defined(_WIN32) || defined(_WIN64)
+        auto pipe = _popen(redirected_cmd.c_str(), "r");
+        #else
+        auto pipe = popen(redirected_cmd.c_str(), "r");
+        #endif
+
+        if (!pipe) {
+            throw std::runtime_error("Could not open pipe for buffering execution output");
+        }
+
+        while (fgets(buffer.data(), buffer.size(), pipe) != nullptr) {
+            output.append(buffer.data());
+        }
+
+        #if defined(_WIN32) || defined(_WIN64)
+        const int status = _pclose(pipe);
+        #else
+        int status = pclose(pipe);
+        
+        if (WIFEXITED(status)) {
+            status = WEXITSTATUS(status);
+        }
+        #endif
+        
+        return std::make_tuple(output, status);
+    }
+
+    bool is_apple_clang() {
+        #if defined(_WIN32) || defined(_WIN64)
+        return false;
+        #else
+        const std::string cmd{"clang++ -dM -E -x c++ /dev/null" };
+
+        auto [output, status] = execute_buffered(cmd);
+
+        if (status != 0) {
+            throw std::runtime_error("Could not detect correct 'clang++' compiler. Failed to execute '" + cmd + "'.");
+        }
+
+        return output.find("__apple_build_version__") != std::string::npos;
+        #endif
+    }
+
     std::string get_compiler_string_prefix(const workspace::project_config::Project& project, const Stage& stage) {
         std::string prefix;
 
@@ -34,10 +83,14 @@ namespace {
             prefix = "g++ -fdiagnostics-color=always";
         } else {
             prefix = std::string("clang++ -fdiagnostics-color=always")
-                + " -stdlib=libc++ -fexperimental-library -D_LIBCPP_ENABLE_EXPERIMENTAL";
+                + " -stdlib=libc++ -fexperimental-library";
             
-            if (stage == Stage::LINK) {
-                prefix += " -rtlib=compiler-rt -fuse-ld=lld -lc++ -lc++abi";
+            if (stage == Stage::COMPILE) {
+                prefix += " -D_LIBCPP_ENABLE_EXPERIMENTAL";
+            } else if (stage == Stage::LINK) {
+                if (!is_apple_clang()) {
+                    prefix += " -rtlib=compiler-rt -fuse-ld=lld";
+                }
             }
         }
 
@@ -87,39 +140,6 @@ namespace {
     int execute(const std::string& cmd) {
         return system(cmd.c_str());
     }
-
-    std::tuple<std::string, int> execute_buffered(const std::string& cmd) {
-        std::string output;
-        std::array<char, 128> buffer;
-
-        const std::string redirected_cmd = cmd + " 2>&1";
-
-        #if defined(_WIN32) || defined(_WIN64)
-        auto pipe = _popen(redirected_cmd.c_str(), "r");
-        #else
-        auto pipe = popen(redirected_cmd.c_str(), "r");
-        #endif
-
-        if (!pipe) {
-            throw std::runtime_error("Could not open pipe for buffering execution output");
-        }
-
-        while (fgets(buffer.data(), buffer.size(), pipe) != nullptr) {
-            output.append(buffer.data());
-        }
-
-        #if defined(_WIN32) || defined(_WIN64)
-        const int status = _pclose(pipe);
-        #else
-        int status = pclose(pipe);
-        
-        if (WIFEXITED(status)) {
-            status = WEXITSTATUS(status);
-        }
-        #endif
-        
-        return std::make_tuple(output, status);
-    } 
 }
 
 namespace compiler_toolchain {

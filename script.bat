@@ -9,8 +9,8 @@ if /I "%TOOLCHAIN%"=="gcc" (
     if "%LDFLAGS%"=="" set "LDFLAGS="
 ) else (
     if "%CXX%"=="" set "COMPILER=clang++"
-    if "%CXXFLAGS%"=="" set "CXXFLAGS=-stdlib=libc++ -fexperimental-library -D_LIBCPP_ENABLE_EXPERIMENTAL"
-    if "%LDFLAGS%"=="" set "LDFLAGS=-rtlib=compiler-rt -fuse-ld=lld -lc++ -lc++abi"
+    if "%CXXFLAGS%"=="" set "CXXFLAGS=-stdlib=libc++ -fexperimental-library"
+    if "%LDFLAGS%"=="" set "LDFLAGS=-rtlib=compiler-rt -fuse-ld=lld"
 )
 
 if not "%CXX%"=="" set "COMPILER=%CXX%"
@@ -22,7 +22,7 @@ set HEADERS_DIR=headers
 set BUILD_DIR=build
 set BINARIES_DIR=%BUILD_DIR%/binaries
 
-set COMPILE_FLAGS=-std=%CPP_STANDARD% %SAFETY_FLAGS% %CXXFLAGS% -Os -s -c -I%HEADERS_DIR%/
+set COMPILE_FLAGS=-std=%CPP_STANDARD% %SAFETY_FLAGS% %CXXFLAGS% -D_LIBCPP_ENABLE_EXPERIMENTAL -Os -s -c -I%HEADERS_DIR%/
 set BUILD_FLAGS=-std=%CPP_STANDARD% %SAFETY_FLAGS% %CXXFLAGS% %LDFLAGS% -O3 -s
 
 echo.

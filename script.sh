@@ -6,8 +6,13 @@ if [ "$TOOLCHAIN" = "gcc" ]; then
     _LDFLAGS="${LDFLAGS:-}"
 else
     _COMPILER="${CXX:-clang++}"
-    _CXXFLAGS="${CXXFLAGS:--stdlib=libc++ -fexperimental-library -D_LIBCPP_ENABLE_EXPERIMENTAL}"
-    _LDFLAGS="${LDFLAGS:--rtlib=compiler-rt -fuse-ld=lld -lc++ -lc++abi}"
+    _CXXFLAGS="${CXXFLAGS:--stdlib=libc++ -fexperimental-library}"
+
+    if "$_COMPILER" -dM -E -x c++ /dev/null 2>/dev/null | grep -q "__apple_build_version__"; then
+        _LDFLAGS="${LDFLAGS:-}"
+    else
+        _LDFLAGS="${LDFLAGS:--rtlib=compiler-rt -fuse-ld=lld}"
+    fi
 fi
 
 readonly CXXFLAGS="$_CXXFLAGS"
@@ -21,7 +26,7 @@ readonly HEADERS_DIR="headers"
 readonly BUILD_DIR="build"
 readonly BINARIES_DIR="$BUILD_DIR/binaries"
 
-readonly COMPILE_FLAGS="-std=$CPP_STANDARD $SAFETY_FLAGS $CXXFLAGS -Os -s -c -I$HEADERS_DIR/"
+readonly COMPILE_FLAGS="-std=$CPP_STANDARD $SAFETY_FLAGS $CXXFLAGS -D_LIBCPP_ENABLE_EXPERIMENTAL -Os -s -c -I$HEADERS_DIR/"
 readonly BUILD_FLAGS="-std=$CPP_STANDARD $SAFETY_FLAGS $CXXFLAGS $LDFLAGS -O3 -s"
 
 function init() {
