@@ -67,6 +67,10 @@ namespace {
         if (project.version.empty()) {
             throw std::runtime_error("Missing entry 'version'" + ERROR_LOCATION);
         }
+        
+        if (project.project_type != ProjectType::APPLICATION && project.project_type != ProjectType::LIBRARY) {
+            throw std::runtime_error("Missing entry 'type'" + ERROR_LOCATION);
+        }
 
         if (project.toolchain != Toolchain::GCC && project.toolchain != Toolchain::LLVM) {
             throw std::runtime_error("Missing entry 'toolchain'" + ERROR_LOCATION);
