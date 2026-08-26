@@ -91,18 +91,18 @@ For development through containerisation technologies (e.g. `docker` or `podman`
 ### Notes
 
 1. `cbt` is developed in `WSL2 Ubuntu 20.04` and `Windows 11`.
-2. There is a hard dependency on `g++` as the underlying tool.
-3. There is a hard dependency on `C++20` standard. Ensure your `GNU` toolchain is at least `9.4.0`.
-4. `GNU` toolchain used for development is `11.4.0`.
-5. If on Windows, MinGW can be downloaded from [WinLibs](https://winlibs.com/).
-6. On a Mac, `g++` is actually a tiny wrapper over `clang`. This shouldn't be a problem as such, but if you want to develop exclusively through `g++`, then download the binary (through Homebrew or MacPorts, etc.) and alias `g++` to the appropriate downloaded binary, i.e. `alias g++=g++-<version>`.
-7. Ensure `curl` and `tar` are available.
-8. `cbt` relies on `cppcheck` to perform static analysis. Head over to the official [website](http://cppcheck.net/) and follow the instructions on how to download. If on Windows 10/11, `cppcheck` can be downloaded using `winget` by issuing `winget install cppcheck` (probable download location: `C:\Program Files\Cppcheck`) and adding it manually to your PATH.
+2. There is a hard dependency on the `C++20` standard.
+3. Depending on your toolchain preference i.e. either `gcc` or `llvm`, ensure your toolchain is at least `11.4.0` for `GNU`, or at least `19.1.4` for `LLVM`.
+4. If on Windows, MinGW can be downloaded from [WinLibs](https://winlibs.com/).
+5. On a Mac, `g++` is actually a tiny wrapper over `clang++`. This shouldn't be a problem as such, but if you want to develop exclusively through `g++`, then download the binary (through Homebrew or MacPorts, etc.) and alias `g++` to the appropriate downloaded binary, i.e. `alias g++=g++-<version>`.
+6. Ensure `curl` and `tar` are available.
+7. `cbt` relies on `cppcheck` to perform static analysis (through `cbt perform-static-analysis` command). Head over to the official [website](http://cppcheck.net/) and follow the instructions on how to download. If on Windows 10/11, `cppcheck` can be downloaded using `winget` by issuing `winget install cppcheck` (probable download location: `C:\Program Files\Cppcheck`) and adding it manually to your `PATH`.
 
 ### Steps
 
 1. Clone/download the source code and navigate to the directory.
-2. Run the following:
+2. Default toolchain is `gcc` picked up from `project.cfg` or if no `TOOLCHAIN` environment variable is found. To use `clang++`, set `toolchain=llvm` in `project.cfg` or set `TOOLCHAIN` environment variable to `llvm`.
+3. Run the following:
   ```sh
   # On *nix platforms
   $ chmod +x script.sh
@@ -111,9 +111,9 @@ For development through containerisation technologies (e.g. `docker` or `podman`
   # On Windows
   > .\script.bat init compile build
   ```
-3. The executable will be placed under the `build/` directory with the name `cbt` (or `cbt.exe` on `Windows`).
-4. Run `./build/cbt help` (or `.\build\cbt.exe` on `Windows`) to get all available commands.
-5. Add the binary to your OS' `PATH`:
+4. The executable will be placed under the `build/` directory with the name `cbt` (or `cbt.exe` on `Windows`).
+5. Run `./build/cbt help` (or `.\build\cbt.exe` on `Windows`) to get all available commands.
+6. Add the binary to your OS' `PATH`:
   ```sh
   # On *nix platforms
   $ ./script.sh link
@@ -121,7 +121,7 @@ For development through containerisation technologies (e.g. `docker` or `podman`
   # On Windows
   > .\script.bat link
   ```
-6. Run `cbt help` or `cbt info` to ensure that it is available globally.
+7. Run `cbt help` or `cbt info` to ensure that it is available globally.
 
 **Note:** During the `build` stage through `script.sh`, pay attention to the following:
 
@@ -135,33 +135,31 @@ In any of the above case(s), the format for the file-name containing the checksu
 
 If you are developing using `docker` or `podman`, use the following workflow:
 
-1. Build the image targeting the `builder` stage:
+1. Build the image:
   ```sh
-  $ docker build --target builder -t cbt-dev-platform .
+  # Set `TOOLCHAIN` to either `gcc` (default) or `llvm`
+  $ docker build --build-arg TOOLCHAIN=gcc -t cbt .
   ```
 2. Mount the project directory into the container:
   ```sh
   # On *nix platforms
-  $ docker run -it --rm -v $(pwd):/cbt cbt-dev-platform bash
+  $ docker run -it --rm -v "$(pwd):/cbt" cbt bash
 
   # On Windows (via Command Prompt)
-  > docker run -it --rm -v %cd%:/cbt cbt-dev-platform bash
+  > docker run -it --rm -v %cd%:/cbt cbt bash
   
   # On Windows (via PowerShell)
-  > docker run -it --rm -v ${PWD}:/cbt cbt-dev-platform bash
+  > docker run -it --rm -v ${PWD}:/cbt cbt bash
   
   # On Windows (via Git Bash)
-  > docker run -it --rm -v "/$(pwd):/cbt" cbt-dev-platform bash
+  > docker run -it --rm -v "/$(pwd):/cbt" cbt bash
+
+  # On Windows (via WSL2)
+  # Ensure WSL Integration (Settings > Resources > WSL Integration) is ON,
+  # and the respective distro is selected
+  > docker run -it --rm -v "$(wslpath -w "$PWD"):/cbt" cbt bash
   ```
 3. Whatever changes you make to the source code, will now be reflected in the container, allowing you to compile and test from within the container itself.
-4. Ship the final (lean) image targeting the `deployment` stage:
-  ```sh
-  $ docker build --target deployment -t cbt .
-  ```
-5. Run the image:
-  ```sh
-  $ docker run -it cbt
-  ```
 
 ## Roadmap
 
@@ -174,9 +172,9 @@ If you are developing using `docker` or `podman`, use the following workflow:
 | 3 | Support scaffold for `test`ing | `✅ Complete` | _**Note:** Only unit tests supported currently_ |
 | 4 | Use `project.cfg` as a one-stop configuration file for the entire project workspace management | `✅ Complete` |
 | 5 | Decouple `g++` and all build configurations from source code | `✅ Complete` | _<ul><li>Requires completion of `project.cfg` parser first.</li><li>Need to add other strict and sane compiler flags.</li></ul>_ |
-| 6 | Add support for various other C++ compilers | `💤 TBD` | _Requires a slight forward thinking mindset w.r.t. point 8 below_ |
+| 6 | Add support for various other C++ compilers | `✅ Complete` ||
 | 7 | Support scaffold for shared objects (`.so` and `.dll`) | `💤 TBD` ||
-| 8 | Add support for dependency management | `✅ Complete` | _<ul><li>How to handle dependencies developed with another compiler implementation than current project? (**Update: Postponed for now**)</li><li>Scaffold should support generating library code along with executable code during project creation.</li><li>Add support for **Software Bill of Materials** (**Update: Postponed for now**)</li></ul>_ |
+| 8 | Add support for dependency management | `✅ Complete` | _<ul><li>Add support for **Software Bill of Materials** (**Update: Postponed for now**)</li></ul>_ |
 | 9 | Add support for documentation during scaffold and as a command (maybe via some 3rd party tools like `doxygen`) | `💤 TBD` ||
 | 10 | Bootstrap `cbt` with `cbt` | `✅ Complete` ||
 | 11 | Add native support for reading environment values from `env` file(s) | `✅ Complete` ||

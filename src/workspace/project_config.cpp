@@ -27,6 +27,8 @@ namespace {
         "description",
         "version",
         "type",
+        "toolchain",
+        "supported_toolchains[]",
         "authors[]",
         "platforms[]",
         "config{cpp_standard}",
@@ -66,6 +68,16 @@ namespace {
             throw std::runtime_error("Missing entry 'version'" + ERROR_LOCATION);
         }
 
+        if (project.toolchain != Toolchain::GCC && project.toolchain != Toolchain::LLVM) {
+            throw std::runtime_error("Missing entry 'toolchain'" + ERROR_LOCATION);
+        }
+
+        if (project.project_type == ProjectType::APPLICATION && !project.supported_toolchains.empty()) {
+            throw std::runtime_error("Unrecognised attribute 'supported_toolchains' for an `application` project" + ERROR_LOCATION);
+        } else if (project.project_type == ProjectType::LIBRARY && project.supported_toolchains.empty()) {
+            throw std::runtime_error("At least one supported toolchain is required" + ERROR_LOCATION);
+        }
+
         if (project.authors.size() == 0) {
             throw std::runtime_error("At least one author is required" + ERROR_LOCATION);
         }
@@ -84,6 +96,20 @@ namespace {
 
         if (project.cppcheck.platform.empty()) {
             throw std::runtime_error("Missing entry 'cppcheck{platform}'" + ERROR_LOCATION);
+        }
+    }
+
+    std::string toolchain_to_string(const Toolchain& toolchain) {
+        return toolchain == Toolchain::GCC ? "gcc" : "llvm";
+    }
+
+    Toolchain string_to_toolchain(const std::string& toolchain) {
+        if (toolchain == "gcc") {
+            return Toolchain::GCC;
+        } else if (toolchain == "llvm") {
+            return Toolchain::LLVM;
+        } else {
+            throw std::domain_error("Unsupported toolchain '" + toolchain + "'");
         }
     }
 
@@ -184,6 +210,11 @@ namespace workspace::project_config {
             .description{ "Add some description here" },
             .version{ workspace::util::get_ISO_date() },
             .project_type{ project_type },
+            .toolchain{ Toolchain::GCC },
+            .supported_toolchains{ project_type == ProjectType::APPLICATION
+                ? std::set<Toolchain>{}
+                : std::set<Toolchain>{ Toolchain::GCC, Toolchain::LLVM }
+            },
             .authors{
                 { "sample_lname@domain.tld", "Sample LName" },
                 { "another_mname_lname@domain.tld", "Another MName LName" }
@@ -266,6 +297,16 @@ namespace workspace::project_config {
                     project.description = value;
                 } else if (key.compare("version") == 0) {
                     project.version = value;
+                } else if (key.compare("toolchain") == 0) {
+                    project.toolchain = string_to_toolchain(value);
+                } else if (key.compare("supported_toolchains[]") == 0) {
+                    const Toolchain supported_toolchain{ string_to_toolchain(value) };
+
+                    if (project.supported_toolchains.contains(supported_toolchain)) {
+                        throw std::runtime_error("Duplicate supported toolchain found (while resolving '" + value + "')" + ERROR_LOCATION);
+                    } else {
+                        project.supported_toolchains.insert(supported_toolchain);
+                    }
                 } else if (key.compare("type") == 0) {
                     project.project_type = string_to_project_type(value);
                 } else if (key.compare("authors[]") == 0) {
@@ -375,6 +416,25 @@ namespace workspace::project_config {
         const string base_text{ std::string("name=") + project.name 
             + "\ndescription=" + project.description
             + "\nversion=" + project.version };
+        
+        const string toolchain_text{ std::string("; instructs `cbt` to use appropriate compiler - values are `gcc` or `llvm`")
+            + "\ntoolchain=" + toolchain_to_string(project.toolchain) };
+        
+        string supported_toolchains{ "" };
+
+        if (project.project_type == ProjectType::LIBRARY) {
+            supported_toolchains = std::accumulate(
+                project.supported_toolchains.begin(),
+                project.supported_toolchains.end(),
+                std::string("; `supported_toolchains` (for library projects only) indicate whether this library is compatible with the ")
+                    + "; `toolchain` of the host application/library. Incompatible toolchain will outright"
+                    + "; reject this library during dependency resolution by the host application/library."
+                    + "; Values can be any of `gcc` or `llvm`. At least one toolchain is required.",
+                [](const string& acc, const auto& toolchain) { 
+                    return acc + "\nsupported_toolchains[]=" + toolchain_to_string(toolchain);
+                } 
+            );
+        }
 
         const string authors_text{
             std::accumulate(
@@ -435,6 +495,9 @@ namespace workspace::project_config {
             + base_text
             + "\n\n"
             + "type=" + project_type_to_string(project.project_type)
+            + "\n\n"
+            + toolchain_text
+            + (project.project_type == ProjectType::LIBRARY ? ("\n\n" + supported_toolchains) : "")
             + "\n\n"
             + authors_text
             + "\n\n"

@@ -11,7 +11,7 @@
 #include <tuple>
 #include <vector>
 
-#include "gnu_toolchain.hpp"
+#include "compiler_toolchain.hpp"
 #include "orchestrator.hpp"
 #include "workspace/dependencies_manager.hpp"
 #include "workspace/modification_identifier.hpp"
@@ -136,6 +136,19 @@ namespace {
 
         return false;
     }
+
+    size_t get_file_count(const fs::path& path, const std::set<std::string>& extensions) {
+        return static_cast<size_t>(std::ranges::count_if(
+            fs::recursive_directory_iterator(path),
+            [&extensions](const auto& entry) {
+                if (entry.is_regular_file()) {
+                    return extensions.contains(entry.path().extension());
+                } else {
+                    return false;
+                }
+            }
+        ));
+    }
 }
 
 namespace commands {
@@ -235,7 +248,7 @@ namespace commands {
             }
         }
 
-        cout << "[COMMAND] " << gnu_toolchain::get_compilation_command(project, compile_as_dependency) << endl << endl;
+        cout << "[COMMAND] " << compiler_toolchain::get_compilation_command(project, compile_as_dependency) << endl << endl;
 
         std::atomic<int> files_succesfully_compiled_count{0};
 
@@ -256,7 +269,7 @@ namespace commands {
             } else {
                 file.compilation_start_timestamp = workspace::modification_identifier::get_current_fileclock_timestamp();
 
-                const int result = gnu_toolchain::compile_file(project, file.file_name, stemmed_file, compile_as_dependency);
+                const int result = compiler_toolchain::compile_file(project, file.file_name, stemmed_file, compile_as_dependency);
 
                 file.compilation_end_timestamp = workspace::modification_identifier::get_current_fileclock_timestamp();
                 file.was_successful = (result == 0);
@@ -309,12 +322,20 @@ namespace commands {
             return;
         }
 
+        const size_t src_files_count{ get_file_count("src", std::set<std::string>{ ".cpp", ".c" } ) };
+        const size_t binary_files_count{ get_file_count("build/binaries", std::set<std::string>{ ".o" } ) };
+
+        if (binary_files_count < src_files_count) {
+            cout << (src_files_count - binary_files_count) << " file(s) not compiled yet! Run 'cbt compile-project' first." << endl;
+            return;
+        }
+
         std::set<string> non_empty_directories;
         const string SEPARATOR{ fs::path::preferred_separator };
 
         list_directories_containing_binaries(non_empty_directories, "build/binaries");
         list_directories_containing_binaries(non_empty_directories, "build/dependencies");
-        
+
         if (non_empty_directories.empty()) {
             cout << "No binaries present! Run 'cbt compile-project' first." << endl;
             return;
@@ -328,7 +349,7 @@ namespace commands {
         const string BINARY_NAME{ project.name };
         #endif
 
-        const int result = gnu_toolchain::perform_linking(project, directories_containing_binaries, string("build") + SEPARATOR + BINARY_NAME);
+        const int result = compiler_toolchain::perform_linking(project, directories_containing_binaries, string("build") + SEPARATOR + BINARY_NAME);
 
         cout << "[BUILD]" << std::left << std::setw(6) << (result == 0 ? "[OK]" : "[NOK]") << workspace::util::get_platform_formatted_filename("build/" + BINARY_NAME) << endl;
     }
@@ -365,7 +386,7 @@ namespace commands {
         const size_t literal_length_of_headers{ std::string("headers/").length() };
         const size_t literal_length_of_dependencies{ std::string(".internals/dh_symlinks/").length() };
 
-        cout << "[COMMAND] " << gnu_toolchain::get_test_execution_command(project, EXTENSION) << endl << endl;
+        cout << "[COMMAND] " << compiler_toolchain::get_test_execution_command(project, EXTENSION) << endl << endl;
 
         for (auto const& [file, dependencies]: tree) {
             const bool is_c_file{ file.starts_with("tests/unit_tests/c/") };
@@ -425,14 +446,17 @@ namespace commands {
             binaries_to_create.push_back(std::make_tuple(files_to_link, test_binary.string()));
         }
 
+        std::mutex binaries_mutex;
+
         orchestrator::orchestrate_task(
             binaries_to_create,
-            [&project, &binaries_to_execute](const std::tuple<std::vector<std::string>, std::string>& binary) {
+            [&project, &binaries_to_execute, &binaries_mutex](const std::tuple<std::vector<std::string>, std::string>& binary) {
                 const auto [files_to_link, test_binary] = binary;
 
-                const int result = gnu_toolchain::create_test_binary(project, files_to_link, test_binary);
+                const int result = compiler_toolchain::create_test_binary(project, files_to_link, test_binary);
 
                 if (result == 0) {
+                    std::lock_guard<std::mutex> lock(binaries_mutex);
                     binaries_to_execute.push_back(test_binary);
                 }
             }
@@ -441,7 +465,7 @@ namespace commands {
         orchestrator::orchestrate_task(
             binaries_to_execute,
             [](const fs::path& test_binary) {
-                [[maybe_unused]] const int result = gnu_toolchain::execute_test_binary(workspace::util::get_platform_formatted_filename(test_binary));
+                [[maybe_unused]] const int result = compiler_toolchain::execute_test_binary(workspace::util::get_platform_formatted_filename(test_binary));
             }
         );
     }
@@ -472,7 +496,7 @@ namespace commands {
     }
     
     void show_info() {
-        gnu_toolchain::CompilerInfo compiler = gnu_toolchain::get_compiler_info();
+        compiler_toolchain::CompilerInfo compiler = compiler_toolchain::get_compiler_info();
 
         cout
             << "cbt: C++ Build Tool" << endl

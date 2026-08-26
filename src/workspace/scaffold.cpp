@@ -37,6 +37,7 @@ namespace {
     const std::regex START_SCOPE_R{ "@START_SCOPE" };
     const std::regex END_SCOPE_R{ "@END_SCOPE" };
     const std::regex DOCKER_APPLICATION_WORKFLOW_CONTINUATION_R{ "@DOCKER_APPLICATION_WORKFLOW_CONTINUATION" };
+    const std::regex DOCKER_CBT_EXEC_COMMAND{ "@DOCKER_CBT_EXEC_COMMAND" };
 
     string remove_raw_literal_indentations(const string& raw_literal) {
         string line, final_string;
@@ -196,10 +197,12 @@ namespace {
 
             if (project.project_type == workspace::project_config::ProjectType::APPLICATION) {
                 const string deployment_text{ remove_raw_literal_indentations(DOCKERFILE_WITH_DEPLOYMENT) };
+                const string with_exec_command_text = std::regex_replace(text, DOCKER_CBT_EXEC_COMMAND, "cbt compile-project && cbt build-project");
 
-                return std::regex_replace(text + "\n" + deployment_text, PROJECT_NAME_R, project.name);
+                return std::regex_replace(with_exec_command_text + "\n" + deployment_text, PROJECT_NAME_R, project.name);
             } else {
-                return std::regex_replace(text, PROJECT_NAME_R, project.name);
+                const string with_exec_command_text = std::regex_replace(text, DOCKER_CBT_EXEC_COMMAND, "cbt compile-project");
+                return std::regex_replace(with_exec_command_text, PROJECT_NAME_R, project.name);
             }
         } else {
             return "";

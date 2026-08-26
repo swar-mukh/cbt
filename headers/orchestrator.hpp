@@ -53,7 +53,7 @@ namespace {
         std::vector<std::future<void>> futures;
 
         for (auto& item: items) {
-            futures.emplace_back(std::async(std::launch::async, lambda, item));
+            futures.emplace_back(std::async(std::launch::async, lambda, std::ref(item)));
         }
 
         for (auto& future: futures) {

@@ -197,7 +197,7 @@ namespace workspace::util {
     }
 
     string get_platform_formatted_filename(std::filesystem::path path) {
-        return std::filesystem::relative(std::filesystem::canonical(path)).make_preferred().string();
+        return std::filesystem::relative(std::filesystem::weakly_canonical(path)).make_preferred().string();
     }
 
     string get_ISO_date() {
