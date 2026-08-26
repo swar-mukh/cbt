@@ -66,7 +66,7 @@ namespace {
         #else
         const std::string cmd{"clang++ -dM -E -x c++ /dev/null" };
 
-        auto [output, status] = execute_buffered(cmd);
+        const auto [output, status] = execute_buffered(cmd);
 
         if (status != 0) {
             throw std::runtime_error("Could not detect correct 'clang++' compiler. Failed to execute '" + cmd + "'.");
@@ -82,15 +82,12 @@ namespace {
         if (project.toolchain == workspace::project_config::Toolchain::GCC) {
             prefix = "g++ -fdiagnostics-color=always";
         } else {
-            prefix = std::string("clang++ -fdiagnostics-color=always")
-                + " -stdlib=libc++ -fexperimental-library";
+            prefix = "clang++ -fdiagnostics-color=always -stdlib=libc++ -fexperimental-library";
             
             if (stage == Stage::COMPILE) {
                 prefix += " -D_LIBCPP_ENABLE_EXPERIMENTAL";
-            } else if (stage == Stage::LINK) {
-                if (!is_apple_clang()) {
-                    prefix += " -rtlib=compiler-rt -fuse-ld=lld";
-                }
+            } else if (stage == Stage::LINK && !is_apple_clang()) {
+                prefix += " -rtlib=compiler-rt -fuse-ld=lld";
             }
         }
 

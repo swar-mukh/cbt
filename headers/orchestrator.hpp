@@ -52,7 +52,7 @@ namespace {
     void run_with_futures(std::vector<T>& items, Callable&& lambda) {
         std::vector<std::future<void>> futures;
 
-        for (auto& item : items) {
+        for (auto& item: items) {
             futures.emplace_back(std::async(std::launch::async, lambda, std::ref(item)));
         }
 
