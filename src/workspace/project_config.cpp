@@ -44,6 +44,7 @@ namespace {
         "cppcheck{safety}",
         "cppcheck{template}",
         "cppcheck{verbose}",
+        "cppcheck{extras}",
         "dependencies[]"
     };
     const std::set<std::string> UNSUPPORTED_CPP_STANDARDS{ "c++98", "c++03", "c++11", "c++14" };
@@ -239,7 +240,8 @@ namespace workspace::project_config {
                 .platform{ "native" },
                 .safety{ true },
                 .template_{ "[{severity}] {file}:[{line}:{column}]\\n{code}\\n({id}) {message}\\n" },
-                .verbose{ false }
+                .verbose{ false },
+                .extras{ "--suppress=missingIncludeSystem" }
             },
             .dependencies{
                 { .alias{ "cbt_tools" }, .version{ "2024-08-31" }, .url{ "https://github.com/swar-mukh/cbt_tools" } },
@@ -381,6 +383,8 @@ namespace workspace::project_config {
                     }
 
                     project.cppcheck.verbose = value == "true" ? true : false;
+                } else if (key == "cppcheck{extras}") {
+                    project.cppcheck.extras = value;
                 } else if (key.compare("dependencies[]") == 0) {
                     const auto result{ parse_dependency(value) };
 
@@ -482,6 +486,7 @@ namespace workspace::project_config {
             + "\n" + (!project.cppcheck.safety.has_value() ? "; " : "") + "cppcheck{safety}=" + (project.cppcheck.safety.value() ? "true" : "false") + " ; optional boolean field (remove/comment if unsupported by cppcheck)"
             + "\n" + (!project.cppcheck.template_.has_value() ? "; " : "") + "cppcheck{template}=" + project.cppcheck.template_.value_or("") + " ; optional string field"
             + "\n" + (!project.cppcheck.verbose.has_value() ? "; " : "") + "cppcheck{verbose}=" + (project.cppcheck.verbose.value() ? "true" : "false") + " ; optional boolean field"
+            + "\n" + (!project.cppcheck.extras.has_value() ? "; " : "") + "cppcheck{extras}=" + project.cppcheck.extras.value_or("") + " ; optional string field, consult cppcheck documentation and add other flags here"
         };
 
         const string dependencies_text{

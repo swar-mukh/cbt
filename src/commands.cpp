@@ -486,6 +486,7 @@ namespace commands {
             + (project.cppcheck.safety.has_value() && project.cppcheck.safety.value() ? " --safety" : "")
             + (project.cppcheck.template_.has_value() ? (" --template=\"" + project.cppcheck.template_.value() + "\"") : "")
             + (project.cppcheck.verbose.has_value() && project.cppcheck.verbose.value() ? " --verbose" : "")
+            + (project.cppcheck.extras.has_value() ? (" " + project.cppcheck.extras.value()) : "")
             + " -I headers/"
             + " src/"
         };

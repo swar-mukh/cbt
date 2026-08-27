@@ -45,6 +45,7 @@ namespace workspace::project_config {
         std::optional<bool> safety;
         std::optional<string> template_;
         std::optional<bool> verbose;
+        std::optional<string> extras;
     };
 
     struct SurfaceDependency {
